@@ -1,0 +1,7 @@
+{
+  "results": [
+    {"id": "1", "title": "IT Support Manager", "company": {"display_name": "Delta Corp"}, "location": {"display_name": "Chicago, IL"}, "created": "2026-04-28T10:00:00Z", "redirect_url": "https://adzuna.com/1"},
+    {"id": "2", "title": "Cloud Engineer (AWS)", "company": {"display_name": "Echo Systems"}, "location": {"display_name": "Denver, CO"}, "created": "2026-04-28T11:00:00Z", "redirect_url": "https://adzuna.com/2"},
+    {"id": "3", "title": "Receptionist", "company": {"display_name": "Foxtrot Services"}, "location": {"display_name": "Miami, FL"}, "created": "2026-04-27T09:00:00Z", "redirect_url": "https://adzuna.com/3"}
+  ]
+}

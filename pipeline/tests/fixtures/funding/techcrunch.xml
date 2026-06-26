@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>TechCrunch Startups</title>
+  <link>https://techcrunch.com</link>
+  <description>Startup news</description>
+  <item>
+    <title>Lima Robotics raises $25M Series B</title>
+    <link>https://techcrunch.com/lima</link>
+    <pubDate>Mon, 28 Apr 2026 14:00:00 +0000</pubDate>
+    <guid>https://techcrunch.com/lima</guid>
+  </item>
+  <item>
+    <title>Mike's AI secures $10M from a16z</title>
+    <link>https://techcrunch.com/mike</link>
+    <pubDate>Sun, 27 Apr 2026 10:00:00 +0000</pubDate>
+    <guid>https://techcrunch.com/mike</guid>
+  </item>
+</channel>
+</rss>

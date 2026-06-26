@@ -1,0 +1,6 @@
+[
+  {"site": "indeed", "job_url": "https://indeed.com/job1", "title": "Help Desk Technician", "company": "Acme Manufacturing", "location": "Boston, MA", "date_posted": "2026-04-28"},
+  {"site": "linkedin", "job_url": "https://linkedin.com/job2", "title": "Chief Information Security Officer", "company": "Beta Healthcare", "location": "Austin, TX", "date_posted": "2026-04-28"},
+  {"site": "indeed", "job_url": "https://indeed.com/job3", "title": "Senior DevOps Engineer", "company": "Gamma Logistics", "location": "Seattle, WA", "date_posted": "2026-04-27"},
+  {"site": "indeed", "job_url": "https://indeed.com/job4", "title": "Plumber", "company": "Pipes Inc", "location": "Phoenix, AZ", "date_posted": "2026-04-27"}
+]

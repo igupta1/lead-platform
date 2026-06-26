@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>PR Newswire Financial</title>
+  <link>https://prnewswire.com</link>
+  <description>Financial news</description>
+  <item>
+    <title>November Bank closes $50M Series C</title>
+    <link>https://prnewswire.com/nov</link>
+    <pubDate>Mon, 28 Apr 2026 09:00:00 +0000</pubDate>
+    <guid>https://prnewswire.com/nov</guid>
+  </item>
+  <item>
+    <title>Oscar Insurance announces $30M raise</title>
+    <link>https://prnewswire.com/osc</link>
+    <pubDate>Sun, 27 Apr 2026 11:00:00 +0000</pubDate>
+    <guid>https://prnewswire.com/osc</guid>
+  </item>
+</channel>
+</rss>
