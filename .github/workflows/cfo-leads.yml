@@ -59,10 +59,17 @@ jobs:
           # and insurance pipelines — different blob key on the
           # receiving end).
           CFO_UPLOAD_API_KEY:   ${{ secrets.LEADS_UPLOAD_API_KEY }}
+          # Gemini key is on the PAID tier (~4,000 RPM, grounded search
+          # free to 1,500/day), so pace fast — the 4.5s code default is
+          # only needed on the free tier's 20/min cap.
+          GEMINI_MIN_INTERVAL_S: "0.7"
           LIMIT:                ${{ inputs.limit }}
           REENRICH:             ${{ inputs.reenrich }}
         run: |
-          args=("--upload")
+          # --enrich-budget 600: paid-tier grounded search is free to
+          # 1,500/day, so drain 600 new leads/night (hiring-signal leads
+          # first); the rest defer and drain over the following nights.
+          args=("--upload" "--enrich-budget" "600")
           if [[ "$REENRICH" == "true" ]]; then
             args+=("--reenrich")
           fi
