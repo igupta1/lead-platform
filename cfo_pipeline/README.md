@@ -9,16 +9,28 @@ enrichment prompt, own Apollo title list, own JSON output shape.
 US SMBs (≤~75 employees) currently in the buying window for a
 fractional CFO. The buying-signal model:
 
-- **Primary (gate):** the company is hiring finance leadership one
-  rung below CFO — Controller, VP / Head / Director of Finance,
-  Accounting Manager, Finance Manager. They need finance leadership
-  but aren't big enough to absorb a full-time CFO yet.
-- **Hard exclude:** the company has an open *full-time* CFO posting.
-  That company is buying a CFO, not a fractional one. Drop entirely
-  from output (and from the DB).
-- **Secondary (urgency, not a gate):** recent Form D filing (last
-  90 days) or freshly announced seed / Series A round. Cash to spend +
-  reporting obligations to a new board = the fractional-CFO window.
+- **In-market (hottest, weight 80):** the company posted a
+  *Fractional / Interim / Part-time CFO* role. They are literally
+  shopping for the service being sold.
+- **Primary (gate, weight 60):** the company is hiring finance
+  leadership one rung below CFO — Controller, VP / Head / Director of
+  Finance, Accounting Manager, Finance Manager. They need finance
+  leadership but aren't big enough to absorb a full-time CFO yet.
+- **Hard exclude:** the company has an open *full-time* CFO posting,
+  OR its Form D lists a CFO among related persons. That company has
+  (or is buying) a CFO, not a fractional one. Drop entirely from
+  output (and from the DB); sticky via the disqualified table.
+- **Secondary (urgency, not a gate, weight 25):** recent Form D
+  filing (last 90 days) or freshly announced seed / Series A round.
+  Cash to spend + reporting obligations to a new board = the
+  fractional-CFO window. Funding-only leads are gated at output:
+  resolved domain required, known offerings must be ≥ $500K, and at
+  most 75 funding-only cards ship so hiring-signal leads dominate.
+
+Form D XML is mined (not just fetched for the pooled-fund check):
+offering amount, related persons (officer names → free DM data),
+industry group, revenue range. Scores decay from the *event* date
+(posting date / filing date), not the scrape date.
 
 ## Setup
 
@@ -40,9 +52,13 @@ python -m cfo_pipeline.daily_run
 Useful flags (mirror of `insurance_pipeline`):
 - `--limit N` per-source candidate cap (smoke runs)
 - `--dry-run` fetch sources only, no DB / LLM / JSON writes
-- `--rescore-only` skip fetch+enrichment, just rescore + regen
+- `--rescore-only` skip fetch+enrichment, just rescore + rewrite
 - `--upload` POST the generated JSON to the Vercel endpoint
 - `--reenrich` force re-enrichment on every lead
+- `--enrich-budget N` max Gemini web lookups per run (default 300 —
+  inside the free-tier 500/day grounded-search quota; overflow leads
+  stay in the DB and drain on later runs, hiring-signal leads first)
+- `--apollo-top-n N` Apollo DM enrichment on the top-N leads (default 30)
 
 ## Tests
 

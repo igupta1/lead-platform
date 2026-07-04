@@ -19,9 +19,10 @@ or as ``company_employees_label``), it's carried on the candidate so
 the SMB cap can short-circuit enrichment for obviously-oversized
 companies.
 
-Backends: JobSpy (Indeed + LinkedIn scrape) + Adzuna API. No HN —
-Hacker News' Who's Hiring threads index tech roles, which is the
-wrong demographic for fractional-CFO buyers.
+Backends: JobSpy (Indeed + ZipRecruiter + Google Jobs at volume;
+LinkedIn scraped gently — no API, aggressive anti-bot) + Adzuna API
+(paginated). No HN — Hacker News' Who's Hiring threads index tech
+roles, which is the wrong demographic for fractional-CFO buyers.
 """
 
 from __future__ import annotations
@@ -29,6 +30,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import time
 from datetime import datetime, timezone
 from typing import Any
 
@@ -63,6 +65,16 @@ _FINANCE_LEAD_QUERIES: tuple[str, ...] = (
 )
 _CFO_QUERIES: tuple[str, ...] = (
     "Chief Financial Officer",
+)
+# In-market queries. A company posting a Fractional / Interim /
+# Part-time CFO role is shopping for exactly the service being sold —
+# the hottest lead class on the page. These titles were previously
+# dropped entirely: not a disqualifier (part-time qualifier) but not
+# a finance-lead title either.
+_FRACTIONAL_CFO_QUERIES: tuple[str, ...] = (
+    "Fractional CFO",
+    "Interim CFO",
+    "Part-time CFO",
 )
 
 # Title classifier. Title text comes back messy ("Senior Controller,
@@ -176,6 +188,18 @@ _AUTOMOTIVE_TITLE_RE = re.compile(r"^\s*automotive\b", re.IGNORECASE)
 # enforce a consistent cap at the candidate level.
 _MAX_POSTING_AGE_DAYS = 30
 
+# Cap the query-time lookback to the same 30 days: everything older
+# is dropped by _is_too_old anyway, and a tighter window returns
+# denser fresh rows from boards that sort loosely by relevance.
+_MAX_HOURS_OLD = _MAX_POSTING_AGE_DAYS * 24
+
+# Scrape plans per query: high-volume boards take the big ask;
+# LinkedIn is scraped gently to avoid anti-bot blocks.
+_JOBSPY_PLANS: tuple[tuple[tuple[str, ...], int], ...] = (
+    (("indeed", "zip_recruiter", "google"), 100),
+    (("linkedin",), 25),
+)
+
 # Indeed's company_employees_label / JobSpy's company_num_employees
 # returns strings like "1 to 10", "11 to 50", "201 to 500", "10,001+".
 # Parse to an integer upper bound; None when unparseable.
@@ -187,7 +211,12 @@ _HEADCOUNT_PLUS_RE = re.compile(
     r"^\s*(\d[\d,]*)\s*\+\s*$",
 )
 
-_ADZUNA_API = "https://api.adzuna.com/v1/api/jobs/us/search/1"
+# Adzuna paging. Free keys have unpublished caps (commonly reported
+# ~25 calls/min); space calls out and stop everything on a 429.
+_ADZUNA_API_BASE = "https://api.adzuna.com/v1/api/jobs/us/search"  # + /{page}
+_ADZUNA_MAX_PAGES = 5
+_ADZUNA_RESULTS_PER_PAGE = 50  # Adzuna's hard max.
+_ADZUNA_CALL_SPACING_S = 2.5
 
 
 def _is_recruiter_name(name: str) -> bool:
@@ -275,6 +304,18 @@ def _is_cfo_disqualifier_title(title: str) -> bool:
     return True
 
 
+def _is_fractional_cfo_title(title: str) -> bool:
+    """True when the posting is for a fractional / interim / part-time
+    CFO — the company is in-market for the exact service being sold.
+    Checked after ``_is_cfo_disqualifier_title`` (which already
+    excludes these via the part-time qualifier)."""
+    if not title:
+        return False
+    return bool(
+        _CFO_TITLE_RE.search(title) and _PART_TIME_QUALIFIER_RE.search(title)
+    )
+
+
 def _parse_headcount_label(label: str | None) -> int | None:
     """Parse Indeed's company size band into an integer upper bound.
     Returns None when the label is unknown / unparseable. We pick the
@@ -328,13 +369,14 @@ def _make_finance_candidate(
     site: str,
     captured_at: datetime,
     headcount: int | None,
+    signal_type: SignalType = SignalType.JOB_POSTED_FINANCE_LEAD,
 ) -> LeadCandidate:
     return LeadCandidate(
         name=company,
         domain=None,
         headcount=headcount,
         initial_signal=Signal(
-            type=SignalType.JOB_POSTED_FINANCE_LEAD,
+            type=signal_type,
             source=SourceName.JOBS,
             captured_at=captured_at,
             payload={
@@ -362,24 +404,35 @@ def _fetch_from_jobspy(
     since: datetime, *, queries: tuple[str, ...]
 ) -> tuple[list[LeadCandidate], list[Disqualifier]]:
     captured_at = _utcnow()
-    hours_old = max(1, int((captured_at - since).total_seconds() / 3600))
+    hours_old = max(
+        1, min(int((captured_at - since).total_seconds() / 3600), _MAX_HOURS_OLD)
+    )
     candidates: list[LeadCandidate] = []
     disqualifiers: list[Disqualifier] = []
+    frames: list[Any] = []
     for query in queries:
-        try:
-            df = jobspy.scrape_jobs(
-                site_name=["indeed", "linkedin"],
-                search_term=query,
-                location="United States",
-                results_wanted=25,
-                hours_old=hours_old,
-                country_indeed="usa",
-            )
-        except Exception:
-            _log.exception("jobspy query failed: %s", query)
-            continue
-        if df is None or len(df) == 0:
-            continue
+        for sites, wanted in _JOBSPY_PLANS:
+            try:
+                df = jobspy.scrape_jobs(
+                    site_name=list(sites),
+                    search_term=query,
+                    # Google Jobs ignores search_term / hours_old — it
+                    # takes its own natural-language query with a
+                    # recency phrase.
+                    google_search_term=(
+                        f"{query} jobs in United States since last week"
+                    ),
+                    location="United States",
+                    results_wanted=wanted,
+                    hours_old=hours_old,
+                    country_indeed="usa",
+                )
+            except Exception:
+                _log.exception("jobspy query failed: %s (sites=%s)", query, sites)
+                continue
+            if df is not None and len(df) > 0:
+                frames.append(df)
+    for df in frames:
         for _, row in df.iterrows():
             title = str(row.get("title") or "").strip()
             company = str(row.get("company") or "").strip()
@@ -402,6 +455,20 @@ def _fetch_from_jobspy(
                 )
                 continue
             if _is_too_old(date_posted, captured_at):
+                continue
+            if _is_fractional_cfo_title(title):
+                candidates.append(
+                    _make_finance_candidate(
+                        company=company,
+                        title=title,
+                        url=url,
+                        date_posted=date_posted,
+                        site=site,
+                        captured_at=captured_at,
+                        headcount=_read_jobspy_headcount(row),
+                        signal_type=SignalType.JOB_POSTED_FRACTIONAL_CFO,
+                    )
+                )
                 continue
             if _is_finance_lead_title(title):
                 headcount = _read_jobspy_headcount(row)
@@ -429,61 +496,94 @@ def _fetch_from_adzuna(
         return [], []
 
     captured_at = _utcnow()
-    max_days_old = max(1, (captured_at - since).days)
+    max_days_old = max(1, min((captured_at - since).days, _MAX_POSTING_AGE_DAYS))
     candidates: list[LeadCandidate] = []
     disqualifiers: list[Disqualifier] = []
+    rate_limited = False
+    first_call = True
     for query in queries:
-        try:
-            response = requests.get(
-                _ADZUNA_API,
-                params={
-                    "app_id": app_id,
-                    "app_key": app_key,
-                    "what": query,
-                    "max_days_old": max_days_old,
-                    "results_per_page": 40,
-                },
-                timeout=15,
-            )
-            response.raise_for_status()
-            data = response.json()
-        except Exception:
-            _log.exception("adzuna query failed: %s", query)
-            continue
-        for item in data.get("results", []):
-            title = str(item.get("title") or "").strip()
-            company = str((item.get("company") or {}).get("display_name") or "").strip()
-            if not title or not company:
-                continue
-            if _is_recruiter_name(company) or _is_auto_dealer_name(company):
-                continue
-            if _is_automotive_title(title):
-                continue
-
-            url = str(item.get("redirect_url") or "")
-            date_posted = str(item.get("created") or "")
-
-            if _is_cfo_disqualifier_title(title):
-                disqualifiers.append(
-                    _make_cfo_disqualifier(
-                        company=company, title=title, site="adzuna", url=url,
-                    )
+        if rate_limited:
+            break
+        for page in range(1, _ADZUNA_MAX_PAGES + 1):
+            if not first_call:
+                time.sleep(_ADZUNA_CALL_SPACING_S)  # stay under the per-minute cap
+            first_call = False
+            try:
+                response = requests.get(
+                    f"{_ADZUNA_API_BASE}/{page}",
+                    params={
+                        "app_id": app_id,
+                        "app_key": app_key,
+                        "what": query,
+                        "max_days_old": max_days_old,
+                        "results_per_page": _ADZUNA_RESULTS_PER_PAGE,
+                    },
+                    timeout=15,
                 )
-                continue
-            if _is_too_old(date_posted, captured_at):
-                continue
-            if _is_finance_lead_title(title):
-                candidates.append(
-                    _make_finance_candidate(
-                        company=company,
-                        title=title,
-                        url=url,
-                        date_posted=date_posted,
-                        site="adzuna",
-                        captured_at=captured_at,
-                        headcount=None,  # Adzuna doesn't expose a size field.
+                if response.status_code == 429:
+                    _log.warning(
+                        "adzuna rate-limited (429) on %r page %d; "
+                        "stopping all Adzuna fetches this run",
+                        query, page,
                     )
-                )
+                    rate_limited = True
+                    break
+                response.raise_for_status()
+                data = response.json()
+            except Exception:
+                _log.exception("adzuna query failed: %s (page %d)", query, page)
+                break
+            results = data.get("results", [])
+            for item in results:
+                title = str(item.get("title") or "").strip()
+                company = str((item.get("company") or {}).get("display_name") or "").strip()
+                if not title or not company:
+                    continue
+                if _is_recruiter_name(company) or _is_auto_dealer_name(company):
+                    continue
+                if _is_automotive_title(title):
+                    continue
+
+                url = str(item.get("redirect_url") or "")
+                date_posted = str(item.get("created") or "")
+
+                if _is_cfo_disqualifier_title(title):
+                    disqualifiers.append(
+                        _make_cfo_disqualifier(
+                            company=company, title=title, site="adzuna", url=url,
+                        )
+                    )
+                    continue
+                if _is_too_old(date_posted, captured_at):
+                    continue
+                if _is_fractional_cfo_title(title):
+                    candidates.append(
+                        _make_finance_candidate(
+                            company=company,
+                            title=title,
+                            url=url,
+                            date_posted=date_posted,
+                            site="adzuna",
+                            captured_at=captured_at,
+                            headcount=None,  # Adzuna doesn't expose a size field.
+                            signal_type=SignalType.JOB_POSTED_FRACTIONAL_CFO,
+                        )
+                    )
+                    continue
+                if _is_finance_lead_title(title):
+                    candidates.append(
+                        _make_finance_candidate(
+                            company=company,
+                            title=title,
+                            url=url,
+                            date_posted=date_posted,
+                            site="adzuna",
+                            captured_at=captured_at,
+                            headcount=None,  # Adzuna doesn't expose a size field.
+                        )
+                    )
+            if len(results) < _ADZUNA_RESULTS_PER_PAGE:
+                break  # last page for this query
     return candidates, disqualifiers
 
 
@@ -502,8 +602,10 @@ def fetch(
     fetchers: tuple[
         tuple[str, Any, tuple[str, ...]], ...
     ] = (
+        ("jobspy_fractional_cfo", _fetch_from_jobspy, _FRACTIONAL_CFO_QUERIES),
         ("jobspy_finance_leads", _fetch_from_jobspy, _FINANCE_LEAD_QUERIES),
         ("jobspy_cfo_disqualifiers", _fetch_from_jobspy, _CFO_QUERIES),
+        ("adzuna_fractional_cfo", _fetch_from_adzuna, _FRACTIONAL_CFO_QUERIES),
         ("adzuna_finance_leads", _fetch_from_adzuna, _FINANCE_LEAD_QUERIES),
         ("adzuna_cfo_disqualifiers", _fetch_from_adzuna, _CFO_QUERIES),
     )

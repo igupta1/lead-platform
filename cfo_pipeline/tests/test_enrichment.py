@@ -157,3 +157,47 @@ def test_zero_headcount_disqualified():
 def test_clean_lead_passes():
     lead = _bare_lead("Acme Robotics", domain="acme.com", headcount=25)
     assert enrichment._disqualification_reason(lead) is None
+
+
+def test_form_d_operator_officer_prefers_operator_titles():
+    lead = _bare_lead(
+        "Acme Robotics",
+        signals=[
+            Signal(
+                type=SignalType.FUNDING_RAISED,
+                source=SourceName.EDGAR_FORM_D,
+                captured_at=datetime(2026, 7, 1),
+                payload={
+                    "filing_type": "Form D",
+                    "officers": [
+                        {"name": "Board Person", "title": "Director"},
+                        {"name": "Jane Doe", "title": "CEO"},
+                    ],
+                },
+            )
+        ],
+    )
+    name, title = enrichment._form_d_operator_officer(lead)
+    assert (name, title) == ("Jane Doe", "CEO")
+
+
+def test_form_d_operator_officer_ignores_non_operators():
+    lead = _bare_lead(
+        "Acme Robotics",
+        signals=[
+            Signal(
+                type=SignalType.FUNDING_RAISED,
+                source=SourceName.EDGAR_FORM_D,
+                captured_at=datetime(2026, 7, 1),
+                payload={
+                    "filing_type": "Form D",
+                    "officers": [{"name": "Board Person", "title": "Director"}],
+                },
+            )
+        ],
+    )
+    assert enrichment._form_d_operator_officer(lead) == (None, None)
+
+
+def test_form_d_operator_officer_no_signals():
+    assert enrichment._form_d_operator_officer(_bare_lead("Acme")) == (None, None)

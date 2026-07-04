@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import time
 from typing import Any, Callable, TypeVar, overload
 
@@ -28,12 +29,73 @@ T = TypeVar("T", bound=BaseModel)
 _DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
 _DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite"
 _DEFAULT_MAX_TOKENS = 1024
-_MAX_RETRIES = 4
+_MAX_RETRIES = 5
 _BACKOFF_BASE_S = 1.5
+# 429s get a bounded number of short retries; if they won't clear we
+# treat the daily free-tier quota as spent (see _gemini_quota_exhausted)
+# rather than sleeping ~1 min on every remaining lead.
+_MAX_429_RETRIES = 3
+_MAX_429_WAIT_S = 20.0
+
+# Free-tier gemini-2.5-flash-lite caps generate_content at ~20 req/min.
+# Enrichment fires one grounded Gemini call per lead, so a scaled fetch
+# bursts straight through that ceiling without proactive pacing. Space
+# calls to stay comfortably under the cap (default ~13/min); override
+# via GEMINI_MIN_INTERVAL_S (e.g. "0" on a paid tier).
+_GEMINI_MIN_INTERVAL_S = float(os.environ.get("GEMINI_MIN_INTERVAL_S", "4.5"))
+_gemini_last_call_ts = 0.0
+
+_RETRY_DELAY_RE = re.compile(r"retry in (\d+(?:\.\d+)?)", re.IGNORECASE)
+
+
+def _throttle_gemini() -> None:
+    """Short-circuit if the quota latch is set; otherwise block until at
+    least ``_GEMINI_MIN_INTERVAL_S`` has elapsed since the previous
+    Gemini call. Single-threaded pipeline, so a module global is
+    sufficient."""
+    if _gemini_quota_exhausted:
+        raise GeminiQuotaExhausted("gemini quota exhausted earlier this run")
+    global _gemini_last_call_ts
+    if _GEMINI_MIN_INTERVAL_S <= 0:
+        return
+    now = time.monotonic()
+    wait = _GEMINI_MIN_INTERVAL_S - (now - _gemini_last_call_ts)
+    if wait > 0:
+        time.sleep(wait)
+    _gemini_last_call_ts = time.monotonic()
+
+
+def _genai_retry_delay(err: Exception) -> float | None:
+    """Extract the server-suggested retry delay (seconds) from a 429
+    message like 'Please retry in 44.03s'. The reactive backoff caps
+    well below these hints, so honoring them is what actually lets a
+    rate-limited call recover."""
+    m = _RETRY_DELAY_RE.search(str(getattr(err, "message", "") or err))
+    return float(m.group(1)) if m else None
 
 
 class LLMError(RuntimeError):
     """Raised when a provider call exhausts retries or its response fails to validate."""
+
+
+class GeminiQuotaExhausted(LLMError):
+    """Raised when the free-tier daily Gemini quota looks spent. The
+    enrichment loop catches this and stops making Gemini calls for the
+    rest of the run — remaining leads defer to a later night — instead
+    of sleeping through a ~60s retry hint on every one of them."""
+
+
+# Latched once a 429 won't clear within the bounded retries. Every
+# subsequent Gemini call short-circuits with GeminiQuotaExhausted so a
+# quota wall stops the enrichment phase in seconds, not hours. Reset
+# per-process (a fresh nightly run starts clean).
+_gemini_quota_exhausted = False
+
+
+def _reset_gemini_quota_latch() -> None:
+    """Test hook — clear the module-level quota latch."""
+    global _gemini_quota_exhausted
+    _gemini_quota_exhausted = False
 
 
 _openai_client: OpenAI | None = None
@@ -96,15 +158,39 @@ def _with_retries(fn: Callable[[], Any], *, what: str) -> Any:
             raise LLMError(f"{what}: openai non-retryable {status}") from exc
         except genai_errors.APIError as exc:
             last_exc = exc
+            code = getattr(exc, "code", None)
+            if code == 429:
+                # Rate/quota limit. Retry a bounded number of times with
+                # a capped wait; if it still won't clear, latch the quota
+                # as spent and stop — don't sleep ~1 min per remaining
+                # lead trying to drain an exhausted daily budget.
+                if attempt < _MAX_429_RETRIES - 1:
+                    hinted = _genai_retry_delay(exc)
+                    wait = hinted if hinted is not None else _BACKOFF_BASE_S * (2**attempt)
+                    wait = min(wait + 0.5, _MAX_429_WAIT_S)
+                    log.warning(
+                        "%s: gemini 429 (attempt %d/%d), sleeping %.1fs",
+                        what, attempt + 1, _MAX_429_RETRIES, wait,
+                    )
+                    time.sleep(wait)
+                    continue
+                global _gemini_quota_exhausted
+                _gemini_quota_exhausted = True
+                log.warning(
+                    "%s: gemini 429 persisted — latching quota as exhausted; "
+                    "remaining enrichment defers to a later run", what,
+                )
+                raise GeminiQuotaExhausted(f"{what}: gemini quota exhausted") from exc
             if _is_retryable_genai(exc) and attempt < _MAX_RETRIES - 1:
+                # 5xx transient server error — plain exponential backoff.
                 wait = _BACKOFF_BASE_S * (2**attempt)
                 log.warning(
                     "%s: gemini %s (attempt %d/%d), sleeping %.1fs",
-                    what, getattr(exc, "code", "?"), attempt + 1, _MAX_RETRIES, wait,
+                    what, code, attempt + 1, _MAX_RETRIES, wait,
                 )
                 time.sleep(wait)
                 continue
-            raise LLMError(f"{what}: gemini non-retryable {getattr(exc, 'code', '?')}") from exc
+            raise LLMError(f"{what}: gemini non-retryable {code}") from exc
     raise LLMError(f"{what}: exhausted {_MAX_RETRIES} retries") from last_exc
 
 
@@ -201,6 +287,7 @@ def _call_gemini_text(prompt: str) -> str:
     )
 
     def go() -> str:
+        _throttle_gemini()
         resp = client.models.generate_content(
             model=_DEFAULT_GEMINI_MODEL,
             contents=prompt,
@@ -227,6 +314,7 @@ def _call_gemini_structured(prompt: str, response_model: type[T]) -> T:
     )
 
     def go() -> T:
+        _throttle_gemini()
         resp = client.models.generate_content(
             model=_DEFAULT_GEMINI_MODEL,
             contents=prompt,

@@ -71,3 +71,83 @@ def test_tranche_filter_preserves_real_companies():
     # No tranche suffix — these are real operating companies.
     assert edgar_form_d._is_operating_company("Series A Productions LLC")
     assert edgar_form_d._is_operating_company("Time Series Analytics Inc")
+
+
+_FORM_D_XML = """<?xml version="1.0"?>
+<edgarSubmission>
+  <relatedPersonsList>
+    <relatedPersonInfo>
+      <relatedPersonName><firstName>Jane</firstName><lastName>Doe</lastName></relatedPersonName>
+      <relatedPersonRelationshipList><relationship>Executive Officer</relationship><relationship>Director</relationship></relatedPersonRelationshipList>
+      <relationshipClarification>CEO</relationshipClarification>
+    </relatedPersonInfo>
+    <relatedPersonInfo>
+      <relatedPersonName><firstName>John</firstName><lastName>Smith</lastName></relatedPersonName>
+      <relatedPersonRelationshipList><relationship>Director</relationship></relatedPersonRelationshipList>
+      <relationshipClarification></relationshipClarification>
+    </relatedPersonInfo>
+  </relatedPersonsList>
+  <offeringData>
+    <industryGroup><industryGroupType>Other Technology</industryGroupType></industryGroup>
+    <issuerSize><revenueRange>$1 - $1,000,000</revenueRange></issuerSize>
+    <offeringSalesAmounts>
+      <totalOfferingAmount>2500000</totalOfferingAmount>
+      <totalAmountSold>1750000</totalAmountSold>
+    </offeringSalesAmounts>
+  </offeringData>
+</edgarSubmission>
+"""
+
+
+def test_parse_form_d_xml_mines_offering_and_officers():
+    d = edgar_form_d._parse_form_d_xml(_FORM_D_XML)
+    assert d["is_pooled_fund"] is False
+    assert d["offering_amount"] == 2500000.0
+    assert d["amount_sold"] == 1750000.0
+    assert d["industry_group"] == "Other Technology"
+    assert d["revenue_range"] == "$1 - $1,000,000"
+    assert d["officers"] == [
+        {"name": "Jane Doe", "title": "CEO"},
+        {"name": "John Smith", "title": "Director"},
+    ]
+    assert d["has_cfo_officer"] is False
+
+
+def test_parse_form_d_xml_flags_cfo_officer():
+    xml = _FORM_D_XML.replace(
+        "<relationshipClarification>CEO</relationshipClarification>",
+        "<relationshipClarification>Chief Financial Officer</relationshipClarification>",
+    )
+    d = edgar_form_d._parse_form_d_xml(xml)
+    assert d["has_cfo_officer"] is True
+    # Word-boundary: "CFO" as a bare token also matches.
+    xml2 = _FORM_D_XML.replace(
+        "<relationshipClarification>CEO</relationshipClarification>",
+        "<relationshipClarification>CFO</relationshipClarification>",
+    )
+    assert edgar_form_d._parse_form_d_xml(xml2)["has_cfo_officer"] is True
+
+
+def test_parse_form_d_xml_indefinite_amount_is_none():
+    xml = _FORM_D_XML.replace(
+        "<totalOfferingAmount>2500000</totalOfferingAmount>",
+        "<totalOfferingAmount>Indefinite</totalOfferingAmount>",
+    )
+    d = edgar_form_d._parse_form_d_xml(xml)
+    assert d["offering_amount"] is None
+    assert d["amount_sold"] == 1750000.0
+
+
+def test_parse_form_d_xml_pooled_fund_flag():
+    xml = _FORM_D_XML.replace(
+        "<industryGroupType>Other Technology</industryGroupType>",
+        "<industryGroupType>Pooled Investment Fund</industryGroupType>",
+    )
+    assert edgar_form_d._parse_form_d_xml(xml)["is_pooled_fund"] is True
+
+
+def test_parse_form_d_xml_malformed_degrades_gracefully():
+    d = edgar_form_d._parse_form_d_xml("<edgarSubmission><broken")
+    assert d["offering_amount"] is None
+    assert d["officers"] == []
+    assert d["has_cfo_officer"] is False

@@ -236,16 +236,19 @@ def _normalize_job_title(title: str) -> str:
 def _signal_dedup_key(sig_dict: dict[str, Any]) -> str:
     """Per-signal-type dedup keys:
 
-    - job_posted_finance_lead: ``(type, normalized_title)``. Strips
-      board / url / date_posted / bracketed IDs so multi-board cross-
-      postings collapse into one signal. This was the regression
-      reported on the 3rd review pass.
+    - job_posted_finance_lead / job_posted_fractional_cfo:
+      ``(type, normalized_title)``. Strips board / url / date_posted /
+      bracketed IDs so multi-board cross-postings collapse into one
+      signal. This was the regression reported on the 3rd review pass.
     - everything else: type + full payload (back-compat with prior
       behavior for FUNDING_RAISED / APOLLO_ENRICHED markers).
     """
     sig_type_str = sig_dict["type"]
     payload = sig_dict.get("payload") or {}
-    if sig_type_str == SignalType.JOB_POSTED_FINANCE_LEAD.value:
+    if sig_type_str in (
+        SignalType.JOB_POSTED_FINANCE_LEAD.value,
+        SignalType.JOB_POSTED_FRACTIONAL_CFO.value,
+    ):
         title = _normalize_job_title(str(payload.get("title") or ""))
         return f"{sig_type_str}|{title}"
     return f"{sig_type_str}|{json.dumps(payload, sort_keys=True, default=str)}"

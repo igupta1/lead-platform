@@ -629,6 +629,30 @@ def classify_industry(lead: Lead, *, value_prop: str | None = None) -> Industry:
 # --- Orchestrator ---------------------------------------------------------
 
 
+# Operator titles worth trusting from a Form D related-persons list.
+# An SEC-filed officer name beats a Gemini web guess — it's sworn
+# filing data, not an LLM lookup.
+_OFFICER_OPERATOR_TITLE_RE = re.compile(
+    r"\b(ceo|chief\s+executive|president|founder|"
+    r"managing\s+(?:partner|member|director)|owner|principal)\b",
+    re.IGNORECASE,
+)
+
+
+def _form_d_operator_officer(lead: Lead) -> tuple[str | None, str | None]:
+    """First operator-titled related person from any Form D signal on
+    the lead — free DM data mined from the filing XML."""
+    for sig in lead.signals:
+        if sig.type != SignalType.FUNDING_RAISED:
+            continue
+        for officer in sig.payload.get("officers") or []:
+            name = (officer.get("name") or "").strip()
+            title = (officer.get("title") or "").strip()
+            if name and _OFFICER_OPERATOR_TITLE_RE.search(title):
+                return name, title
+    return None, None
+
+
 def _last_enrichment_at(lead: Lead) -> datetime | None:
     times = [s.captured_at for s in lead.signals if s.type == SignalType.ENRICHMENT_RUN]
     return max(times) if times else None
@@ -751,11 +775,14 @@ def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool
         "value_prop": lookup.value_prop,
     }
     if not has_apollo:
+        # SEC-filed Form D officer beats the Gemini web guess when the
+        # title reads operator (CEO / President / Founder / ...).
+        officer_name, officer_title = _form_d_operator_officer(lead)
         updates.update(
             headcount=lookup.headcount if lookup.headcount is not None else lead.headcount,
             domain=lookup.domain,
-            dm_name=lookup.dm_name,
-            dm_title=lookup.dm_title,
+            dm_name=officer_name or lookup.dm_name,
+            dm_title=officer_title if officer_name else lookup.dm_title,
         )
     elif lookup.domain and not lead.domain:
         updates["domain"] = lookup.domain

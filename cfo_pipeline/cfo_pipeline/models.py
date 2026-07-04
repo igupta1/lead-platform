@@ -13,6 +13,11 @@ from pydantic import BaseModel, Field
 
 
 class SignalType(str, Enum):
+    # Hottest signal — the company posted a Fractional / Interim /
+    # Part-time CFO role. They are literally in-market for the exact
+    # service being sold; outranks every other signal.
+    JOB_POSTED_FRACTIONAL_CFO = "job_posted_fractional_cfo"
+
     # Primary buying signal — company is hiring finance leadership
     # one rung below CFO (Controller, VP / Head / Director of
     # Finance, Accounting / Finance Manager).

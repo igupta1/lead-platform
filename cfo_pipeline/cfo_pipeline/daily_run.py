@@ -1,7 +1,7 @@
 """End-to-end pipeline runner for the fractional-CFO niche.
 
 fetch -> record-disqualifiers -> upsert -> enrich -> purge -> score ->
-apollo -> regen -> write -> upload. Output JSON shape
+apollo -> write -> upload. Output JSON shape
 ``{generated_at, leads: [...]}`` — flat, matches what
 ``api/generate-cfo-leads.js`` expects.
 
@@ -27,7 +27,7 @@ from typing import Any
 
 import requests
 
-from cfo_pipeline import apollo, db, enrichment, scoring
+from cfo_pipeline import apollo, db, enrichment, llm, scoring
 from cfo_pipeline.models import (
     Disqualifier,
     Lead,
@@ -46,21 +46,43 @@ DEFAULT_OUTPUT_PATH = Path("data/leads.json")
 # Form D window is 90 days per spec; jobs source uses its own
 # hours_old window internally (capped by since for safety).
 LOOKBACK_DAYS = 90
-INSIGHT_THRESHOLD = 20.0
 SIGNAL_LIMIT_IN_JSON = 6
 APOLLO_TOP_N_DEFAULT = 30
+
+# Funding-only output gate. Form-D-only leads with a known offering
+# below this are too small to be in the fractional-CFO window; leads
+# with an unknown / "Indefinite" amount (including signals ingested
+# before amounts were mined) pass on the domain requirement alone.
+FUNDING_ONLY_MIN_OFFERING_USD = 500_000.0
+# Cap funding-only cards so hiring-signal leads dominate the page.
+FUNDING_ONLY_MAX_CARDS = 75
 
 
 _SCORING_SIGNAL_TYPES: frozenset[SignalType] = frozenset(
     {
+        SignalType.JOB_POSTED_FRACTIONAL_CFO,
         SignalType.JOB_POSTED_FINANCE_LEAD,
         SignalType.FUNDING_RAISED,
+    }
+)
+
+# Hiring-side signal types — used for bullseye detection and the
+# hiring-vs-funding split in merge reconciliation.
+_HIRING_SIGNAL_TYPES: frozenset[SignalType] = frozenset(
+    {
+        SignalType.JOB_POSTED_FRACTIONAL_CFO,
+        SignalType.JOB_POSTED_FINANCE_LEAD,
     }
 )
 
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def _enrich_budget(args: argparse.Namespace) -> int | None:
+    """0 (or negative) means unlimited."""
+    return args.enrich_budget if args.enrich_budget > 0 else None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -88,24 +110,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.rescore_only:
         log.info("rescore-only: skipping fetch / upsert")
 
-        if args.clear_insights:
-            cleared = 0
-            for lead in db.iter_leads(conn):
-                if lead.id is None or lead.insight is None:
-                    continue
-                try:
-                    db.update_lead(conn, lead.id, insight=None)
-                    cleared += 1
-                except Exception:
-                    log.exception("clear-insights failed for id=%s", lead.id)
-            log.info("clear-insights: nulled %d insight rows", cleared)
-
         if args.reenrich:
             existing_ids = [
                 lead.id for lead in db.iter_leads(conn) if lead.id is not None
             ]
             log.info("re-enriching %d existing leads (force=True)", len(existing_ids))
-            _enrich_all(conn, existing_ids, force=True)
+            _, re_spent, re_deferred = _enrich_all(
+                conn, existing_ids, force=True, budget=_enrich_budget(args)
+            )
+            log.info("re-enrichment: llm_spent=%d deferred=%d", re_spent, re_deferred)
 
         modified = db.dedup_signals_pass(conn)
         log.info("deduped signals on %d leads", modified)
@@ -118,14 +131,9 @@ def main(argv: list[str] | None = None) -> int:
 
         score_changes = _rescore_all(conn, all_ids)
         apollo_ids = _apollo_enrich_top_n(conn, n=args.apollo_top_n)
-        copy_calls = _regen_copy(
-            conn, score_changes,
-            force_regen_ids=apollo_ids,
-            model=args.copy_model,
-        )
         log.info(
-            "re-scored %d, apollo-enriched %d, regen %d",
-            len(score_changes), len(apollo_ids), copy_calls,
+            "re-scored %d, apollo-enriched %d",
+            len(score_changes), len(apollo_ids),
         )
 
         output = _build_output(conn)
@@ -181,29 +189,51 @@ def main(argv: list[str] | None = None) -> int:
     merged_count = _reconcile_bullseyes(conn)
     log.info("reconciled %d bullseye merges", merged_count)
 
-    enriched_ids = _enrich_all(conn, upserted_ids, force=args.reenrich)
-    log.info("kept %d enriched leads", len(enriched_ids))
+    # Unified, best-lead-first worklist: this run's new upserts and
+    # leads deferred on prior nights compete on equal footing, so a
+    # fractional-CFO posting deferred last night still enriches before
+    # tonight's funding-only Form D leads.
+    worklist = _enrichment_worklist(conn, force=args.reenrich)
+    log.info(
+        "enrichment worklist: %d leads need a pass (budget=%s)",
+        len(worklist), _enrich_budget(args) if _enrich_budget(args) else "unlimited",
+    )
+    enriched_ids, enrich_spent, enrich_deferred = _enrich_all(
+        conn, worklist, force=args.reenrich, budget=_enrich_budget(args),
+    )
+    log.info(
+        "kept %d enriched leads (llm_spent=%d, deferred=%d)",
+        len(enriched_ids), enrich_spent, enrich_deferred,
+    )
 
     purged = enrichment.purge_disqualified(conn)
     log.info("purged %d disqualified leads", purged)
-    enriched_ids = [lid for lid in enriched_ids if db.get_lead(conn, lead_id=lid)]
 
-    score_changes = _rescore_all(conn, enriched_ids)
+    # Rescore EVERY surviving lead, not just the ones enriched this
+    # run: scores decay from the event date (Phase 4), so an
+    # un-touched lead's stored score drifts stale every night. Scoring
+    # is pure compute (no API calls) — cheap to run across the table.
+    all_ids = [l.id for l in db.iter_leads(conn) if l.id is not None]
+    score_changes = _rescore_all(conn, all_ids)
     apollo_ids = _apollo_enrich_top_n(conn, n=args.apollo_top_n)
-    copy_calls = _regen_copy(
-        conn, score_changes,
-        force_regen_ids=apollo_ids,
-        model=args.copy_model,
-    )
     log.info(
-        "re-scored %d, apollo-enriched %d, regen %d",
-        len(score_changes), len(apollo_ids), copy_calls,
+        "re-scored %d, apollo-enriched %d",
+        len(score_changes), len(apollo_ids),
     )
 
     output = _build_output(conn)
     args.output_path.parent.mkdir(parents=True, exist_ok=True)
     args.output_path.write_text(json.dumps(output, indent=2, default=str))
     log.info("wrote %s", args.output_path)
+
+    # One-line funnel so quota tuning is evidence-based instead of blind.
+    log.info(
+        "funnel: candidates=%d disqualifiers=%d upserted=%d worklist=%d "
+        "llm_spent=%d deferred=%d purged=%d output=%d",
+        len(candidates), len(disqualifiers), len(upserted_ids),
+        len(worklist), enrich_spent, enrich_deferred, purged,
+        len(output["leads"]),
+    )
 
     if args.upload:
         try:
@@ -223,22 +253,26 @@ def _fetch_all(
     candidates: list[LeadCandidate] = []
     disqualifiers: list[Disqualifier] = []
 
-    # Jobs source has a two-return signature.
-    try:
-        c, d = jobs.fetch(since=since, limit=per_source_limit)
-        log.info("source jobs returned %d candidates, %d disqualifiers", len(c), len(d))
-        candidates.extend(c)
-        disqualifiers.extend(d)
-    except Exception:
-        log.exception("source jobs failed")
-
-    for name, fn in (("funding", funding.fetch), ("edgar_form_d", edgar_form_d.fetch)):
+    # Jobs + EDGAR have two-return signatures (they produce
+    # disqualifiers: CFO postings / CFO-officer Form D listings).
+    for name, fn in (("jobs", jobs.fetch), ("edgar_form_d", edgar_form_d.fetch)):
         try:
-            cs = fn(since=since, limit=per_source_limit)
-            log.info("source %s returned %d candidates", name, len(cs))
-            candidates.extend(cs)
+            c, d = fn(since=since, limit=per_source_limit)
+            log.info(
+                "source %s returned %d candidates, %d disqualifiers",
+                name, len(c), len(d),
+            )
+            candidates.extend(c)
+            disqualifiers.extend(d)
         except Exception:
             log.exception("source %s failed", name)
+
+    try:
+        cs = funding.fetch(since=since, limit=per_source_limit)
+        log.info("source funding returned %d candidates", len(cs))
+        candidates.extend(cs)
+    except Exception:
+        log.exception("source funding failed")
 
     return candidates, disqualifiers
 
@@ -377,7 +411,7 @@ def _reconcile_bullseyes(conn: sqlite3.Connection) -> int:
     # dedup_signals_pass).
     def _signal_side(lead: Lead) -> str:
         types = {s.type for s in lead.signals}
-        has_hire = SignalType.JOB_POSTED_FINANCE_LEAD in types
+        has_hire = bool(types & _HIRING_SIGNAL_TYPES)
         has_fund = SignalType.FUNDING_RAISED in types
         if has_hire and has_fund:
             return "both"
@@ -438,22 +472,89 @@ def _reconcile_bullseyes(conn: sqlite3.Connection) -> int:
 
 
 def _enrich_all(
-    conn: sqlite3.Connection, lead_ids: list[int], *, force: bool
-) -> list[int]:
+    conn: sqlite3.Connection,
+    lead_ids: list[int],
+    *,
+    force: bool,
+    budget: int | None = None,
+) -> tuple[list[int], int, int]:
+    """Enrich each lead, spending at most ``budget`` LLM lookups
+    (None = unlimited). Signal-aware skips are free. Leads deferred
+    past the budget stay in the DB and drain via
+    ``_enrichment_backlog`` on subsequent nightly runs.
+
+    Returns ``(kept_ids, spent, deferred)``."""
     kept: list[int] = []
-    for lead_id in lead_ids:
+    spent = 0
+    deferred = 0
+    for idx, lead_id in enumerate(lead_ids):
         lead = db.get_lead(conn, lead_id=lead_id)
         if lead is None:
+            continue
+        needs_call = not enrichment._should_skip(lead, force)
+        if needs_call and budget is not None and spent >= budget:
+            deferred += 1
+            kept.append(lead_id)
             continue
         try:
             if enrichment.enrich(conn, lead, force=force):
                 kept.append(lead_id)
+        except llm.GeminiQuotaExhausted:
+            # Daily free-tier Gemini quota is spent. Stop enriching —
+            # this lead and everything after it defers to a later run
+            # (the worklist re-ranks them next time). Better than
+            # burning the timeout sleeping on a wall we can't clear.
+            remaining = lead_ids[idx:]
+            deferred += len(remaining)
+            kept.extend(remaining)
+            log.warning(
+                "enrichment stopped early: Gemini quota exhausted after "
+                "%d lookups; %d leads deferred to a later run",
+                spent, len(remaining),
+            )
+            break
         except Exception:
             log.exception(
                 "enrichment failed for lead %s (id=%s)", lead.name, lead.id
             )
             kept.append(lead_id)
-    return kept
+            if needs_call:
+                spent += 1
+        else:
+            if needs_call:
+                spent += 1
+    # Dedup while preserving order — a deferred lead already in `kept`
+    # from a successful earlier pass shouldn't appear twice.
+    return list(dict.fromkeys(kept)), spent, deferred
+
+
+def _enrichment_worklist(conn: sqlite3.Connection, *, force: bool) -> list[int]:
+    """Every lead needing an enrichment pass this run (never enriched,
+    or a fresh signal since the last pass), ranked best-lead-first.
+    Unifies this run's new upserts with leads deferred on prior nights
+    so the budget always spends on the strongest leads regardless of
+    when they were ingested.
+
+    Priority tiers, each newest-first (highest lead id):
+    0. fractional-CFO postings (in-market)
+    1. below-CFO finance hires (the gate signal)
+    2. funding-only (the weak, high-volume tail)"""
+    ranked: list[tuple[int, int, int]] = []
+    for lead in db.iter_leads(conn):
+        if lead.id is None:
+            continue
+        if enrichment._should_skip(lead, force):
+            continue
+        types = {s.type for s in lead.signals}
+        if SignalType.JOB_POSTED_FRACTIONAL_CFO in types:
+            tier = 0
+        elif SignalType.JOB_POSTED_FINANCE_LEAD in types:
+            tier = 1
+        else:
+            tier = 2
+        ranked.append((tier, -lead.id, lead.id))
+    ranked.sort()
+    return [lead_id for _, _, lead_id in ranked]
 
 
 def _rescore_all(
@@ -576,36 +677,6 @@ def _apollo_enrich_top_n(conn: sqlite3.Connection, *, n: int) -> set[int]:
     return enriched
 
 
-def _regen_copy(
-    conn: sqlite3.Connection,
-    score_changes: dict[int, tuple[float | None, float]],
-    *,
-    force_regen_ids: set[int],
-    model: str,
-) -> int:
-    """Insight generation removed per 3rd-review req #8. The LLM kept
-    leaking the same autopilot phrases ("$300K CFO comp", "6-10
-    weeks", "outgrown founder-as-CFO") across companies of wildly
-    different stages — pattern was obvious to readers and damaged
-    credibility.
-
-    This function now just NULLs out any insight that's still on a
-    lead row from a prior run. Signature kept for upstream callers.
-    """
-    del force_regen_ids, model  # unused
-    cleared = 0
-    for lead_id, _ in score_changes.items():
-        lead = db.get_lead(conn, lead_id=lead_id)
-        if lead is None or lead.insight is None:
-            continue
-        try:
-            db.update_lead(conn, lead_id, insight=None)
-            cleared += 1
-        except Exception:
-            log.exception("regen: clearing insight failed for id=%s", lead_id)
-    return cleared
-
-
 # --- JSON output -----------------------------------------------------------
 
 
@@ -632,16 +703,63 @@ def _build_output(conn: sqlite3.Connection) -> dict[str, Any]:
     # signal sort above single-signal leads of the same score.
     def _bullseye_key(l: dict[str, Any]) -> tuple[int, float]:
         types = {s["type"] for s in l["signals"]}
-        is_bullseye = (
-            SignalType.JOB_POSTED_FINANCE_LEAD.value in types
-            and SignalType.FUNDING_RAISED.value in types
-        )
+        has_hire = any(t.value in types for t in _HIRING_SIGNAL_TYPES)
+        is_bullseye = has_hire and SignalType.FUNDING_RAISED.value in types
         return (0 if is_bullseye else 1, -(l.get("score") or 0))
     leads_out.sort(key=_bullseye_key)
+    leads_out = _gate_funding_only(leads_out)
     return {
         "generated_at": now.isoformat(),
         "leads": leads_out,
     }
+
+
+def _gate_funding_only(leads_out: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Quality gate for leads whose only signals are funding-side.
+    They're the weak class (their need is implicit, not expressed), so
+    they must earn their card: a resolved domain, and — when the Form D
+    offering amount is known — a raise of at least
+    ``FUNDING_ONLY_MIN_OFFERING_USD``. Unknown / "Indefinite" amounts
+    (including signals ingested before amounts were mined) pass on the
+    domain requirement alone. At most ``FUNDING_ONLY_MAX_CARDS``
+    survive; the list arrives sorted, so the best-scored ones win."""
+    gated: list[dict[str, Any]] = []
+    kept_funding_only = 0
+    dropped_small = 0
+    dropped_domainless = 0
+    dropped_over_cap = 0
+    for lead in leads_out:
+        types = {s["type"] for s in lead["signals"]}
+        if any(t.value in types for t in _HIRING_SIGNAL_TYPES):
+            gated.append(lead)
+            continue
+        if not lead.get("domain"):
+            dropped_domainless += 1
+            continue
+        known_amounts: list[float] = []
+        for s in lead["signals"]:
+            payload = s.get("payload") or {}
+            if payload.get("filing_type") != "Form D":
+                continue
+            amt = payload.get("offering_amount")
+            if isinstance(amt, (int, float)):
+                known_amounts.append(float(amt))
+        if known_amounts and max(known_amounts) < FUNDING_ONLY_MIN_OFFERING_USD:
+            dropped_small += 1
+            continue
+        if kept_funding_only >= FUNDING_ONLY_MAX_CARDS:
+            dropped_over_cap += 1
+            continue
+        kept_funding_only += 1
+        gated.append(lead)
+    if dropped_small or dropped_domainless or dropped_over_cap:
+        log.info(
+            "funding-only gate: kept %d, dropped %d small-offering, "
+            "%d domainless, %d over cap",
+            kept_funding_only, dropped_small, dropped_domainless,
+            dropped_over_cap,
+        )
+    return gated
 
 
 def _is_empty_shell(rendered: dict[str, Any]) -> bool:
@@ -773,10 +891,9 @@ def _lead_to_json(lead: Lead, *, now: datetime) -> dict[str, Any]:
             lead.name, cleaned_dm, dm_email, dm_linkedin
         ),
         "score": lead.score,
-        # Insight intentionally null — see _regen_copy. Field kept in
-        # the schema (req says don't change output schema) so the
-        # React side keeps working; the LeadCard already conditionally
-        # renders it so null collapses cleanly.
+        # Insight generation was removed (LLM copy read as templated
+        # across leads). Field kept null for schema stability; the
+        # LeadCard collapses null cleanly.
         "insight": None,
         "trigger_type": outreach.trigger_type(top_sig) if top_sig else "other",
         "signals": [_signal_to_json(s, now) for s in relevant],
@@ -819,32 +936,10 @@ def _names_match(a: str | None, b: str | None) -> bool:
 
 def _payload_event_date(s: Signal) -> datetime | None:
     """Per req #10: the date the EVENT happened (job posted, Form D
-    filed) — not when the pipeline captured it. Used for the days_ago
-    label so 'today' only fires when the event itself is today."""
-    p = s.payload or {}
-    candidates: list[str] = []
-    if s.type == SignalType.JOB_POSTED_FINANCE_LEAD:
-        v = p.get("date_posted")
-        if v:
-            candidates.append(str(v))
-    elif s.type == SignalType.FUNDING_RAISED:
-        v = p.get("filed_on") or p.get("published")
-        if v:
-            candidates.append(str(v))
-    for raw in candidates:
-        raw = raw.strip()
-        if not raw:
-            continue
-        # YYYY-MM-DD or ISO timestamp prefix
-        try:
-            return datetime.fromisoformat(raw[:19].replace("Z", ""))
-        except ValueError:
-            pass
-        try:
-            return datetime.strptime(raw[:10], "%Y-%m-%d")
-        except ValueError:
-            continue
-    return None
+    filed) — not when the pipeline captured it. Canonical logic lives
+    in ``scoring.payload_event_date`` (it drives score decay too);
+    reused here for the days_ago label and the 30-day output window."""
+    return scoring.payload_event_date(s)
 
 
 def _signal_age_days(s: Signal, now: datetime) -> int:
@@ -906,7 +1001,6 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         action="store_true",
         help="Force re-enrichment on every lead",
     )
-    parser.add_argument("--copy-model", default="gpt-4o-mini")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -920,20 +1014,22 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--rescore-only",
         action="store_true",
-        help="Skip fetch / upsert / disqualifier recording. Dedup, rescore, regen, write, upload.",
-    )
-    parser.add_argument(
-        "--clear-insights",
-        action="store_true",
-        help="One-shot: null out every lead's insight before rescoring. "
-        "Use after an outreach-prompt change so existing leads regenerate "
-        "their insight against the new prompt. Only honored in --rescore-only.",
+        help="Skip fetch / upsert / disqualifier recording. Dedup, rescore, write, upload.",
     )
     parser.add_argument(
         "--apollo-top-n",
         type=int,
         default=APOLLO_TOP_N_DEFAULT,
         help="Apollo runs only on the top-N leads by score. Default: %(default)d.",
+    )
+    parser.add_argument(
+        "--enrich-budget",
+        type=int,
+        default=300,
+        help="Max Gemini web lookups per run (0 = unlimited). Overflow "
+        "leads stay in the DB and drain on subsequent nightly runs. "
+        "Default %(default)d — safely inside the free-tier 500/day "
+        "grounded-search quota.",
     )
     parser.add_argument("--verbose", action="store_true")
     return parser.parse_args(argv)

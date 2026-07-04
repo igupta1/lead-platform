@@ -15,6 +15,14 @@ Both emit the same ``FUNDING_RAISED`` signal shape. Operating-company
 filter (drops funds / SPVs / partnerships / vintage-year vehicles)
 applies to both.
 
+The EFTS path fetches each surviving filing's primary_doc.xml (it
+always did, for the pooled-fund check) and now mines it instead of
+discarding it: offering amount, related persons (officer names and
+titles — free DM data), industry group, revenue range. A related
+person titled CFO is a hard disqualifier — the company already has
+finance leadership — so ``fetch`` returns ``(candidates,
+disqualifiers)`` like the jobs source.
+
 Independent from insurance_pipeline. Mirror code, mirror filters;
 no cross-imports.
 """
@@ -23,6 +31,7 @@ from __future__ import annotations
 
 import logging
 import re
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from typing import Any
@@ -31,6 +40,7 @@ import feedparser
 import requests
 
 from cfo_pipeline.models import (
+    Disqualifier,
     LeadCandidate,
     Signal,
     SignalType,
@@ -251,11 +261,79 @@ def _form_d_xml_url(adsh: str, cik: str) -> str | None:
     )
 
 
-def _is_pooled_fund_xml(adsh: str, cik: str) -> bool | None:
-    """Fetch the Form D XML and check Item 6 / industryGroupType for
-    pooled-fund flag. Returns True/False on a successful fetch, None
-    on network error (treat as 'unknown — fall through to other
-    filters')."""
+# Word-boundary CFO detection in officer titles / relationship text.
+_CFO_OFFICER_RE = re.compile(r"\bcfo\b|chief\s+financial", re.IGNORECASE)
+
+# Operator titles worth surfacing as the DM (enrichment consumes this
+# ordering implicitly — first operator-titled officer wins).
+_MAX_OFFICERS_IN_PAYLOAD = 8
+
+
+def _parse_form_d_xml(xml: str) -> dict[str, Any]:
+    """Extract everything useful from a Form D primary_doc.xml in one
+    pass. The documents are small, machine-generated, and schema-
+    stable (no namespaces), so ElementTree over the raw text is safe;
+    a parse failure degrades to the regex pooled-fund check only."""
+    details: dict[str, Any] = {
+        "is_pooled_fund": any(p.search(xml) for p in _POOLED_FUND_FLAG_RES),
+        "offering_amount": None,
+        "amount_sold": None,
+        "industry_group": None,
+        "revenue_range": None,
+        "officers": [],
+        "has_cfo_officer": False,
+    }
+    try:
+        root = ET.fromstring(xml)
+    except ET.ParseError:
+        return details
+
+    def _text(path: str) -> str | None:
+        el = root.find(path)
+        if el is None or el.text is None:
+            return None
+        return el.text.strip() or None
+
+    def _amount(path: str) -> float | None:
+        raw = _text(path)
+        if raw is None:
+            return None
+        try:
+            return float(raw.replace(",", ""))
+        except ValueError:
+            return None  # "Indefinite" — continuous offering.
+
+    details["offering_amount"] = _amount(
+        ".//offeringSalesAmounts/totalOfferingAmount"
+    )
+    details["amount_sold"] = _amount(".//offeringSalesAmounts/totalAmountSold")
+    details["industry_group"] = _text(".//industryGroup/industryGroupType")
+    details["revenue_range"] = _text(".//issuerSize/revenueRange")
+
+    officers: list[dict[str, str]] = []
+    for rp in root.findall(".//relatedPersonsList/relatedPersonInfo"):
+        first = (rp.findtext("relatedPersonName/firstName") or "").strip()
+        last = (rp.findtext("relatedPersonName/lastName") or "").strip()
+        name = f"{first} {last}".strip()
+        if not name:
+            continue
+        clarification = (rp.findtext("relationshipClarification") or "").strip()
+        relationships = [
+            (r.text or "").strip()
+            for r in rp.findall("relatedPersonRelationshipList/relationship")
+            if (r.text or "").strip()
+        ]
+        title = clarification or ", ".join(relationships)
+        officers.append({"name": name, "title": title})
+        if _CFO_OFFICER_RE.search(f"{clarification} {' '.join(relationships)}"):
+            details["has_cfo_officer"] = True
+    details["officers"] = officers[:_MAX_OFFICERS_IN_PAYLOAD]
+    return details
+
+
+def _fetch_form_d_details(adsh: str, cik: str) -> dict[str, Any] | None:
+    """Fetch + parse the Form D XML. Returns None on network error
+    (treat as 'unknown — fall through to other filters')."""
     url = _form_d_xml_url(adsh, cik)
     if url is None:
         return None
@@ -269,8 +347,7 @@ def _is_pooled_fund_xml(adsh: str, cik: str) -> bool | None:
     except requests.RequestException as exc:
         _log.warning("edgar form-d xml fetch failed adsh=%s: %s", adsh, exc)
         return None
-    xml = r.text
-    return any(p.search(xml) for p in _POOLED_FUND_FLAG_RES)
+    return _parse_form_d_xml(r.text)
 
 
 def _fetch_efts_page(
@@ -304,12 +381,13 @@ def _fetch_efts_page(
 
 def _fetch_from_efts(
     since: datetime, *, max_pages: int = _EFTS_DEFAULT_PAGES
-) -> list[LeadCandidate]:
+) -> tuple[list[LeadCandidate], list[Disqualifier]]:
     captured_at = _utcnow()
     end_date = captured_at.date().isoformat()
     start_date = since.date().isoformat()
 
     candidates: list[LeadCandidate] = []
+    disqualifiers: list[Disqualifier] = []
     for page in range(max_pages):
         offset = page * _EFTS_PAGE_SIZE
         data = _fetch_efts_page(
@@ -336,15 +414,32 @@ def _fetch_from_efts(
             adsh = str(src.get("adsh") or "")
             ciks = src.get("ciks") or []
 
-            # Item 6 / industryGroupType check. Only fires for names
-            # that survived the regex filter — those are most likely
-            # to be misclassified operating-cos that are actually
-            # pooled funds. Adds ~0.3s per surviving candidate.
+            # Fetch + mine the filing XML. Only fires for names that
+            # survived the regex filter — those are most likely to be
+            # misclassified operating-cos that are actually pooled
+            # funds. Adds ~0.3s per surviving candidate and yields
+            # offering amount + officer names for free.
+            details: dict[str, Any] | None = None
             if ciks and adsh:
-                is_fund = _is_pooled_fund_xml(adsh, ciks[0])
-                if is_fund is True:
+                details = _fetch_form_d_details(adsh, ciks[0])
+                if details is not None and details["is_pooled_fund"]:
                     _log.info("edgar efts: skipping pooled fund: %s", company)
                     continue
+
+            # A related person titled CFO means the company already
+            # has finance leadership — hard exclude, sticky, same
+            # semantics as an open full-time CFO posting.
+            if details is not None and details["has_cfo_officer"]:
+                _log.info("edgar efts: CFO listed on Form D: %s", company)
+                disqualifiers.append(
+                    Disqualifier(
+                        name=company,
+                        reason="cfo_listed_on_form_d",
+                        source=SourceName.EDGAR_FORM_D,
+                        payload={"adsh": adsh, "filed_on": file_date},
+                    )
+                )
+                continue
 
             link = (
                 f"https://www.sec.gov/Archives/edgar/data/{int(ciks[0])}/{adsh.replace('-', '')}/{adsh}-index.htm"
@@ -366,6 +461,11 @@ def _fetch_from_efts(
                             "link": link,
                             "biz_state": (src.get("biz_states") or [None])[0],
                             "biz_location": (src.get("biz_locations") or [None])[0],
+                            "offering_amount": (details or {}).get("offering_amount"),
+                            "amount_sold": (details or {}).get("amount_sold"),
+                            "industry_group": (details or {}).get("industry_group"),
+                            "revenue_range": (details or {}).get("revenue_range"),
+                            "officers": (details or {}).get("officers") or [],
                         },
                     ),
                 )
@@ -377,10 +477,11 @@ def _fetch_from_efts(
             break
 
     _log.info(
-        "edgar efts: %d operating-company candidates from %s..%s",
-        len(candidates), start_date, end_date,
+        "edgar efts: %d operating-company candidates, %d CFO-officer "
+        "disqualifiers from %s..%s",
+        len(candidates), len(disqualifiers), start_date, end_date,
     )
-    return candidates
+    return candidates, disqualifiers
 
 
 # --- getcurrent backstop ---------------------------------------------------
@@ -444,26 +545,40 @@ def _fetch_from_getcurrent(since: datetime) -> list[LeadCandidate]:
 # --- Public ----------------------------------------------------------------
 
 
-def fetch(*, since: datetime, limit: int | None = None) -> list[LeadCandidate]:
+def fetch(
+    *, since: datetime, limit: int | None = None
+) -> tuple[list[LeadCandidate], list[Disqualifier]]:
     """EFTS pages (deep backfill) ∪ getcurrent (freshness backstop),
-    deduped on the operating-company name. Capped by ``limit`` if set."""
+    deduped on the operating-company name. Capped by ``limit`` if set.
+
+    Returns ``(candidates, disqualifiers)`` — the disqualifiers are
+    companies whose Form D lists a CFO among the related persons."""
     out: list[LeadCandidate] = []
+    disqualifiers: list[Disqualifier] = []
     seen_names: set[str] = set()
 
-    for source_name, getter in (
-        ("efts", lambda: _fetch_from_efts(since)),
-        ("getcurrent", lambda: _fetch_from_getcurrent(since)),
-    ):
-        try:
-            for cand in getter():
-                key = cand.name.strip().lower()
-                if key in seen_names:
-                    continue
-                seen_names.add(key)
-                out.append(cand)
-        except Exception:
-            _log.exception("edgar %s failed", source_name)
+    try:
+        efts_candidates, disqualifiers = _fetch_from_efts(since)
+    except Exception:
+        _log.exception("edgar efts failed")
+        efts_candidates = []
+    for cand in efts_candidates:
+        key = cand.name.strip().lower()
+        if key in seen_names:
+            continue
+        seen_names.add(key)
+        out.append(cand)
+
+    try:
+        for cand in _fetch_from_getcurrent(since):
+            key = cand.name.strip().lower()
+            if key in seen_names:
+                continue
+            seen_names.add(key)
+            out.append(cand)
+    except Exception:
+        _log.exception("edgar getcurrent failed")
 
     if limit is not None:
         out = out[:limit]
-    return out
+    return out, disqualifiers

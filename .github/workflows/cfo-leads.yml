@@ -9,11 +9,6 @@ on:
         description: "Per-source candidate cap (empty = no cap; e.g. 5 for a quick smoke)"
         required: false
         default: ""
-      clear_insights:
-        description: "One-shot: clear insights + rescore-only after a prompt-template change"
-        type: boolean
-        required: false
-        default: false
       reenrich:
         description: "Force re-enrichment on every lead (re-runs Gemini lookup against all rows, refreshes industry / DM / has_full_time_cfo per the current prompt)"
         type: boolean
@@ -65,13 +60,9 @@ jobs:
           # receiving end).
           CFO_UPLOAD_API_KEY:   ${{ secrets.LEADS_UPLOAD_API_KEY }}
           LIMIT:                ${{ inputs.limit }}
-          CLEAR_INSIGHTS:       ${{ inputs.clear_insights }}
           REENRICH:             ${{ inputs.reenrich }}
         run: |
           args=("--upload")
-          if [[ "$CLEAR_INSIGHTS" == "true" ]]; then
-            args+=("--rescore-only" "--clear-insights")
-          fi
           if [[ "$REENRICH" == "true" ]]; then
             args+=("--reenrich")
           fi

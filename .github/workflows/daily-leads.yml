@@ -1,8 +1,12 @@
 name: Daily lead refresh
 
+# ARCHIVED 2026-07-03 — MSP/MSSP/Cloud scraping paused to conserve API
+# credits for the CFO pipeline. Also disabled via `gh workflow disable
+# "Daily lead refresh"`. To resume: uncomment the schedule block below
+# and run `gh workflow enable "Daily lead refresh"`.
 on:
-  schedule:
-    - cron: "0 6 * * *"   # 06:00 UTC daily (~11pm PT, 2am ET)
+  # schedule:
+  #   - cron: "0 6 * * *"   # 06:00 UTC daily (~11pm PT, 2am ET)
   workflow_dispatch:
     inputs:
       limit:
