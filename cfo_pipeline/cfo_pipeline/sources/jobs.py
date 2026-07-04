@@ -62,19 +62,37 @@ _FINANCE_LEAD_QUERIES: tuple[str, ...] = (
     "Finance Manager",
     "FP&A Manager",
     "Senior Accountant",
+    # Distinct titles not surfaced by the searches above. "Corporate"
+    # / "Divisional" Controller aren't queried separately — the plain
+    # "Controller" search already returns them and _CONTROLLER_RE
+    # classifies them, so a dedicated query would just burn scrape
+    # budget on redundant results.
+    "Chief Accounting Officer",
+    "Treasurer",
+    "Bookkeeper",
 )
 _CFO_QUERIES: tuple[str, ...] = (
     "Chief Financial Officer",
 )
 # In-market queries. A company posting a Fractional / Interim /
 # Part-time CFO role is shopping for exactly the service being sold —
-# the hottest lead class on the page. These titles were previously
-# dropped entirely: not a disqualifier (part-time qualifier) but not
-# a finance-lead title either.
+# the hottest lead class on the page. The fractional universe is small
+# (a few dozen fresh postings nationally), so we cast the widest
+# possible net of phrasings across every board rather than sampling:
+# each variant surfaces postings the others miss.
 _FRACTIONAL_CFO_QUERIES: tuple[str, ...] = (
     "Fractional CFO",
     "Interim CFO",
     "Part-time CFO",
+    "Outsourced CFO",
+    "Contract CFO",
+    "Virtual CFO",
+    "Fractional Chief Financial Officer",
+    "Interim Chief Financial Officer",
+    "Part-Time Chief Financial Officer",
+    "Fractional Controller",
+    "Interim Controller",
+    "CFO Consultant",
 )
 
 # Title classifier. Title text comes back messy ("Senior Controller,
@@ -120,6 +138,31 @@ _SENIOR_ACCOUNTANT_EXCLUDE_RE = re.compile(
     r"\b(?:tax|audit|cost|payroll|forensic|fixed[\s-]asset)\s+accountant\b",
     re.IGNORECASE,
 )
+# Chief Accounting Officer: a company hiring a CAO with no CFO is a
+# strong fractional-CFO target. Distinct from the CFO disqualifier
+# (which only matches "chief financial officer" / "cfo").
+_CAO_RE = re.compile(
+    r"\bchief\s+accounting\s+officer\b|\bcao\b",
+    re.IGNORECASE,
+)
+_TREASURER_RE = re.compile(r"\btreasurer\b", re.IGNORECASE)
+_BOOKKEEPER_RE = re.compile(r"\bbook\s?keeper\b|\bbookkeeping\b", re.IGNORECASE)
+
+# Finance-LEADERSHIP titles (a rung the fractional service can fill).
+# Used to promote a part-time / interim / fractional posting of one of
+# these to the in-market tier. Deliberately excludes IC-level finance
+# titles (bookkeeper, staff / senior accountant, finance / accounting
+# manager): a "Part-Time Bookkeeper" is not a fractional-CFO buyer.
+_FINANCE_LEADERSHIP_RES: tuple[re.Pattern[str], ...] = (
+    _CONTROLLER_RE,
+    _VP_FINANCE_RE,
+    _VP_FINANCE_ALT_RE,
+    _FINANCE_DIRECTOR_RE,
+    _HEAD_OF_ACCOUNTING_RE,
+    _FPA_LEAD_RE,
+    _CAO_RE,
+    _TREASURER_RE,
+)
 
 # CFO disqualifier. Detects "Chief Financial Officer" or stand-alone
 # "CFO" (as a word, not a substring) — but excludes part-time variants
@@ -131,7 +174,7 @@ _CFO_TITLE_RE = re.compile(
     re.IGNORECASE,
 )
 _PART_TIME_QUALIFIER_RE = re.compile(
-    r"\b(fractional|interim|part[\s-]?time|outsourced|contract|temp|temporary|consultant|consulting|advisory)\b",
+    r"\b(fractional|interim|part[\s-]?time|outsourced|virtual|contract|temp|temporary|consultant|consulting|advisory)\b",
     re.IGNORECASE,
 )
 
@@ -183,21 +226,23 @@ _AUTO_SUFFIX_RE = re.compile(
 )
 _AUTOMOTIVE_TITLE_RE = re.compile(r"^\s*automotive\b", re.IGNORECASE)
 
-# Hard 30-day cutoff on posting age (req #10). JobSpy already filters
-# by hours_old at query time but Adzuna returns older results too;
-# enforce a consistent cap at the candidate level.
+# Hard cutoff on posting age. JobSpy already filters by hours_old at
+# query time but Adzuna returns older results too; enforce a consistent
+# cap at the candidate level. The finance-lead / disqualifier queries
+# use 30 days; the scarce, long-lived fractional-CFO postings use a
+# wider 60-day window so we capture the standing inventory, not just
+# this week's new listings (a company that posted a fractional CFO role
+# 45 days ago is very likely still searching).
 _MAX_POSTING_AGE_DAYS = 30
+_FRACTIONAL_MAX_POSTING_AGE_DAYS = 60
 
-# Cap the query-time lookback to the same 30 days: everything older
-# is dropped by _is_too_old anyway, and a tighter window returns
-# denser fresh rows from boards that sort loosely by relevance.
-_MAX_HOURS_OLD = _MAX_POSTING_AGE_DAYS * 24
-
-# Scrape plans per query: high-volume boards take the big ask;
-# LinkedIn is scraped gently to avoid anti-bot blocks.
+# Scrape plans per query: high-volume boards take the big ask; LinkedIn
+# and Glassdoor are scraped gently to avoid anti-bot blocks (both fail
+# closed — a blocked board is logged and skipped per query).
 _JOBSPY_PLANS: tuple[tuple[tuple[str, ...], int], ...] = (
     (("indeed", "zip_recruiter", "google"), 100),
     (("linkedin",), 25),
+    (("glassdoor",), 20),
 )
 
 # Indeed's company_employees_label / JobSpy's company_num_employees
@@ -254,13 +299,18 @@ def _parse_posted_date(value: Any) -> datetime | None:
         return None
 
 
-def _is_too_old(date_posted: str | None, now: datetime) -> bool:
-    """Drop postings older than _MAX_POSTING_AGE_DAYS at candidate
-    construction time. Cheaper than enriching and then dropping."""
+def _is_too_old(
+    date_posted: str | None,
+    now: datetime,
+    max_days: int = _MAX_POSTING_AGE_DAYS,
+) -> bool:
+    """Drop postings older than ``max_days`` at candidate construction
+    time. Cheaper than enriching and then dropping. Fractional-CFO
+    queries pass the wider 60-day window."""
     parsed = _parse_posted_date(date_posted)
     if parsed is None:
         return False  # unknown age — keep, let downstream score decay it
-    return (now - parsed).days > _MAX_POSTING_AGE_DAYS
+    return (now - parsed).days > max_days
 
 
 def _utcnow() -> datetime:
@@ -288,6 +338,9 @@ def _is_finance_lead_title(title: str) -> bool:
         or _FINANCE_MANAGER_RE.search(title)
         or _HEAD_OF_ACCOUNTING_RE.search(title)
         or _FPA_LEAD_RE.search(title)
+        or _CAO_RE.search(title)
+        or _TREASURER_RE.search(title)
+        or _BOOKKEEPER_RE.search(title)
     )
 
 
@@ -305,15 +358,29 @@ def _is_cfo_disqualifier_title(title: str) -> bool:
 
 
 def _is_fractional_cfo_title(title: str) -> bool:
-    """True when the posting is for a fractional / interim / part-time
-    CFO — the company is in-market for the exact service being sold.
-    Checked after ``_is_cfo_disqualifier_title`` (which already
-    excludes these via the part-time qualifier)."""
+    """True when the company is in-market for fractional finance
+    leadership. Two cases, both requiring a part-time / interim /
+    fractional / outsourced / contract qualifier:
+
+    1. A CFO title ("Fractional CFO", "Interim Chief Financial Officer").
+    2. A finance-LEADERSHIP title ("Interim Controller", "Part-Time
+       Head of Finance", "Fractional CAO"). That company needs finance
+       leadership now, on a fractional basis — the same buyer.
+
+    IC-level finance titles (bookkeeper, staff / senior accountant,
+    finance / accounting manager) are NOT promoted here even with a
+    qualifier; they fall through to the finance-lead tier or drop out.
+
+    Checked after ``_is_cfo_disqualifier_title`` (which already excludes
+    full-time CFOs) and before ``_is_finance_lead_title`` so these route
+    to the in-market tier, not the finance-lead tier."""
     if not title:
         return False
-    return bool(
-        _CFO_TITLE_RE.search(title) and _PART_TIME_QUALIFIER_RE.search(title)
-    )
+    if not _PART_TIME_QUALIFIER_RE.search(title):
+        return False
+    if _CFO_TITLE_RE.search(title):
+        return True
+    return any(r.search(title) for r in _FINANCE_LEADERSHIP_RES)
 
 
 def _parse_headcount_label(label: str | None) -> int | None:
@@ -401,12 +468,19 @@ def _make_cfo_disqualifier(
 
 
 def _fetch_from_jobspy(
-    since: datetime, *, queries: tuple[str, ...]
+    since: datetime,
+    *,
+    queries: tuple[str, ...],
+    max_age_days: int = _MAX_POSTING_AGE_DAYS,
 ) -> tuple[list[LeadCandidate], list[Disqualifier]]:
     captured_at = _utcnow()
     hours_old = max(
-        1, min(int((captured_at - since).total_seconds() / 3600), _MAX_HOURS_OLD)
+        1, min(int((captured_at - since).total_seconds() / 3600), max_age_days * 24)
     )
+    # Google Jobs takes a natural-language recency phrase instead of
+    # hours_old; match the window to max_age_days ("last month" for
+    # the 30-day queries, "last 2 months" for the wider fractional net).
+    google_recency = "in the last 2 months" if max_age_days > 30 else "in the last month"
     candidates: list[LeadCandidate] = []
     disqualifiers: list[Disqualifier] = []
     frames: list[Any] = []
@@ -420,7 +494,7 @@ def _fetch_from_jobspy(
                     # takes its own natural-language query with a
                     # recency phrase.
                     google_search_term=(
-                        f"{query} jobs in United States since last week"
+                        f"{query} jobs in United States {google_recency}"
                     ),
                     location="United States",
                     results_wanted=wanted,
@@ -454,7 +528,7 @@ def _fetch_from_jobspy(
                     )
                 )
                 continue
-            if _is_too_old(date_posted, captured_at):
+            if _is_too_old(date_posted, captured_at, max_age_days):
                 continue
             if _is_fractional_cfo_title(title):
                 candidates.append(
@@ -487,7 +561,10 @@ def _fetch_from_jobspy(
 
 
 def _fetch_from_adzuna(
-    since: datetime, *, queries: tuple[str, ...]
+    since: datetime,
+    *,
+    queries: tuple[str, ...],
+    max_age_days: int = _MAX_POSTING_AGE_DAYS,
 ) -> tuple[list[LeadCandidate], list[Disqualifier]]:
     app_id = os.environ.get("ADZUNA_APP_ID")
     app_key = os.environ.get("ADZUNA_APP_KEY")
@@ -496,7 +573,7 @@ def _fetch_from_adzuna(
         return [], []
 
     captured_at = _utcnow()
-    max_days_old = max(1, min((captured_at - since).days, _MAX_POSTING_AGE_DAYS))
+    max_days_old = max(1, min((captured_at - since).days, max_age_days))
     candidates: list[LeadCandidate] = []
     disqualifiers: list[Disqualifier] = []
     rate_limited = False
@@ -554,7 +631,7 @@ def _fetch_from_adzuna(
                         )
                     )
                     continue
-                if _is_too_old(date_posted, captured_at):
+                if _is_too_old(date_posted, captured_at, max_age_days):
                     continue
                 if _is_fractional_cfo_title(title):
                     candidates.append(
@@ -600,18 +677,18 @@ def fetch(
     disqualifiers: list[Disqualifier] = []
 
     fetchers: tuple[
-        tuple[str, Any, tuple[str, ...]], ...
+        tuple[str, Any, tuple[str, ...], int], ...
     ] = (
-        ("jobspy_fractional_cfo", _fetch_from_jobspy, _FRACTIONAL_CFO_QUERIES),
-        ("jobspy_finance_leads", _fetch_from_jobspy, _FINANCE_LEAD_QUERIES),
-        ("jobspy_cfo_disqualifiers", _fetch_from_jobspy, _CFO_QUERIES),
-        ("adzuna_fractional_cfo", _fetch_from_adzuna, _FRACTIONAL_CFO_QUERIES),
-        ("adzuna_finance_leads", _fetch_from_adzuna, _FINANCE_LEAD_QUERIES),
-        ("adzuna_cfo_disqualifiers", _fetch_from_adzuna, _CFO_QUERIES),
+        ("jobspy_fractional_cfo", _fetch_from_jobspy, _FRACTIONAL_CFO_QUERIES, _FRACTIONAL_MAX_POSTING_AGE_DAYS),
+        ("jobspy_finance_leads", _fetch_from_jobspy, _FINANCE_LEAD_QUERIES, _MAX_POSTING_AGE_DAYS),
+        ("jobspy_cfo_disqualifiers", _fetch_from_jobspy, _CFO_QUERIES, _MAX_POSTING_AGE_DAYS),
+        ("adzuna_fractional_cfo", _fetch_from_adzuna, _FRACTIONAL_CFO_QUERIES, _FRACTIONAL_MAX_POSTING_AGE_DAYS),
+        ("adzuna_finance_leads", _fetch_from_adzuna, _FINANCE_LEAD_QUERIES, _MAX_POSTING_AGE_DAYS),
+        ("adzuna_cfo_disqualifiers", _fetch_from_adzuna, _CFO_QUERIES, _MAX_POSTING_AGE_DAYS),
     )
-    for name, fetcher, queries in fetchers:
+    for name, fetcher, queries, max_age in fetchers:
         try:
-            c, d = fetcher(since, queries=queries)
+            c, d = fetcher(since, queries=queries, max_age_days=max_age)
             candidates.extend(c)
             disqualifiers.extend(d)
         except Exception:

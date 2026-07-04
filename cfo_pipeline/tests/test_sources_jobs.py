@@ -135,20 +135,46 @@ def test_cfo_posting_classified_as_disqualifier_not_signal():
 def test_fractional_cfo_title_classified_as_in_market():
     """A Fractional / Interim / Part-time CFO posting is the hottest
     lead class — the company is shopping for exactly the service being
-    sold. Previously these were dropped: not a disqualifier, not a
-    finance-lead title."""
+    sold."""
     assert jobs._is_fractional_cfo_title("Fractional CFO")
     assert jobs._is_fractional_cfo_title("Interim CFO")
     assert jobs._is_fractional_cfo_title("Part-Time Chief Financial Officer")
     assert jobs._is_fractional_cfo_title("Outsourced CFO")
+    assert jobs._is_fractional_cfo_title("Contract CFO")
+    assert jobs._is_fractional_cfo_title("Virtual CFO")
     # Full-time CFO is the disqualifier, not in-market:
     assert not jobs._is_fractional_cfo_title("Chief Financial Officer")
     assert not jobs._is_fractional_cfo_title("CFO")
-    # Non-CFO titles never match, even with a part-time qualifier
-    # ("Interim Controller" stays a finance-lead signal):
-    assert not jobs._is_fractional_cfo_title("Interim Controller")
     assert not jobs._is_fractional_cfo_title("Fractional Marketing Lead")
     assert not jobs._is_fractional_cfo_title("")
+
+
+def test_part_time_finance_leadership_is_in_market():
+    """A part-time / interim / fractional qualifier on a finance-
+    LEADERSHIP title is the same buyer shopping for fractional finance
+    leadership — it routes to the in-market tier, not finance-lead."""
+    assert jobs._is_fractional_cfo_title("Interim Controller")
+    assert jobs._is_fractional_cfo_title("Fractional Controller")
+    assert jobs._is_fractional_cfo_title("Part-Time Head of Finance")
+    assert jobs._is_fractional_cfo_title("Interim Head of Finance")
+    assert jobs._is_fractional_cfo_title("Fractional Chief Accounting Officer")
+
+
+def test_part_time_ic_finance_is_not_in_market():
+    """IC-level finance titles are NOT promoted to in-market even with a
+    qualifier — a part-time bookkeeper is not a fractional-CFO buyer.
+    (These stay finance-lead or drop out via the runner's ordering.)"""
+    assert not jobs._is_fractional_cfo_title("Part-Time Bookkeeper")
+    assert not jobs._is_fractional_cfo_title("Interim Accounting Manager")
+    assert not jobs._is_fractional_cfo_title("Contract Senior Accountant")
+
+
+def test_classifies_newly_added_leadership_titles():
+    assert jobs._is_finance_lead_title("Chief Accounting Officer")
+    assert jobs._is_finance_lead_title("Treasurer")
+    assert jobs._is_finance_lead_title("Bookkeeper")
+    assert jobs._is_finance_lead_title("Corporate Controller")
+    assert jobs._is_finance_lead_title("Divisional Controller")
 
 
 def test_fractional_title_never_disqualifies():

@@ -689,24 +689,35 @@ def _build_output(conn: sqlite3.Connection) -> dict[str, Any]:
     for lead in db.iter_leads(conn):
         rendered = _lead_to_json(lead, now=now)
         if not rendered["signals"]:
-            continue  # all signals were >30d old or non-scoring
-        # 4th-review req #4c: empty-shell filter. A lead with no
-        # domain AND no DM AND no headcount AND no location is a
-        # useless card — MapperHealth shipped exactly this and
-        # diluted the dashboard. Suppress at output rather than
-        # delete from the DB (a future enrichment run might fill
-        # the missing fields).
+            continue  # all signals were beyond the recency window / non-scoring
+        # A fractional CFO can only act on a company they can find. If
+        # we couldn't resolve a website there's nothing to reach out to,
+        # so a domainless card is dropped at output (kept in the DB — a
+        # later enrichment run might resolve the domain).
+        if not rendered.get("domain"):
+            continue
+        # Belt-and-suspenders empty-shell filter (a lead with no domain
+        # AND no DM AND no headcount AND no location). The domain check
+        # above already covers it, but keep this in case the domain rule
+        # is ever relaxed.
         if _is_empty_shell(rendered):
             continue
         leads_out.append(rendered)
-    # Bullseye boost — leads with BOTH a hiring signal AND a funding
-    # signal sort above single-signal leads of the same score.
-    def _bullseye_key(l: dict[str, Any]) -> tuple[int, float]:
+    # Strict tier ordering: in-market fractional-CFO postings first,
+    # then finance-lead hires, then funding-only — score orders WITHIN
+    # a tier. The tiered score already encodes this (bands don't
+    # overlap), but sorting on the tier explicitly keeps the ordering
+    # correct even if the score weights are ever retuned.
+    def _rank_key(l: dict[str, Any]) -> tuple[int, float]:
         types = {s["type"] for s in l["signals"]}
-        has_hire = any(t.value in types for t in _HIRING_SIGNAL_TYPES)
-        is_bullseye = has_hire and SignalType.FUNDING_RAISED.value in types
-        return (0 if is_bullseye else 1, -(l.get("score") or 0))
-    leads_out.sort(key=_bullseye_key)
+        if SignalType.JOB_POSTED_FRACTIONAL_CFO.value in types:
+            tier = 0
+        elif SignalType.JOB_POSTED_FINANCE_LEAD.value in types:
+            tier = 1
+        else:
+            tier = 2
+        return (tier, -(l.get("score") or 0))
+    leads_out.sort(key=_rank_key)
     leads_out = _gate_funding_only(leads_out)
     return {
         "generated_at": now.isoformat(),
@@ -950,10 +961,22 @@ def _signal_age_days(s: Signal, now: datetime) -> int:
     return max(0, (now - base).days)
 
 
+# Output-time recency window per signal type. Matches the scrape
+# windows: fractional-CFO postings are scarce and long-lived, so they
+# stay on the page up to 60 days; everything else drops at 30.
+_MAX_SIGNAL_AGE_DAYS = 30
+_FRACTIONAL_MAX_SIGNAL_AGE_DAYS = 60
+
+
 def _signal_too_old(s: Signal, now: datetime) -> bool:
-    """Drop signals older than 30 days at output time. Uses the EVENT
-    date, not captured_at."""
-    return _signal_age_days(s, now) > 30
+    """Drop stale signals at output time. Uses the EVENT date, not
+    captured_at. Fractional-CFO postings get the wider 60-day window."""
+    max_days = (
+        _FRACTIONAL_MAX_SIGNAL_AGE_DAYS
+        if s.type == SignalType.JOB_POSTED_FRACTIONAL_CFO
+        else _MAX_SIGNAL_AGE_DAYS
+    )
+    return _signal_age_days(s, now) > max_days
 
 
 def _signal_to_json(s: Signal, now: datetime) -> dict[str, Any]:
