@@ -201,3 +201,81 @@ def test_form_d_operator_officer_ignores_non_operators():
 
 def test_form_d_operator_officer_no_signals():
     assert enrichment._form_d_operator_officer(_bare_lead("Acme")) == (None, None)
+
+
+def _enriched_sig():
+    return Signal(
+        type=SignalType.ENRICHMENT_RUN,
+        source=SourceName.COMPUTED,
+        captured_at=datetime(2026, 7, 3),
+        payload={},
+    )
+
+
+def _hire_sig():
+    return Signal(
+        type=SignalType.JOB_POSTED_FINANCE_LEAD,
+        source=SourceName.JOBS,
+        captured_at=datetime(2026, 7, 3),
+        payload={"title": "Controller"},
+    )
+
+
+def test_unknown_headcount_drops_funding_only_lead():
+    """A funding-only lead with no discoverable headcount after
+    enrichment is still culled — that's how huge orgs used to leak on."""
+    lead = _bare_lead(
+        "Obscure Fund Co",
+        headcount=None,
+        signals=[
+            _enriched_sig(),
+            Signal(
+                type=SignalType.FUNDING_RAISED,
+                source=SourceName.EDGAR_FORM_D,
+                captured_at=datetime(2026, 7, 3),
+                payload={"filing_type": "Form D"},
+            ),
+        ],
+    )
+    assert enrichment._disqualification_reason(lead) == "unknown_headcount_post_enrichment"
+
+
+def test_unknown_headcount_keeps_hiring_signal_lead():
+    """A company actively hiring finance leadership is a prime
+    fractional-CFO target even when Gemini can't size it — it must
+    survive the unknown-headcount gate."""
+    lead = _bare_lead(
+        "Tiny Startup Inc",
+        headcount=None,
+        signals=[_enriched_sig(), _hire_sig()],
+    )
+    assert enrichment._disqualification_reason(lead) is None
+    assert enrichment._has_hiring_signal(lead) is True
+
+
+def test_fractional_cfo_signal_counts_as_hiring():
+    lead = _bare_lead(
+        "In Market Co",
+        headcount=None,
+        signals=[
+            _enriched_sig(),
+            Signal(
+                type=SignalType.JOB_POSTED_FRACTIONAL_CFO,
+                source=SourceName.JOBS,
+                captured_at=datetime(2026, 7, 3),
+                payload={"title": "Fractional CFO"},
+            ),
+        ],
+    )
+    assert enrichment._disqualification_reason(lead) is None
+
+
+def test_oversized_still_drops_hiring_lead():
+    """The unsized-keep carve-out must NOT rescue a hiring lead that
+    Gemini sized ABOVE the SMB cap — too big for a fractional CFO."""
+    lead = _bare_lead(
+        "Big Hiring Co",
+        headcount=1320,
+        signals=[_enriched_sig(), _hire_sig()],
+    )
+    assert enrichment._disqualification_reason(lead) == "oversized=1320"

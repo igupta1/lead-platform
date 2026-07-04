@@ -298,6 +298,23 @@ def _is_form_d_noise(lead: Lead) -> bool:
     )
 
 
+# Hiring-signal leads — a Fractional / Interim CFO posting or a
+# below-CFO finance hire — are the money leads. A small, obscure
+# company Gemini can't size or geolocate is a PRIME fractional-CFO
+# target, not a reject, so an unknown headcount / country must not
+# delete it the way it does the weak funding-only class. Explicit
+# disqualifiers (non-US, oversized, competitor, megacorp, CFO-already)
+# still apply to every lead regardless of signal.
+_HIRING_SIGNAL_TYPES: frozenset[SignalType] = frozenset({
+    SignalType.JOB_POSTED_FRACTIONAL_CFO,
+    SignalType.JOB_POSTED_FINANCE_LEAD,
+})
+
+
+def _has_hiring_signal(lead: Lead) -> bool:
+    return any(s.type in _HIRING_SIGNAL_TYPES for s in lead.signals)
+
+
 def _disqualification_reason(lead: Lead) -> str | None:
     if _domain_blocked(lead.domain):
         return f"blocked_domain={lead.domain}"
@@ -332,7 +349,16 @@ def _disqualification_reason(lead: Lead) -> str | None:
     has_enrichment_run = any(
         s.type == SignalType.ENRICHMENT_RUN for s in lead.signals
     )
-    if has_enrichment_run and lead.headcount is None:
+    # Only the weak (funding-only) class is dropped for an unknown
+    # headcount after enrichment. A lead that's actively hiring finance
+    # leadership stays even unsized — that's a prime small-company
+    # target, and the output-time empty-shell filter still suppresses
+    # the ones with nothing actionable at all.
+    if (
+        has_enrichment_run
+        and lead.headcount is None
+        and not _has_hiring_signal(lead)
+    ):
         return "unknown_headcount_post_enrichment"
     return None
 
@@ -703,19 +729,23 @@ def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool
     oversized = (
         effective_headcount is not None and effective_headcount > _SMB_HEADCOUNT_CAP
     )
-    # Per 3rd-review spec: null/unknown headcount after Gemini+Apollo
-    # attempts → drop. Was previously kept; that's how MLB, Goldman,
-    # Formula 1 got onto the page (no discoverable headcount but
-    # actually thousands of employees).
+    # Unknown headcount / country drops the weak funding-only class
+    # (that's how MLB, Goldman, Formula 1 once leaked on — huge orgs
+    # with no discoverable headcount), but NOT a hiring-signal lead: a
+    # company actively hiring a Controller off a US job board is a
+    # prime fractional-CFO target even when Gemini can't size it.
+    # Explicit non-US (Gemini says "DE") and oversized still delete
+    # everyone.
+    keep_unsized = _has_hiring_signal(lead)
     headcount_unknown = effective_headcount is None
     non_us = lookup.country is not None and lookup.country != "US"
     unknown_country = lookup.country is None
     disqualifier_reason = None
     if non_us:
         disqualifier_reason = f"non_us_country={lookup.country!r}"
-    elif unknown_country:
+    elif unknown_country and not keep_unsized:
         disqualifier_reason = "unknown_country"
-    elif headcount_unknown:
+    elif headcount_unknown and not keep_unsized:
         disqualifier_reason = "unknown_headcount"
     elif oversized:
         disqualifier_reason = f"oversized_headcount={effective_headcount}"
