@@ -62,6 +62,12 @@ APOLLO_TOP_N_DEFAULT = 30
 FUNDING_ONLY_MIN_OFFERING_USD = 500_000.0
 # Cap funding-only cards so hiring-signal leads dominate the page.
 FUNDING_ONLY_MAX_CARDS = 75
+# Only enrich the freshest N funding-only leads. The output gate ships
+# at most FUNDING_ONLY_MAX_CARDS of them, so enriching the whole tail
+# (hundreds of Form C / Form D filings) just burns LLM budget on leads
+# that get capped away. 2x the card cap leaves a disqualification
+# buffer while keeping the spend bounded.
+FUNDING_ONLY_ENRICH_CAP = 150
 
 
 _SCORING_SIGNAL_TYPES: frozenset[SignalType] = frozenset(
@@ -504,7 +510,10 @@ def _enrich_all(
         lead = db.get_lead(conn, lead_id=lead_id)
         if lead is None:
             continue
-        needs_call = not enrichment._should_skip(lead, force)
+        # A "call" is a Gemini grounded-search lookup. Form C leads take
+        # the light path (no Gemini), so they don't consume the budget
+        # and are never deferred when it's exhausted.
+        needs_call = enrichment.needs_gemini_lookup(lead, force)
         if needs_call and budget is not None and spent >= budget:
             deferred += 1
             kept.append(lead_id)
@@ -541,6 +550,34 @@ def _enrich_all(
     return list(dict.fromkeys(kept)), spent, deferred
 
 
+def _funding_only_below_floor(lead: Lead) -> bool:
+    """Form D funding-only lead whose known offering is below the output
+    gate's floor — it can never ship, so don't spend enrichment on it.
+    (Form C carries no floor; unknown Form D amounts pass on domain.)"""
+    known: list[float] = []
+    for s in lead.signals:
+        p = s.payload or {}
+        if p.get("filing_type") != "Form D":
+            continue
+        amt = p.get("offering_amount")
+        if isinstance(amt, (int, float)):
+            known.append(float(amt))
+    return bool(known) and max(known) < FUNDING_ONLY_MIN_OFFERING_USD
+
+
+def _funding_event_age_days(lead: Lead) -> float:
+    """Age (days) of the freshest funding signal — the ranking proxy for
+    which funding-only leads are worth enriching (real scores don't
+    exist yet at worklist time)."""
+    now = _utcnow()
+    ages = [
+        (now - (scoring.payload_event_date(s) or s.captured_at)).total_seconds() / 86400.0
+        for s in lead.signals
+        if s.type == SignalType.FUNDING_RAISED
+    ]
+    return min(ages) if ages else float("inf")
+
+
 def _enrichment_worklist(conn: sqlite3.Connection, *, force: bool) -> list[int]:
     """Every lead needing an enrichment pass this run (never enriched,
     or a fresh signal since the last pass), ranked best-lead-first.
@@ -551,8 +588,15 @@ def _enrichment_worklist(conn: sqlite3.Connection, *, force: bool) -> list[int]:
     Priority tiers, each newest-first (highest lead id):
     0. fractional-CFO postings (in-market)
     1. below-CFO finance hires (the gate signal)
-    2. funding-only (the weak, high-volume tail)"""
-    ranked: list[tuple[int, int, int]] = []
+    2. funding-only (the weak, high-volume tail)
+
+    Funding-only leads are pre-gated and capped BEFORE enrichment: leads
+    below the offering floor are dropped, and only the freshest
+    ``FUNDING_ONLY_ENRICH_CAP`` survive — the output gate ships at most
+    ``FUNDING_ONLY_MAX_CARDS`` of them, so enriching the whole tail just
+    wastes LLM budget on leads that get capped away."""
+    hiring: list[tuple[int, int, int]] = []
+    funding: list[tuple[float, int]] = []
     for lead in db.iter_leads(conn):
         if lead.id is None:
             continue
@@ -560,14 +604,18 @@ def _enrichment_worklist(conn: sqlite3.Connection, *, force: bool) -> list[int]:
             continue
         types = {s.type for s in lead.signals}
         if SignalType.JOB_POSTED_FRACTIONAL_CFO in types:
-            tier = 0
+            hiring.append((0, -lead.id, lead.id))
         elif SignalType.JOB_POSTED_FINANCE_LEAD in types:
-            tier = 1
+            hiring.append((1, -lead.id, lead.id))
         else:
-            tier = 2
-        ranked.append((tier, -lead.id, lead.id))
-    ranked.sort()
-    return [lead_id for _, _, lead_id in ranked]
+            if _funding_only_below_floor(lead):
+                continue  # can't ship — never enrich it
+            funding.append((_funding_event_age_days(lead), lead.id))
+    hiring.sort()
+    funding.sort()  # ascending age = freshest first
+    worklist = [lead_id for _, _, lead_id in hiring]
+    worklist.extend(lead_id for _, lead_id in funding[:FUNDING_ONLY_ENRICH_CAP])
+    return worklist
 
 
 def _rescore_all(

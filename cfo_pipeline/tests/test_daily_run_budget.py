@@ -47,6 +47,48 @@ def _candidate(
     )
 
 
+def _form_c_candidate(
+    name: str, *, domain: str = "issuer.com", headcount: int = 20,
+    filed_on: str = "2026-07-01",
+) -> LeadCandidate:
+    return LeadCandidate(
+        name=name,
+        domain=domain,
+        headcount=headcount,
+        initial_signal=Signal(
+            type=SignalType.FUNDING_RAISED,
+            source=SourceName.EDGAR_FORM_C,
+            captured_at=datetime(2026, 7, 1, 12, 0, 0),
+            payload={
+                "filing_type": "Form C",
+                "filed_on": filed_on,
+                "biz_location": "Austin",
+                "biz_state": "TX",
+            },
+        ),
+    )
+
+
+def _form_d_candidate(
+    name: str, offering: float | None, *, filed_on: str = "2026-07-01",
+) -> LeadCandidate:
+    return LeadCandidate(
+        name=name,
+        domain="raiser.com",
+        initial_signal=Signal(
+            type=SignalType.FUNDING_RAISED,
+            source=SourceName.EDGAR_FORM_D,
+            captured_at=datetime(2026, 7, 1, 12, 0, 0),
+            payload={
+                "filing_type": "Form D",
+                "filed_on": filed_on,
+                "offering_amount": offering,
+                "link": "",
+            },
+        ),
+    )
+
+
 def test_enrich_budget_defers_overflow(conn, monkeypatch):
     ids = []
     for name in ("Alpha Co", "Beta Co", "Gamma Co"):
@@ -138,6 +180,100 @@ def test_worklist_skips_already_enriched(conn, monkeypatch):
     assert daily_run._enrichment_worklist(conn, force=False) == []
     # force=True re-includes everything (re-enrich path).
     assert daily_run._enrichment_worklist(conn, force=True) == [hire.id]
+
+
+# --- LLM-usage optimizations -------------------------------------------------
+
+
+def test_form_c_funding_only_needs_no_gemini(conn):
+    fc = db.upsert_lead(conn, _form_c_candidate("Crowdfund Co"))
+    fd = db.upsert_lead(conn, _candidate("FormD Co", SignalType.FUNDING_RAISED))
+    hire = db.upsert_lead(conn, _candidate("Hire Co"))
+    assert fc and fd and hire
+    fc = db.get_lead(conn, lead_id=fc.id)
+    fd = db.get_lead(conn, lead_id=fd.id)
+    hire = db.get_lead(conn, lead_id=hire.id)
+    assert fc and fd and hire
+    # Form C funding-only: light path, no Gemini -> doesn't count vs budget.
+    assert enrichment.needs_gemini_lookup(fc, force=False) is False
+    # Form D needs Gemini to resolve a domain; hiring leads always do.
+    assert enrichment.needs_gemini_lookup(fd, force=False) is True
+    assert enrichment.needs_gemini_lookup(hire, force=False) is True
+
+
+def test_form_c_light_path_skips_gemini(conn, monkeypatch):
+    fc = db.upsert_lead(conn, _form_c_candidate("Crowdfund Co"))
+    assert fc is not None
+    lead = db.get_lead(conn, lead_id=fc.id)
+    assert lead is not None
+
+    def boom(*a, **k):
+        raise AssertionError("lookup_company (Gemini) must not run on the light path")
+
+    monkeypatch.setattr(enrichment, "lookup_company", boom)
+    monkeypatch.setattr(
+        enrichment, "classify_industry",
+        lambda lead, value_prop=None: enrichment.Industry.SOFTWARE_SAAS,
+    )
+
+    assert enrichment.enrich(conn, lead, force=False) is True
+    updated = db.get_lead(conn, lead_id=fc.id)
+    assert updated is not None
+    assert updated.industry == "software_saas"
+    assert updated.country == "US"
+    assert any(s.type == SignalType.LOCATION_CAPTURED for s in updated.signals)
+    assert any(s.type == SignalType.ENRICHMENT_RUN for s in updated.signals)
+
+
+def test_worklist_drops_small_form_d_and_caps_funding(conn, monkeypatch):
+    monkeypatch.setattr(daily_run, "FUNDING_ONLY_ENRICH_CAP", 2)
+    small = db.upsert_lead(conn, _form_d_candidate("Tiny Raise", 100_000))
+    big1 = db.upsert_lead(conn, _form_d_candidate("Big 1", 3_000_000, filed_on="2026-07-04"))
+    big2 = db.upsert_lead(conn, _form_d_candidate("Big 2", 3_000_000, filed_on="2026-07-03"))
+    big3 = db.upsert_lead(conn, _form_d_candidate("Big 3", 3_000_000, filed_on="2026-07-01"))
+    assert small and big1 and big2 and big3
+
+    wl = daily_run._enrichment_worklist(conn, force=False)
+    # Below-floor raise never enters the worklist.
+    assert small.id not in wl
+    # Cap=2, freshest-first: big3 (oldest) is capped out.
+    assert set(wl) == {big1.id, big2.id}
+
+
+def test_worklist_hiring_never_capped(conn, monkeypatch):
+    """The funding cap must not touch the fractional / finance tiers."""
+    monkeypatch.setattr(daily_run, "FUNDING_ONLY_ENRICH_CAP", 0)
+    hire = db.upsert_lead(conn, _candidate("Hire Co"))
+    frac = db.upsert_lead(
+        conn, _candidate("Frac Co", SignalType.JOB_POSTED_FRACTIONAL_CFO)
+    )
+    fund = db.upsert_lead(conn, _form_d_candidate("Fund Co", 3_000_000))
+    assert hire and frac and fund
+    wl = daily_run._enrichment_worklist(conn, force=False)
+    assert hire.id in wl and frac.id in wl
+    assert fund.id not in wl  # cap=0 drops all funding-only
+
+
+def test_form_c_light_path_not_counted_against_budget(conn, monkeypatch):
+    """A Form C funding-only lead enriches even when the Gemini budget
+    is exhausted — the light path costs no grounded-search call."""
+    hire = db.upsert_lead(conn, _candidate("Hire Co"))
+    fc = db.upsert_lead(conn, _form_c_candidate("Crowdfund Co"))
+    assert hire and fc
+
+    calls: list[str] = []
+    monkeypatch.setattr(
+        enrichment, "enrich",
+        lambda c, lead, *, force=False: (calls.append(lead.name) or True),
+    )
+
+    kept, spent, deferred = daily_run._enrich_all(
+        conn, [hire.id, fc.id], force=False, budget=0
+    )
+    assert calls == ["Crowdfund Co"]  # only the light-path lead ran
+    assert spent == 0
+    assert deferred == 1  # the hiring lead deferred (budget exhausted)
+    assert set(kept) == {hire.id, fc.id}  # nothing dropped
 
 
 # --- Funding-only output gate ------------------------------------------------

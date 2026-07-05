@@ -66,10 +66,14 @@ jobs:
           LIMIT:                ${{ inputs.limit }}
           REENRICH:             ${{ inputs.reenrich }}
         run: |
-          # --enrich-budget 600: paid-tier grounded search is free to
-          # 1,500/day, so drain 600 new leads/night (hiring-signal leads
-          # first); the rest defer and drain over the following nights.
-          args=("--upload" "--enrich-budget" "600")
+          # --enrich-budget 900: paid-tier grounded search is free to
+          # ~1,500/day. Form C leads now enrich on a light path (no
+          # Gemini call) and funding-only leads are pre-capped, so the
+          # budget concentrates on the fractional / finance tiers that
+          # actually convert; 900 drains more of them per night while
+          # keeping headroom under the daily quota. Overflow defers and
+          # drains over the following nights.
+          args=("--upload" "--enrich-budget" "900")
           if [[ "$REENRICH" == "true" ]]; then
             args+=("--reenrich")
           fi

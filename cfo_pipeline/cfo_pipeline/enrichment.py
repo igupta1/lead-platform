@@ -720,6 +720,79 @@ def _should_skip(lead: Lead, force: bool) -> bool:
     return not _has_signal_after(lead, last)
 
 
+def _is_form_c_funding_only(lead: Lead) -> bool:
+    """A Form C (Reg Crowdfunding) lead that arrived pre-filled from the
+    filing (domain + headcount) and has no hiring signal. Its domain,
+    size, and location are already known, and a tiny Reg-CF issuer won't
+    have a full-time CFO or be a CFO-services competitor — so it can be
+    enriched WITHOUT a Gemini grounded-search call (the light path)."""
+    if _has_hiring_signal(lead):
+        return False  # bullseye — worth the full lookup for the DM etc.
+    if lead.domain is None:
+        return False  # need Gemini to resolve a domain, or it can't ship
+    return any(
+        s.type == SignalType.FUNDING_RAISED
+        and (s.payload or {}).get("filing_type") == "Form C"
+        for s in lead.signals
+    )
+
+
+def needs_gemini_lookup(lead: Lead, force: bool) -> bool:
+    """True when enriching this lead will spend a Gemini grounded-search
+    call. Skippable leads and Form C funding-only leads (light path)
+    cost no Gemini, so they must not count against the daily budget."""
+    if _should_skip(lead, force):
+        return False
+    return not _is_form_c_funding_only(lead)
+
+
+def _form_c_location(lead: Lead) -> tuple[str | None, str | None]:
+    for s in lead.signals:
+        if (
+            s.type == SignalType.FUNDING_RAISED
+            and (s.payload or {}).get("filing_type") == "Form C"
+        ):
+            p = s.payload or {}
+            return p.get("biz_location"), p.get("biz_state")
+    return None, None
+
+
+def _enrich_form_c_light(conn: sqlite3.Connection, lead: Lead) -> bool:
+    """Light enrichment for a Form C lead: NO Gemini call. Domain,
+    headcount, and location come straight from the filing; only the
+    (separate, cheap) OpenAI industry classifier runs. The pure-code
+    disqualifier already ran in enrich()."""
+    assert lead.id is not None
+    if not any(s.type == SignalType.LOCATION_CAPTURED for s in lead.signals):
+        city, state = _form_c_location(lead)
+        if city or state:
+            db.append_signal(
+                conn, lead.id,
+                Signal(
+                    type=SignalType.LOCATION_CAPTURED,
+                    source=SourceName.COMPUTED,
+                    captured_at=_utcnow(),
+                    payload={"city": city, "state": state},
+                ),
+            )
+    industry = classify_industry(lead, value_prop=None)
+    db.update_lead(conn, lead.id, industry=industry.value, country="US")
+    db.append_signal(
+        conn, lead.id,
+        Signal(
+            type=SignalType.ENRICHMENT_RUN,
+            source=SourceName.COMPUTED,
+            captured_at=_utcnow(),
+            payload={},
+        ),
+    )
+    log.info(
+        "enrich (light/Form C): %d (%s) industry=%s — no Gemini call",
+        lead.id, lead.name, industry.value,
+    )
+    return True
+
+
 def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool:
     if lead.id is None:
         raise ValueError("enrich() requires a persisted lead (lead.id is None)")
@@ -734,6 +807,11 @@ def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool
         log.info("enrich: deleting lead %d (%s) — %s", lead.id, lead.name, reason)
         db.delete_lead(conn, lead.id)
         return False
+
+    # Form C funding-only leads take the light path — the filing already
+    # carries domain / headcount / location, so no Gemini call is spent.
+    if _is_form_c_funding_only(lead):
+        return _enrich_form_c_light(conn, lead)
 
     lookup = lookup_company(lead)
 
