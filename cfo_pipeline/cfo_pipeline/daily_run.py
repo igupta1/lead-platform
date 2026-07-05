@@ -36,7 +36,13 @@ from cfo_pipeline.models import (
     SignalType,
     SourceName,
 )
-from cfo_pipeline.sources import edgar_form_d, funding, jobs
+from cfo_pipeline.sources import (
+    edgar_form_c,
+    edgar_form_d,
+    fractional_boards,
+    funding,
+    jobs,
+)
 from cfo_pipeline import outreach  # kept for trigger_type helper
 
 log = logging.getLogger("cfo.daily_run")
@@ -253,9 +259,16 @@ def _fetch_all(
     candidates: list[LeadCandidate] = []
     disqualifiers: list[Disqualifier] = []
 
-    # Jobs + EDGAR have two-return signatures (they produce
-    # disqualifiers: CFO postings / CFO-officer Form D listings).
-    for name, fn in (("jobs", jobs.fetch), ("edgar_form_d", edgar_form_d.fetch)):
+    # Two-return sources: jobs + EDGAR (Form D / Form C) + fractional
+    # boards. Jobs and Form D produce disqualifiers (CFO postings /
+    # CFO-officer Form D listings); Form C and the boards return an
+    # empty disqualifier list but share the shape.
+    for name, fn in (
+        ("jobs", jobs.fetch),
+        ("edgar_form_d", edgar_form_d.fetch),
+        ("edgar_form_c", edgar_form_c.fetch),
+        ("fractional_boards", fractional_boards.fetch),
+    ):
         try:
             c, d = fn(since=since, limit=per_source_limit)
             log.info(
@@ -870,20 +883,67 @@ def _sanitize_dm_for_output(
     return name, title, email, linkedin
 
 
+_FILING_NOISE_RE = re.compile(
+    r"\(\s*(?:cik\s*)?\d{6,}\s*\)|\(\s*filer\s*\)", re.IGNORECASE
+)
+
+
+def _clean_filing_title(title: str | None) -> str | None:
+    """Strip EDGAR CIK / '(Filer)' noise from a funding signal's display
+    title (e.g. 'D - Drone Express, Inc. (0001897956) (Filer)')."""
+    if not title:
+        return title
+    cleaned = _FILING_NOISE_RE.sub("", title)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+    return cleaned or title
+
+
+def _norm_signal_title(sig: Signal) -> str:
+    raw = _clean_filing_title((sig.payload or {}).get("title") or "") or ""
+    return re.sub(r"[^a-z0-9]+", " ", raw.lower()).strip()
+
+
+def _signal_still_valid(sig: Signal) -> bool:
+    """Re-validate a stored hiring signal against the CURRENT title
+    classifiers, so a lead whose only signal is a now-dropped title
+    (bookkeeper, standalone treasurer, clerical) falls out of the output
+    immediately — no DB migration needed. Only applies to job-board
+    (JOBS) signals: fractional-board postings are in-market by context,
+    and funding signals carry no classifiable title."""
+    if sig.source != SourceName.JOBS:
+        return True
+    title = (sig.payload or {}).get("title") or ""
+    if sig.type == SignalType.JOB_POSTED_FRACTIONAL_CFO:
+        return jobs._is_fractional_cfo_title(title)
+    if sig.type == SignalType.JOB_POSTED_FINANCE_LEAD:
+        return jobs._is_finance_lead_title(title)
+    return True
+
+
 def _lead_to_json(lead: Lead, *, now: datetime) -> dict[str, Any]:
     city, state = _city_state(lead)
     dm_name, dm_title, dm_email, dm_linkedin = _sanitize_dm_for_output(lead)
-    # Per req #10: drop scoring signals where the payload's own date
-    # (posting date for jobs, filing date for Form D) is > 30 days
-    # old. captured_at reflects when the pipeline observed the signal,
-    # not when the event itself occurred — and JobSpy returns leads
-    # going back ~90 days. The 30-day window is enforced here so the
-    # output reflects the actual recency story.
-    scoring_sigs = [s for s in lead.signals if s.type in _SCORING_SIGNAL_TYPES]
+    # Drop scoring signals whose payload event date is beyond the recency
+    # window (30d, or 60d for fractional postings), AND re-validate
+    # job-board titles against the current classifiers so retired title
+    # rules (bookkeeper / treasurer / clerical) take effect immediately.
+    scoring_sigs = [
+        s for s in lead.signals
+        if s.type in _SCORING_SIGNAL_TYPES and _signal_still_valid(s)
+    ]
     fresh_sigs = [s for s in scoring_sigs if not _signal_too_old(s, now)]
-    relevant = sorted(
-        fresh_sigs, key=lambda s: _signal_age_days(s, now)
-    )[:SIGNAL_LIMIT_IN_JSON]
+    # Dedup near-identical signals (the EFTS + getcurrent Form D paths can
+    # catch the same filing under slightly different names), keeping the
+    # freshest of each.
+    deduped: list[Signal] = []
+    seen_keys: set[tuple[SignalType, str]] = set()
+    for s in sorted(fresh_sigs, key=lambda sig: _signal_age_days(sig, now)):
+        key = (s.type, _norm_signal_title(s))
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        deduped.append(s)
+    relevant = deduped[:SIGNAL_LIMIT_IN_JSON]
     top_sig = relevant[0] if relevant else None
     cleaned_dm = _clean_dm_name(dm_name)
     return {
@@ -980,11 +1040,14 @@ def _signal_too_old(s: Signal, now: datetime) -> bool:
 
 
 def _signal_to_json(s: Signal, now: datetime) -> dict[str, Any]:
+    payload = dict(s.payload or {})
+    if payload.get("title"):
+        payload["title"] = _clean_filing_title(payload["title"])
     return {
         "type": s.type.value,
         "captured_at": s.captured_at.isoformat(),
         "days_ago": _signal_age_days(s, now),
-        "payload": s.payload,
+        "payload": payload,
     }
 
 

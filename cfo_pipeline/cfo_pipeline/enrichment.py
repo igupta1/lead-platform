@@ -41,6 +41,8 @@ from cfo_pipeline.sources.edgar_form_d import (
 )
 from cfo_pipeline.sources.jobs import (
     _is_auto_dealer_name,
+    _is_hotel_name,
+    _is_public_sector,
     _is_recruiter_name,
 )
 
@@ -197,6 +199,17 @@ _MEGACORP_PREFIX_RES: tuple[re.Pattern[str], ...] = (
     re.compile(r"^Ernst\s+&?\s+Young\b", re.IGNORECASE),
     re.compile(r"^PricewaterhouseCoopers\b", re.IGNORECASE),
     re.compile(r"^PwC\b", re.IGNORECASE),
+    # Large chains / brands that slip through on unknown headcount
+    # (surfaced by the live-feed audit).
+    re.compile(r"^Gabe'?s\b", re.IGNORECASE),
+    re.compile(r"^Sono\s+Bello\b", re.IGNORECASE),
+    re.compile(r"^USA\s+Clinics\b", re.IGNORECASE),
+    re.compile(r"^Revelyst\b", re.IGNORECASE),
+    re.compile(r"^MasTec\b", re.IGNORECASE),
+    re.compile(r"^Bon\s+App", re.IGNORECASE),
+    re.compile(r"^CookUnity\b", re.IGNORECASE),
+    re.compile(r"^Chrome\s+Hearts\b", re.IGNORECASE),
+    re.compile(r"\bErickson\s+Senior\s+Living\b", re.IGNORECASE),
 )
 
 
@@ -334,6 +347,10 @@ def _disqualification_reason(lead: Lead) -> str | None:
         return "recruiter_name_pattern"
     if _is_auto_dealer_name(lead.name):
         return "auto_dealer_name_pattern"
+    if _is_hotel_name(lead.name):
+        return "hotel_name_pattern"
+    if _is_public_sector(lead.name, lead.domain):
+        return "public_sector_pattern"
     if _is_form_d_noise(lead):
         return "form_d_noise_pattern"
     if lead.headcount is not None and lead.headcount > _SMB_HEADCOUNT_CAP:

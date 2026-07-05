@@ -56,6 +56,12 @@ _EXTRA_ROLE_CAP = 6.0
 _SIZE_FIT_BONUS = 4.0          # headcount in the fractional sweet spot
 _SIZE_FIT_MIN = 10
 _SIZE_FIT_MAX = 50
+_REVENUE_BONUS = 4.0           # Form D/C shows the company has real revenue
+
+# Form D revenueRange bands that mean "no real revenue yet".
+_NO_REVENUE_RANGES: frozenset[str] = frozenset(
+    {"", "no revenues", "decline to disclose", "not applicable"}
+)
 
 
 _HIRING_SIGNAL_TYPES: frozenset[SignalType] = frozenset(
@@ -140,6 +146,23 @@ def _distinct_hiring_titles(lead: Lead) -> int:
     return len(keys)
 
 
+def _has_real_revenue(lead: Lead) -> bool:
+    """True when a funding signal (Form D revenueRange or Form C
+    revenue amount) shows the company has real revenue — a stronger
+    operating profile than a pre-revenue shell."""
+    for s in lead.signals:
+        if s.type != SignalType.FUNDING_RAISED:
+            continue
+        p = s.payload or {}
+        amt = p.get("revenue_amount")
+        if isinstance(amt, (int, float)) and amt > 0:
+            return True
+        rng = str(p.get("revenue_range") or "").strip().lower()
+        if rng and rng not in _NO_REVENUE_RANGES:
+            return True
+    return False
+
+
 def score(lead: Lead, *, now: datetime | None = None) -> float:
     if now is None:
         now = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -188,5 +211,9 @@ def score(lead: Lead, *, now: datetime | None = None) -> float:
     # Headcount sweet spot for the fractional model.
     if lead.headcount is not None and _SIZE_FIT_MIN <= lead.headcount <= _SIZE_FIT_MAX:
         bonus += _SIZE_FIT_BONUS
+
+    # Real revenue (Form D/C) beats a pre-revenue shell.
+    if _has_real_revenue(lead):
+        bonus += _REVENUE_BONUS
 
     return max(SCORE_MIN, min(SCORE_MAX, base + min(bonus, headroom)))

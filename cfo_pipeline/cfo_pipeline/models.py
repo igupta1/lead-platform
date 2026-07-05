@@ -42,6 +42,8 @@ class SourceName(str, Enum):
     JOBS = "jobs"
     FUNDING = "funding"
     EDGAR_FORM_D = "edgar_form_d"
+    EDGAR_FORM_C = "edgar_form_c"
+    FRACTIONAL_BOARD = "fractional_board"
     COMPUTED = "computed"
     APOLLO = "apollo"
 

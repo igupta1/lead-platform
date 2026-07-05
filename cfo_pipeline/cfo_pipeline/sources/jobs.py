@@ -62,14 +62,12 @@ _FINANCE_LEAD_QUERIES: tuple[str, ...] = (
     "Finance Manager",
     "FP&A Manager",
     "Senior Accountant",
-    # Distinct titles not surfaced by the searches above. "Corporate"
-    # / "Divisional" Controller aren't queried separately — the plain
+    # Distinct title not surfaced by the searches above. "Corporate" /
+    # "Divisional" Controller aren't queried separately — the plain
     # "Controller" search already returns them and _CONTROLLER_RE
     # classifies them, so a dedicated query would just burn scrape
     # budget on redundant results.
     "Chief Accounting Officer",
-    "Treasurer",
-    "Bookkeeper",
 )
 _CFO_QUERIES: tuple[str, ...] = (
     "Chief Financial Officer",
@@ -145,14 +143,47 @@ _CAO_RE = re.compile(
     r"\bchief\s+accounting\s+officer\b|\bcao\b",
     re.IGNORECASE,
 )
-_TREASURER_RE = re.compile(r"\btreasurer\b", re.IGNORECASE)
-_BOOKKEEPER_RE = re.compile(r"\bbook\s?keeper\b|\bbookkeeping\b", re.IGNORECASE)
+# Treasurer counts ONLY when bundled with a corporate finance-leadership
+# word (Controller/Treasurer, VP Finance & Treasurer, EVP Finance &
+# Treasurer). Standalone "Treasurer" is overwhelmingly a government /
+# school / volunteer-board role — not a fractional-CFO buyer — so it is
+# not a signal on its own.
+_BUNDLED_TREASURER_RE = re.compile(
+    r"\btreasurer\b.*\b(controller|finance|financial|accounting)\b"
+    r"|\b(controller|finance|financial|accounting)\b.*\btreasurer\b",
+    re.IGNORECASE,
+)
+
+# Core finance-leadership keywords. Used to rescue a clerical-looking
+# title that nonetheless names a real leadership role (e.g. "Assistant
+# Controller") from the clerical exclusion below.
+_FINANCE_CORE_RE = re.compile(
+    r"\b(controller|comptroller|"
+    r"chief\s+financial(?:\s+officer)?|chief\s+accounting(?:\s+officer)?|cfo|cao|"
+    r"vp\s+(?:of\s+)?finance|vice\s+president[,\s].*finance|"
+    r"head\s+of\s+finance|director\s+of\s+finance|finance\s+director|"
+    r"head\s+of\s+accounting|director\s+of\s+accounting)\b",
+    re.IGNORECASE,
+)
+
+# Clerical / junior IC titles that are NOT finance leadership. A title
+# matching this and lacking a _FINANCE_CORE_RE keyword is rejected
+# ("Accounting Clerk", "Financial Services Technician", "Admin
+# Assistant / Bookkeeper"), while "Assistant Controller" survives.
+_CLERICAL_EXCLUDE_RE = re.compile(
+    r"\b(clerk|technician|administrative\s+assistant|admin\s+assistant|"
+    r"executive\s+assistant|office\s+assistant|office\s+administrator|"
+    r"support\s+associate|representative\s+payee|receptionist|"
+    r"data\s+manager|front\s+office|secretary|intern|apprentice|"
+    r"reservationist)\b",
+    re.IGNORECASE,
+)
 
 # Finance-LEADERSHIP titles (a rung the fractional service can fill).
 # Used to promote a part-time / interim / fractional posting of one of
 # these to the in-market tier. Deliberately excludes IC-level finance
 # titles (bookkeeper, staff / senior accountant, finance / accounting
-# manager): a "Part-Time Bookkeeper" is not a fractional-CFO buyer.
+# manager) and standalone treasurer.
 _FINANCE_LEADERSHIP_RES: tuple[re.Pattern[str], ...] = (
     _CONTROLLER_RE,
     _VP_FINANCE_RE,
@@ -161,7 +192,42 @@ _FINANCE_LEADERSHIP_RES: tuple[re.Pattern[str], ...] = (
     _HEAD_OF_ACCOUNTING_RE,
     _FPA_LEAD_RE,
     _CAO_RE,
-    _TREASURER_RE,
+)
+
+# Branded / property-level hotels. A hotel's "Director of Finance" is a
+# standard property role reporting to a management company or REIT, not
+# a fractional-CFO buyer.
+_HOTEL_NAME_RE = re.compile(
+    r"\b(hotel|hyatt|kimpton|marriott|hilton|sheraton|westin|fairmont|"
+    r"ritz[-\s]?carlton|four\s+seasons|auberge|intercontinental|"
+    r"hospitality|resort|lodge|\binn\b|suites)\b",
+    re.IGNORECASE,
+)
+
+# Government / public-sector entities. Statutory finance departments +
+# elected treasurers — legally not fractional-CFO buyers. Careful entity
+# matching so private nonprofits that merely reference a place survive
+# (e.g. "Sickle Cell Foundation of Palm Beach County").
+_PUBLIC_SECTOR_RES: tuple[re.Pattern[str], ...] = (
+    re.compile(r"\b(?:city|town|village|borough|township|county|state|commonwealth)\s+of\b", re.IGNORECASE),
+    re.compile(r"\btownship\b", re.IGNORECASE),
+    re.compile(r"\bcounty\s*$", re.IGNORECASE),
+    re.compile(r"\bcounty\s+(?:schools?|school\s+district|government|treasurer)\b", re.IGNORECASE),
+    re.compile(r"\b(?:public|community|city|unified|independent)\s+school(?:s|\s+district)?\b", re.IGNORECASE),
+    re.compile(r"\bschool\s+district\b|\bisd\b", re.IGNORECASE),
+    re.compile(r"\bpolice\s+department\b|\bsheriff(?:'s)?\s+(?:office|department)\b", re.IGNORECASE),
+    re.compile(r"\b(?:rapid\s+transit|transit\s+authority|transit\s+district)\b", re.IGNORECASE),
+    re.compile(r"\bmunicipal(?:ity)?\b", re.IGNORECASE),
+)
+# Private-nonprofit indicators that legitimately reference a locality —
+# these are real orgs (some do buy fractional CFOs), so they override
+# the public-sector patterns above.
+_NONPROFIT_INDICATOR_RE = re.compile(
+    r"\b(foundation|association|coalition|alliance|charit(?:y|ies)|"
+    r"non-?profit|ministries|ministry|church|synagogue|diocese|temple|"
+    r"chamber\s+of\s+commerce|society|institute|council|united\s+way|"
+    r"habitat\s+for\s+humanity|goodwill|ymca|ywca)\b",
+    re.IGNORECASE,
 )
 
 # CFO disqualifier. Detects "Chief Financial Officer" or stand-alone
@@ -275,6 +341,24 @@ def _is_auto_dealer_name(name: str) -> bool:
     return bool(_AUTO_BRAND_RE.search(name) or _AUTO_SUFFIX_RE.search(name))
 
 
+def _is_hotel_name(name: str) -> bool:
+    return bool(_HOTEL_NAME_RE.search(name))
+
+
+def _is_public_sector(name: str, domain: str | None = None) -> bool:
+    """Government / public-sector entity — not a fractional-CFO buyer.
+    Private nonprofits that merely name a locality are exempted."""
+    if _NONPROFIT_INDICATOR_RE.search(name):
+        return False
+    if any(p.search(name) for p in _PUBLIC_SECTOR_RES):
+        return True
+    if domain:
+        d = domain.lower()
+        if ".k12." in d or d.endswith(".k12.us"):
+            return True
+    return False
+
+
 def _is_automotive_title(title: str) -> bool:
     return bool(_AUTOMOTIVE_TITLE_RE.search(title))
 
@@ -325,10 +409,19 @@ def _is_finance_lead_title(title: str) -> bool:
     first)."""
     if not title:
         return False
+    # Clerical / junior exclusion: reject administrative or IC titles
+    # (clerk, technician, admin/exec assistant, ...) UNLESS they also
+    # name a genuine finance-leadership role. Drops "Accounting Clerk"
+    # and "Financial Services Technician" while keeping "Assistant
+    # Controller".
+    if _CLERICAL_EXCLUDE_RE.search(title) and not _FINANCE_CORE_RE.search(title):
+        return False
     # Senior Accountant: include unless the title narrows to a specialist
     # IC track (tax / audit / cost / payroll), where the buying signal
     # weakens.
     if _SENIOR_ACCOUNTANT_RE.search(title) and not _SENIOR_ACCOUNTANT_EXCLUDE_RE.search(title):
+        return True
+    if _BUNDLED_TREASURER_RE.search(title):
         return True
     return bool(
         _CONTROLLER_RE.search(title)
@@ -339,8 +432,6 @@ def _is_finance_lead_title(title: str) -> bool:
         or _HEAD_OF_ACCOUNTING_RE.search(title)
         or _FPA_LEAD_RE.search(title)
         or _CAO_RE.search(title)
-        or _TREASURER_RE.search(title)
-        or _BOOKKEEPER_RE.search(title)
     )
 
 
@@ -512,7 +603,12 @@ def _fetch_from_jobspy(
             company = str(row.get("company") or "").strip()
             if not title or not company:
                 continue
-            if _is_recruiter_name(company) or _is_auto_dealer_name(company):
+            if (
+                _is_recruiter_name(company)
+                or _is_auto_dealer_name(company)
+                or _is_hotel_name(company)
+                or _is_public_sector(company)
+            ):
                 continue
             if _is_automotive_title(title):
                 continue

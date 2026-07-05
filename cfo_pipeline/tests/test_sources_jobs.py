@@ -169,12 +169,68 @@ def test_part_time_ic_finance_is_not_in_market():
     assert not jobs._is_fractional_cfo_title("Contract Senior Accountant")
 
 
-def test_classifies_newly_added_leadership_titles():
+def test_classifies_cao_and_controllers():
     assert jobs._is_finance_lead_title("Chief Accounting Officer")
-    assert jobs._is_finance_lead_title("Treasurer")
-    assert jobs._is_finance_lead_title("Bookkeeper")
     assert jobs._is_finance_lead_title("Corporate Controller")
     assert jobs._is_finance_lead_title("Divisional Controller")
+
+
+def test_bookkeeper_titles_dropped():
+    assert not jobs._is_finance_lead_title("Bookkeeper")
+    assert not jobs._is_finance_lead_title("Winery Bookkeeper")
+    assert not jobs._is_finance_lead_title("Office Administrator - Bookkeeper")
+    assert not jobs._is_finance_lead_title("In-House Bookkeeper")
+
+
+def test_standalone_treasurer_dropped_bundled_kept():
+    # Government / school / volunteer treasurers are noise:
+    assert not jobs._is_finance_lead_title("Treasurer")
+    assert not jobs._is_finance_lead_title("Village Treasurer")
+    assert not jobs._is_finance_lead_title("Deputy Treasurer")
+    assert not jobs._is_finance_lead_title("Secretary/Treasurer")
+    # Bundled corporate treasurer is a real finance-leadership role:
+    assert jobs._is_finance_lead_title("VP, Controller & Treasurer")
+    assert jobs._is_finance_lead_title("Controller/Treasurer")
+    assert jobs._is_finance_lead_title("VP Finance & Treasurer")
+
+
+def test_clerical_titles_dropped_but_assistant_controller_kept():
+    assert not jobs._is_finance_lead_title("Accounting Clerk")
+    assert not jobs._is_finance_lead_title("Financial Services Technician I - County Treasurer")
+    assert not jobs._is_finance_lead_title("Administrative Assistant / Bookkeeper")
+    assert not jobs._is_finance_lead_title("Support Associate V - Treasurer")
+    # A genuine finance role that merely says "assistant" survives:
+    assert jobs._is_finance_lead_title("Assistant Controller")
+
+
+def test_hotel_names_filtered():
+    assert jobs._is_hotel_name("Kimpton Hotel Monaco Denver")
+    assert jobs._is_hotel_name("Hyatt Union Square New York")
+    assert jobs._is_hotel_name("Auberge du Soleil")
+    assert jobs._is_hotel_name("Glenwood Hot Springs Resort")
+    assert jobs._is_hotel_name("Whiteface Lodge")
+    assert not jobs._is_hotel_name("Acme Robotics Inc")
+    assert not jobs._is_hotel_name("Canary Technologies")  # hospitality TECH — keep
+
+
+def test_public_sector_filtered_but_nonprofits_survive():
+    assert jobs._is_public_sector("Lea County")
+    assert jobs._is_public_sector("Oakland County")
+    assert jobs._is_public_sector("Village of Pittsford")
+    assert jobs._is_public_sector("Borough of Lewistown")
+    assert jobs._is_public_sector("New Hanover County Schools")
+    assert jobs._is_public_sector("Garfield Heights City Schools")
+    assert jobs._is_public_sector("New York City Police Department")
+    assert jobs._is_public_sector("Dallas Area Rapid Transit")
+    assert jobs._is_public_sector("Chesterfield Township Michigan")
+    assert jobs._is_public_sector("Culver Community Schools Corporation")
+    # k12 school domain:
+    assert jobs._is_public_sector("Pender County Schools", "pender.k12.nc.us")
+    # Private nonprofits that merely name a locality survive:
+    assert not jobs._is_public_sector(
+        "Sickle Cell Foundation of Palm Beach County & Treasure Coast, Inc"
+    )
+    assert not jobs._is_public_sector("Acme Robotics Inc")
 
 
 def test_fractional_title_never_disqualifies():
