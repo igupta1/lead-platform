@@ -94,15 +94,17 @@ def test_plain_words_per_type():
 # --- _build_inventory qualification ---------------------------------------
 
 
-def _make(conn, name, *, domain, state=None, city=None, niche=None, days_ago=3):
-    cand = LeadCandidate(
-        name=name, domain=domain,
-        initial_signal=_sig(
-            SignalType.JOB_POSTED_FINANCE_LEAD,
-            payload={"title": "Controller", "date_posted": _recent(days_ago),
-                     "url": "x", "site": "indeed"},
-        ),
-    )
+def _make(conn, name, *, domain, state=None, city=None, niche=None, days_ago=3,
+          funding=False, value_prop=None):
+    if funding:
+        sig = _sig(SignalType.FUNDING_RAISED, payload={
+            "filing_type": "Form D", "offering_amount": 3_000_000,
+            "filed_on": _recent(days_ago), "link": ""})
+    else:
+        sig = _sig(SignalType.JOB_POSTED_FINANCE_LEAD, payload={
+            "title": "Controller", "date_posted": _recent(days_ago),
+            "url": "x", "site": "indeed"})
+    cand = LeadCandidate(name=name, domain=domain, initial_signal=sig)
     lead = db.upsert_lead(conn, cand)
     assert lead is not None and lead.id is not None
     if state or city:
@@ -111,24 +113,33 @@ def _make(conn, name, *, domain, state=None, city=None, niche=None, days_ago=3):
             Signal(type=SignalType.LOCATION_CAPTURED, source=SourceName.COMPUTED,
                    captured_at=_NOW, payload={"city": city, "state": state}),
         )
+    updates = {}
     if niche:
-        db.update_lead(conn, lead.id, niche=niche, industry=taxonomy.parent_of(niche))
+        updates.update(niche=niche, industry=taxonomy.parent_of(niche))
+    if value_prop:
+        updates["value_prop"] = value_prop
+    if updates:
+        db.update_lead(conn, lead.id, **updates)
     return lead
 
 
 def test_build_inventory_qualification(conn):
     _make(conn, "Fresh Co", domain="fresh.com", state="CA", city="Oakland",
-          niche="b2b_saas", days_ago=5)          # fresh -> included
+          niche="b2b_saas", days_ago=5, value_prop="B2B SaaS for gyms")  # fresh
     _make(conn, "Stale Co", domain="stale.com", state="TX", city="Austin",
-          niche="restaurant", days_ago=45)        # stale (31-60) -> included
-    _make(conn, "Dead Co", domain="dead.com", state="NY", days_ago=70)  # >60 -> excluded
-    _make(conn, "NoDomain Co", domain=None, state="FL")   # domainless -> excluded
-    _make(conn, "NoState Co", domain="nostate.com")       # no location -> excluded
+          niche="restaurant", days_ago=45)                     # stale (31-60) -> included
+    _make(conn, "Dead Co", domain="dead.com", state="NY", days_ago=70)   # >60 -> excluded
+    _make(conn, "NoDomain Hire", domain=None, state="FL", days_ago=4)    # hiring, no domain -> INCLUDED
+    _make(conn, "NoDomain Fund", domain=None, state="WA", days_ago=4, funding=True)  # funding, no domain -> excluded
+    _make(conn, "NoState Co", domain="nostate.com")                      # no location -> excluded
 
     inv = daily_run._build_inventory(conn)
     by_name = {l["company"]: l for l in inv["leads"]}
 
-    assert set(by_name) == {"Fresh Co", "Stale Co"}
+    # domain relaxed for hiring leads, still required for funding-only
+    assert set(by_name) == {"Fresh Co", "Stale Co", "NoDomain Hire"}
+    assert by_name["NoDomain Hire"]["domain"] is None
+
     assert by_name["Fresh Co"]["freshness"] == "fresh"
     assert by_name["Stale Co"]["freshness"] == "stale"
 
@@ -136,6 +147,7 @@ def test_build_inventory_qualification(conn):
     assert fresh["signal_type"] == "hiring_only"
     assert fresh["industry"] == "software_saas"  # derived from niche
     assert fresh["niche"] == "b2b_saas"
+    assert fresh["value_prop"] == "B2B SaaS for gyms"  # surfaced for the review card
     assert fresh["state"] == "CA" and fresh["city"] == "Oakland"
     # id is domain-derived (name_key arg is ignored when a domain exists).
     assert fresh["id"] == daily_run._stable_id("fresh.com", "ignored")

@@ -1238,8 +1238,6 @@ def _build_inventory(conn: sqlite3.Connection) -> dict[str, Any]:
     # (the bullseye reconciliation only runs in the full nightly flow).
     grouped: dict[str, dict[str, Any]] = {}
     for lead in db.iter_leads(conn):
-        if not lead.domain:
-            continue  # need a resolvable company to serve it
         city, state = _city_state(lead)
         if not state:
             continue  # unmatchable without at least a state
@@ -1250,6 +1248,15 @@ def _build_inventory(conn: sqlite3.Connection) -> dict[str, Any]:
             and _signal_age_days(s, now) <= _INVENTORY_MAX_AGE_DAYS
         ]
         if not valid:
+            continue
+        # Domain is OPTIONAL for hiring-signal leads: the gift copy never
+        # prints a domain ("[Company], [city]: [signal]"), and a company
+        # that publicly posted a finance role is provably real even when
+        # Gemini couldn't resolve its website — often a small, obscure
+        # firm, i.e. a prime target. Funding-only leads still require a
+        # domain as a quality proxy against Form-D shell artifacts.
+        has_hiring = any(s.type in _HIRING_SIGNAL_TYPES for s in valid)
+        if not lead.domain and not has_hiring:
             continue
         lid = _stable_id(lead.domain, lead.name_key)
         rec = grouped.get(lid)
@@ -1282,6 +1289,10 @@ def _build_inventory(conn: sqlite3.Connection) -> dict[str, Any]:
             "state": rec["state"],
             "industry": lead.industry,
             "niche": lead.niche,
+            # "what they do" — lets the review card verify the niche at a
+            # glance (null for light-path Form C leads, which are the
+            # unknown-niche ones anyway).
+            "value_prop": lead.value_prop,
             "signal_type": _lead_signal_type(deduped),
             "freshness": _freshness_label(freshest),
             "signals": [_inventory_signal(s, now) for s in deduped],
