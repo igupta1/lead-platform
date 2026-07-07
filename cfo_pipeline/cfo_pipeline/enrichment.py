@@ -209,6 +209,13 @@ _MEGACORP_PREFIX_RES: tuple[re.Pattern[str], ...] = (
     re.compile(r"^CookUnity\b", re.IGNORECASE),
     re.compile(r"^Chrome\s+Hearts\b", re.IGNORECASE),
     re.compile(r"\bErickson\s+Senior\s+Living\b", re.IGNORECASE),
+    # Large null-headcount subsidiaries surfaced by the live-feed audit.
+    re.compile(r"^Canon\b", re.IGNORECASE),
+    re.compile(r"^W(?:ü|u)rth\b", re.IGNORECASE),
+    re.compile(r"^JCB\b", re.IGNORECASE),
+    re.compile(r"^Karl\s+Storz\b", re.IGNORECASE),
+    re.compile(r"^SXSW\b", re.IGNORECASE),
+    re.compile(r"^Hengli\b", re.IGNORECASE),
 )
 
 
@@ -343,6 +350,53 @@ def _has_ticker(name: str) -> bool:
     return bool(m and m.group(1) not in _TICKER_DENYLIST)
 
 
+# Foreign-parent US subsidiary naming ("Canon U.S.A.", "Würth Industry
+# USA", "JCB North America", "Karl Storz — America"). Used ONLY as a
+# headcount proxy when headcount is null: these are almost always large,
+# and the ≤75 cap can't fire without a number. Gated on null headcount so
+# a genuinely small "Acme USA LLC" that we DID size is untouched.
+_FOREIGN_SUBSIDIARY_RE = re.compile(
+    r"(?:\bu\.?\s?s\.?\s?a\b|\bnorth\s+america\b|\bamericas?\b)\.?"
+    r"(?:\s*[-,]?\s*(?:inc|llc|corp(?:oration)?|co|ltd|limited|gmbh|group|holdings?)\.?)?\s*$",
+    re.IGNORECASE,
+)
+
+
+def _is_foreign_subsidiary_name(name: str) -> bool:
+    return bool(_FOREIGN_SUBSIDIARY_RE.search(name))
+
+
+# Finance-vertical OPERATORS — banks, insurers, VC/PE, wealth managers.
+# They have finance in-house (or ARE finance) and don't buy a fractional
+# CFO. Distinct from fintech PRODUCT startups (Stripe, Plaid, Affirm),
+# which are brand-named and don't match these operator patterns — so the
+# fintech niche is preserved.
+_NONFINANCIAL_BANK_RE = re.compile(
+    r"\b(?:food|blood|data|sperm|milk|seed|piggy|toy|memory|word|bottle|"
+    r"tissue|organ|eye|bone|gene|time|river|left|west)\s+bank",
+    re.IGNORECASE,
+)
+_BANK_RE = re.compile(r"\bbank\b", re.IGNORECASE)
+_FINANCE_VERTICAL_RE = re.compile(
+    r"\b(?:"
+    r"banc(?:orp|shares)|credit\s+union|"
+    r"insurance|reinsurance|life\s+assurance|blue\s+(?:cross|shield)|"
+    r"private\s+equity|venture\s+capital|"
+    r"asset\s+management|investment\s+management|"
+    r"wealth\s+(?:management|partners|advisors?|advisory|group)"
+    r")\b"
+    r"|\bcapital\s*$"     # trailing "... Capital" (VC / PE firm)
+    r"|\bfinancial\s*$",  # trailing "... Financial" (advisory firm)
+    re.IGNORECASE,
+)
+
+
+def _is_finance_vertical(name: str) -> bool:
+    if _BANK_RE.search(name) and not _NONFINANCIAL_BANK_RE.search(name):
+        return True
+    return bool(_FINANCE_VERTICAL_RE.search(name))
+
+
 def _disqualification_reason(lead: Lead) -> str | None:
     if _domain_blocked(lead.domain):
         return f"blocked_domain={lead.domain}"
@@ -368,12 +422,19 @@ def _disqualification_reason(lead: Lead) -> str | None:
         return "public_sector_pattern"
     if _has_ticker(lead.name):
         return "public_company_ticker"
+    if _is_finance_vertical(lead.name):
+        return "finance_vertical"
     if _is_form_d_noise(lead):
         return "form_d_noise_pattern"
     if lead.headcount is not None and lead.headcount > _SMB_HEADCOUNT_CAP:
         return f"oversized={lead.headcount}"
     if lead.headcount == 0:
         return "zero_headcount"
+    # Headcount proxy: an unsized "[Name] USA / America / North America"
+    # is almost always a large foreign-parent subsidiary the ≤75 cap
+    # can't catch without a number.
+    if lead.headcount is None and _is_foreign_subsidiary_name(lead.name):
+        return "likely_oversized_subsidiary"
     # Per req #2: null headcount excludes IF the lead has been through
     # enrichment at least once. We can't punish brand-new leads on the
     # first run (enrichment hasn't tried yet), so the check is gated
