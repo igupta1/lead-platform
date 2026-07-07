@@ -60,7 +60,8 @@ class Lead(BaseModel):
     name: str
     name_key: str
     domain: str | None = None
-    industry: str | None = None
+    industry: str | None = None       # coarse parent, derived from niche
+    niche: str | None = None          # granular child (see taxonomy.py)
     headcount: int | None = None
     country: str | None = None
     dm_name: str | None = None

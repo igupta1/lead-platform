@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS leads (
     name_key        TEXT NOT NULL UNIQUE,
     domain          TEXT,
     industry        TEXT,
+    niche           TEXT,
     headcount       INTEGER,
     country         TEXT,
     dm_name         TEXT,
@@ -67,7 +68,9 @@ CREATE TABLE IF NOT EXISTS disqualified (
 
 # Migrations land BEFORE indexes inside init_db so legacy DBs migrate
 # cleanly. Lesson learned from msp_pipeline's init_db ordering bug.
-_MIGRATIONS: tuple[tuple[str, str], ...] = ()
+_MIGRATIONS: tuple[tuple[str, str], ...] = (
+    ("niche", "TEXT"),
+)
 
 _INDEXES = (
     "CREATE INDEX IF NOT EXISTS idx_leads_score ON leads(score DESC)",
@@ -76,6 +79,7 @@ _INDEXES = (
 _UPDATABLE_FIELDS = frozenset({
     "domain",
     "industry",
+    "niche",
     "headcount",
     "country",
     "dm_name",

@@ -212,14 +212,15 @@ def test_form_c_light_path_skips_gemini(conn, monkeypatch):
 
     monkeypatch.setattr(enrichment, "lookup_company", boom)
     monkeypatch.setattr(
-        enrichment, "classify_industry",
-        lambda lead, value_prop=None: enrichment.Industry.SOFTWARE_SAAS,
+        enrichment, "classify_niche",
+        lambda lead, value_prop=None: "b2b_saas",
     )
 
     assert enrichment.enrich(conn, lead, force=False) is True
     updated = db.get_lead(conn, lead_id=fc.id)
     assert updated is not None
-    assert updated.industry == "software_saas"
+    assert updated.niche == "b2b_saas"
+    assert updated.industry == "software_saas"  # derived parent
     assert updated.country == "US"
     assert any(s.type == SignalType.LOCATION_CAPTURED for s in updated.signals)
     assert any(s.type == SignalType.ENRICHMENT_RUN for s in updated.signals)

@@ -14,6 +14,11 @@ on:
         type: boolean
         required: false
         default: false
+      reclassify:
+        description: "One-time backfill: re-run the niche classifier (OpenAI only, no Gemini / scraping) on every enriched lead, rebuild + upload. Skips the fetch."
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write
@@ -65,6 +70,7 @@ jobs:
           GEMINI_MIN_INTERVAL_S: "0.7"
           LIMIT:                ${{ inputs.limit }}
           REENRICH:             ${{ inputs.reenrich }}
+          RECLASSIFY:           ${{ inputs.reclassify }}
         run: |
           # --enrich-budget 900: paid-tier grounded search is free to
           # ~1,500/day. Form C leads now enrich on a light path (no
@@ -76,6 +82,9 @@ jobs:
           args=("--upload" "--enrich-budget" "900")
           if [[ "$REENRICH" == "true" ]]; then
             args+=("--reenrich")
+          fi
+          if [[ "$RECLASSIFY" == "true" ]]; then
+            args+=("--reclassify")
           fi
           if [[ -n "$LIMIT" ]]; then
             args+=("--limit" "$LIMIT")

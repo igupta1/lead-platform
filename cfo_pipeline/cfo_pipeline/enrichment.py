@@ -23,11 +23,10 @@ import logging
 import re
 import sqlite3
 from datetime import datetime, timezone
-from enum import Enum
 
 from pydantic import BaseModel
 
-from cfo_pipeline import db, llm
+from cfo_pipeline import db, llm, taxonomy
 from cfo_pipeline.models import Lead, Signal, SignalType, SourceName
 from cfo_pipeline.sources.edgar_form_d import (
     _INVESTMENT_VEHICLE_KEYWORDS_RE,
@@ -328,6 +327,22 @@ def _has_hiring_signal(lead: Lead) -> bool:
     return any(s.type in _HIRING_SIGNAL_TYPES for s in lead.signals)
 
 
+# Public-company ticker in the name, e.g. "... Corp (BRQL)" / "(QNCX)".
+# A public company isn't a fractional-CFO buyer (spec Part 2 exclusion).
+# Match a trailing 2-5 uppercase-letter parenthetical, excluding common
+# non-ticker abbreviations (legal suffixes, country codes).
+_TICKER_RE = re.compile(r"\(([A-Z]{2,5})\)\s*$")
+_TICKER_DENYLIST: frozenset[str] = frozenset({
+    "USA", "LLC", "INC", "PLC", "LTD", "LP", "LLP", "CO", "US", "UK",
+    "EU", "AI", "IT", "HR", "PR", "NA", "DC", "USB",
+})
+
+
+def _has_ticker(name: str) -> bool:
+    m = _TICKER_RE.search(name)
+    return bool(m and m.group(1) not in _TICKER_DENYLIST)
+
+
 def _disqualification_reason(lead: Lead) -> str | None:
     if _domain_blocked(lead.domain):
         return f"blocked_domain={lead.domain}"
@@ -351,6 +366,8 @@ def _disqualification_reason(lead: Lead) -> str | None:
         return "hotel_name_pattern"
     if _is_public_sector(lead.name, lead.domain):
         return "public_sector_pattern"
+    if _has_ticker(lead.name):
+        return "public_company_ticker"
     if _is_form_d_noise(lead):
         return "form_d_noise_pattern"
     if lead.headcount is not None and lead.headcount > _SMB_HEADCOUNT_CAP:
@@ -426,30 +443,11 @@ def purge_disqualified(conn: sqlite3.Connection) -> int:
     return deleted
 
 
-# --- Industry vocabulary ---------------------------------------------------
-
-
-class Industry(str, Enum):
-    SOFTWARE_SAAS = "software_saas"
-    FINTECH = "fintech"
-    HEALTHCARE = "healthcare"
-    ECOMMERCE_RETAIL = "ecommerce_retail"
-    MANUFACTURING = "manufacturing"
-    LOGISTICS_TRANSPORT = "logistics_transport"
-    REAL_ESTATE = "real_estate"
-    LEGAL_PROFESSIONAL = "legal_professional"
-    EDUCATION = "education"
-    MEDIA_ENTERTAINMENT = "media_entertainment"
-    HOSPITALITY_FOOD = "hospitality_food"
-    GOVERNMENT_NONPROFIT = "government_nonprofit"
-    CONSTRUCTION = "construction"
-    OTHER = "other"
-    # Explicit unknown bucket — prior runs surfaced car dealerships,
-    # semiconductors, farmland platforms, and supplement brands all
-    # tagged as Fintech because OTHER felt too generic to the LLM and
-    # FINTECH was the soft default. The classifier prompt is now
-    # explicit that uncertainty → UNKNOWN, not FINTECH.
-    UNKNOWN = "unknown"
+# --- Industry / niche vocabulary -------------------------------------------
+#
+# The taxonomy (granular niches + their coarse parents) lives in
+# taxonomy.py. Leads are classified into a granular niche; the coarse
+# ``industry`` is derived from it via ``taxonomy.parent_of``.
 
 
 def _summarize_signals(lead: Lead) -> str:
@@ -612,61 +610,66 @@ def lookup_company(lead: Lead) -> _Lookup:
     )
 
 
-# --- OpenAI industry classification ---------------------------------------
+# --- OpenAI niche classification ------------------------------------------
 
 
-_INDUSTRY_PROMPT = """\
-Classify the company "{name}" into exactly one of these industry tags:
-{tags}
+_NICHE_PROMPT = """\
+Classify the company "{name}" into exactly ONE granular niche from the
+catalog below.
 
-What the company actually does (from web lookup): {value_prop}
+What the company actually does (from a web lookup): {value_prop}
 
-Recent signals about this company (these describe the LEAD's hiring /
-filing activity — NOT what they sell): {signals}
+Recent signals (these describe the company's hiring / filing activity —
+NOT what it sells; do not classify by the signal): {signals}
 
-Pick the single best-fitting tag based on the value_prop above.
-The signals are about who they're hiring or what they filed, not
-what they make — do not classify a supplement brand as fintech just
-because the signal is "job_posted_finance_lead".
+Available niches, grouped by their broad parent category:
+{niches}
 
 Rules:
-- Only use "fintech" for companies whose core product IS financial
-  technology: payments, banking software, lending platforms,
-  brokerage / trading tech, financial data services. A company
-  whose name contains a financial-sounding word is NOT fintech.
-  "Suprannaturals" / "Capital Tea" / "Naturals Co" are NOT fintech.
-- Use "real_estate" for property management, REITs, real-estate
-  platforms, farmland investment vehicles.
-- Use "ecommerce_retail" for DTC brands (supplements, apparel,
-  beauty, food, beverage), online retailers, marketplaces.
-- Use "manufacturing" for hardware, semiconductors, industrial
-  equipment, consumer-goods producers.
-- Use "logistics_transport" for trucking, fleet operators, freight,
-  delivery, auto dealerships.
-- Use "healthcare" for clinical, diagnostic, biotech, pharma,
-  health-services companies.
-- Use "software_saas" for B2B / B2C software products, dev tools,
-  AI infrastructure, AI agents, GPU compute, developer platforms.
-- Use "unknown" when value_prop is "unknown" or doesn't give you
-  enough to confidently pick. Do NOT guess "fintech" or "other" as
-  a soft default. UNKNOWN is the correct answer when you're not sure.
+- Pick the single best-fitting CHILD niche based on what the company
+  sells or does (the value_prop above), not on the signal. Do not tag a
+  supplement brand as a finance niche just because it's hiring a
+  Controller.
+- "vertical_saas" = software sold to one industry (e.g. dental software);
+  "b2b_saas" = horizontal business software; "ai_ml" = the core product
+  is an AI/ML model or platform.
+- "biotech_pharma" / "medical_devices" are for drug / device / clinical
+  companies; a healthcare-SERVICES clinic or practice is
+  "medical_practice".
+- Consumer product brands are "dtc_brand" / "cpg_food_beverage" /
+  "apparel_fashion" / "beauty_personal_care" — NOT "marketplace" (a
+  platform connecting third-party buyers and sellers).
+- If the value_prop is "unknown" or too thin to judge, return "unknown".
+  Do NOT guess "other" or a soft default — "unknown" is the correct
+  answer when you cannot tell.
 """
 
 
-class _IndustryOut(BaseModel):
-    industry: Industry
+class _NicheOut(BaseModel):
+    niche: taxonomy.Niche
 
 
-def classify_industry(lead: Lead, *, value_prop: str | None = None) -> Industry:
-    tags = ", ".join(t.value for t in Industry)
-    prompt = _INDUSTRY_PROMPT.format(
+def _niche_catalog() -> str:
+    lines = []
+    for parent, children in taxonomy.PARENT_CHILDREN.items():
+        if parent in ("other", "unknown"):
+            continue
+        lines.append(f"- {parent}: {', '.join(children)}")
+    lines.append("- (fallbacks): other, unknown")
+    return "\n".join(lines)
+
+
+def classify_niche(lead: Lead, *, value_prop: str | None = None) -> str:
+    """Classify into a granular niche (taxonomy.Niche value). The coarse
+    industry is derived by the caller via ``taxonomy.parent_of``."""
+    prompt = _NICHE_PROMPT.format(
         name=lead.name,
-        tags=tags,
+        niches=_niche_catalog(),
         value_prop=value_prop or lead.value_prop or "unknown",
         signals=_summarize_signals(lead),
     )
-    out = llm.call_openai(prompt, response_model=_IndustryOut)
-    return out.industry
+    out = llm.call_openai(prompt, response_model=_NicheOut)
+    return out.niche.value
 
 
 # --- Orchestrator ---------------------------------------------------------
@@ -775,8 +778,11 @@ def _enrich_form_c_light(conn: sqlite3.Connection, lead: Lead) -> bool:
                     payload={"city": city, "state": state},
                 ),
             )
-    industry = classify_industry(lead, value_prop=None)
-    db.update_lead(conn, lead.id, industry=industry.value, country="US")
+    niche = classify_niche(lead, value_prop=None)
+    db.update_lead(
+        conn, lead.id,
+        industry=taxonomy.parent_of(niche), niche=niche, country="US",
+    )
     db.append_signal(
         conn, lead.id,
         Signal(
@@ -787,8 +793,8 @@ def _enrich_form_c_light(conn: sqlite3.Connection, lead: Lead) -> bool:
         ),
     )
     log.info(
-        "enrich (light/Form C): %d (%s) industry=%s — no Gemini call",
-        lead.id, lead.name, industry.value,
+        "enrich (light/Form C): %d (%s) niche=%s — no Gemini call",
+        lead.id, lead.name, niche,
     )
     return True
 
@@ -889,13 +895,14 @@ def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool
             ),
         )
 
-    # Pass the freshly-fetched value_prop into industry classification
-    # so SUPRANATURALS-style supplements brands don't get tagged
-    # 'fintech' because the only signal is a finance-lead hire.
-    industry = classify_industry(lead, value_prop=lookup.value_prop)
+    # Classify the granular niche from the freshly-fetched value_prop
+    # (so a SUPRANATURALS-style supplements brand doesn't get tagged by
+    # its finance-lead signal); derive the coarse industry from it.
+    niche = classify_niche(lead, value_prop=lookup.value_prop)
 
     updates: dict[str, object] = {
-        "industry": industry.value,
+        "industry": taxonomy.parent_of(niche),
+        "niche": niche,
         "country": "US" if lookup.country == "US" else None,
         "value_prop": lookup.value_prop,
     }

@@ -15,6 +15,7 @@ leads out of the leads table before anything else runs.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import logging
 import os
@@ -27,7 +28,7 @@ from typing import Any
 
 import requests
 
-from cfo_pipeline import apollo, db, enrichment, llm, scoring
+from cfo_pipeline import apollo, db, enrichment, llm, scoring, taxonomy
 from cfo_pipeline.models import (
     Disqualifier,
     Lead,
@@ -119,8 +120,13 @@ def main(argv: list[str] | None = None) -> int:
     args.db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = db.init_db(args.db_path)
 
-    if args.rescore_only:
+    if args.rescore_only or args.reclassify:
         log.info("rescore-only: skipping fetch / upsert")
+
+        if args.reclassify:
+            log.info("reclassify: re-running niche classifier (OpenAI only)")
+            n = _reclassify_niches(conn)
+            log.info("reclassify: migrated %d leads onto the niche taxonomy", n)
 
         if args.reenrich:
             existing_ids = [
@@ -152,6 +158,11 @@ def main(argv: list[str] | None = None) -> int:
         args.output_path.parent.mkdir(parents=True, exist_ok=True)
         args.output_path.write_text(json.dumps(output, indent=2, default=str))
         log.info("wrote %s", args.output_path)
+
+        try:
+            _write_and_upload_inventory(conn, args)
+        except Exception:
+            log.exception("inventory build/upload failed")
 
         if args.upload:
             try:
@@ -246,6 +257,11 @@ def main(argv: list[str] | None = None) -> int:
         len(worklist), enrich_spent, enrich_deferred, purged,
         len(output["leads"]),
     )
+
+    try:
+        _write_and_upload_inventory(conn, args)
+    except Exception:
+        log.exception("inventory build/upload failed")
 
     if args.upload:
         try:
@@ -1099,16 +1115,230 @@ def _signal_to_json(s: Signal, now: datetime) -> dict[str, Any]:
     }
 
 
+# --- Lead inventory (queryable API feed) -----------------------------------
+#
+# A separate, fuller output than the curated /cfo page: every qualified
+# lead INCLUDING stale (31-60d), all signal types, no funding cap, with
+# the fields the outreach workflow (System B) queries — id / signal_type
+# / freshness / niche / plain-words signals. Served by /api/leads.
+
+_INVENTORY_MAX_AGE_DAYS = 60  # dead beyond this — never served
+
+
+def _stable_id(domain: str | None, name_key: str) -> str:
+    """Stable public identity for exclude_ids: a hash of the domain
+    (fallback name_key). Deterministic across nightly regenerations, and
+    survives bullseye merges (same-domain leads already collapse to one
+    canonical)."""
+    basis = (domain or name_key or "").strip().lower()
+    return hashlib.sha1(basis.encode("utf-8")).hexdigest()[:16]
+
+
+def _lead_signal_type(signals: list[Signal]) -> str:
+    """The spec's 4-way label from a lead's fresh+stale signals."""
+    types = {s.type for s in signals}
+    if SignalType.JOB_POSTED_FRACTIONAL_CFO in types:
+        return "cfo_wanted"
+    has_hire = SignalType.JOB_POSTED_FINANCE_LEAD in types
+    has_fund = SignalType.FUNDING_RAISED in types
+    if has_hire and has_fund:
+        return "double_signal"
+    if has_fund:
+        return "funding_only"
+    if has_hire:
+        return "hiring_only"
+    return "other"
+
+
+def _freshness_label(age_days: int) -> str:
+    if age_days <= 30:
+        return "fresh"
+    if age_days <= _INVENTORY_MAX_AGE_DAYS:
+        return "stale"
+    return "dead"
+
+
+def _rough_when(age_days: int) -> str:
+    if age_days <= 0:
+        return "today"
+    if age_days == 1:
+        return "yesterday"
+    if age_days <= 13:
+        return f"{age_days} days ago"
+    return f"{round(age_days / 7)} weeks ago"
+
+
+def _fmt_amount(amt: Any) -> str | None:
+    if not isinstance(amt, (int, float)) or amt <= 0:
+        return None
+    if amt >= 1_000_000:
+        return f"${amt / 1_000_000:.1f}M".replace(".0M", "M")
+    if amt >= 1_000:
+        return f"${amt / 1_000:.0f}K"
+    return f"${int(amt)}"
+
+
+def _clean_role_title(title: str | None) -> str | None:
+    if not title:
+        return None
+    t = re.split(r"[–—(]| - ", title, maxsplit=1)[0].strip()
+    t = re.sub(r"\s+", " ", t)
+    return t[:50].strip() or None
+
+
+def _signal_type_label(sig: Signal) -> str:
+    if sig.type == SignalType.JOB_POSTED_FRACTIONAL_CFO:
+        return "cfo_posting"
+    if sig.type == SignalType.JOB_POSTED_FINANCE_LEAD:
+        return "finance_posting"
+    if sig.type == SignalType.FUNDING_RAISED:
+        ft = (sig.payload or {}).get("filing_type")
+        if ft == "Form C":
+            return "form_c"
+        if ft == "Form D":
+            return "form_d"
+        return "funding_news"
+    return "other"
+
+
+def _plain_words(sig: Signal, now: datetime) -> str:
+    when = _rough_when(_signal_age_days(sig, now))
+    p = sig.payload or {}
+    if sig.type == SignalType.JOB_POSTED_FRACTIONAL_CFO:
+        return f"posted a fractional / interim CFO opening {when}"
+    if sig.type == SignalType.JOB_POSTED_FINANCE_LEAD:
+        role = _clean_role_title(p.get("title"))
+        return f"posted a {role} role {when}" if role else f"posted a finance-leadership role {when}"
+    if sig.type == SignalType.FUNDING_RAISED:
+        ft = p.get("filing_type")
+        amt = _fmt_amount(p.get("offering_amount"))
+        if ft == "Form C":
+            return (f"raised via Reg CF (equity crowdfunding), {amt} target, {when}"
+                    if amt else f"raised via Reg CF (equity crowdfunding) {when}")
+        if ft == "Form D":
+            return f"filed a {amt} raise (Form D) {when}" if amt else f"filed a Form D raise {when}"
+        return f"announced a funding round {when}"
+    return f"showed a finance-need signal {when}"
+
+
+def _inventory_signal(sig: Signal, now: datetime) -> dict[str, Any]:
+    dt = scoring.payload_event_date(sig) or sig.captured_at
+    return {
+        "type": _signal_type_label(sig),
+        "date": dt.date().isoformat(),
+        "plain_words_description": _plain_words(sig, now),
+    }
+
+
+def _build_inventory(conn: sqlite3.Connection) -> dict[str, Any]:
+    now = _utcnow()
+    # Group by stable id so the inventory is exactly one row per company
+    # identity — guarantees exclude_ids works and no duplicate rows —
+    # merging the signals of any same-domain leads the DB didn't merge
+    # (the bullseye reconciliation only runs in the full nightly flow).
+    grouped: dict[str, dict[str, Any]] = {}
+    for lead in db.iter_leads(conn):
+        if not lead.domain:
+            continue  # need a resolvable company to serve it
+        city, state = _city_state(lead)
+        if not state:
+            continue  # unmatchable without at least a state
+        valid = [
+            s for s in lead.signals
+            if s.type in _SCORING_SIGNAL_TYPES
+            and _signal_still_valid(s)
+            and _signal_age_days(s, now) <= _INVENTORY_MAX_AGE_DAYS
+        ]
+        if not valid:
+            continue
+        lid = _stable_id(lead.domain, lead.name_key)
+        rec = grouped.get(lid)
+        if rec is None:
+            grouped[lid] = {
+                "lead": lead, "city": city, "state": state, "signals": list(valid),
+            }
+        else:
+            rec["signals"].extend(valid)
+            if not rec["lead"].niche and lead.niche:
+                rec["lead"] = lead  # prefer the classified row for metadata
+
+    leads_out: list[dict[str, Any]] = []
+    for lid, rec in grouped.items():
+        lead = rec["lead"]
+        deduped: list[Signal] = []
+        seen: set[tuple[SignalType, str]] = set()
+        for s in sorted(rec["signals"], key=lambda x: _signal_age_days(x, now)):
+            key = (s.type, _norm_signal_title(s))
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(s)
+        freshest = min(_signal_age_days(s, now) for s in deduped)
+        leads_out.append({
+            "id": lid,
+            "company": lead.name,
+            "domain": lead.domain,
+            "city": rec["city"],
+            "state": rec["state"],
+            "industry": lead.industry,
+            "niche": lead.niche,
+            "signal_type": _lead_signal_type(deduped),
+            "freshness": _freshness_label(freshest),
+            "signals": [_inventory_signal(s, now) for s in deduped],
+        })
+    return {
+        "generated_at": now.isoformat(),
+        "count": len(leads_out),
+        "taxonomy": taxonomy.PARENT_CHILDREN,
+        "leads": leads_out,
+    }
+
+
+def _write_and_upload_inventory(
+    conn: sqlite3.Connection, args: argparse.Namespace
+) -> None:
+    inventory = _build_inventory(conn)
+    inv_path = args.output_path.parent / "inventory.json"
+    inv_path.write_text(json.dumps(inventory, indent=2, default=str))
+    log.info("wrote %s (%d leads)", inv_path, inventory["count"])
+    if args.upload:
+        _upload_blob(inv_path, kind="inventory")
+
+
+def _reclassify_niches(conn: sqlite3.Connection) -> int:
+    """One-time backfill: re-run the niche classifier (OpenAI only — no
+    Gemini, no scraping) on every lead that already has a value_prop, and
+    derive its coarse industry. Migrates the existing inventory onto the
+    granular taxonomy immediately instead of waiting ~30-60d for churn."""
+    count = 0
+    for lead in list(db.iter_leads(conn)):
+        if lead.id is None or not lead.value_prop:
+            continue
+        try:
+            niche = enrichment.classify_niche(lead, value_prop=lead.value_prop)
+        except Exception:
+            log.exception("reclassify: classify failed for %s", lead.name)
+            continue
+        try:
+            db.update_lead(conn, lead.id, niche=niche, industry=taxonomy.parent_of(niche))
+            count += 1
+        except Exception:
+            log.exception("reclassify: update failed for id=%s", lead.id)
+    return count
+
+
 # --- Upload ----------------------------------------------------------------
 
 
-def _upload_blob(json_path: Path) -> None:
+def _upload_blob(json_path: Path, *, kind: str = "current") -> None:
     url = os.environ.get("CFO_UPLOAD_URL")
     api_key = os.environ.get("CFO_UPLOAD_API_KEY")
     if not url or not api_key:
         raise RuntimeError(
             "--upload requires CFO_UPLOAD_URL and CFO_UPLOAD_API_KEY env vars"
         )
+    if kind != "current":
+        url = f"{url}?kind={kind}"
     payload = json.loads(json_path.read_text())
     resp = requests.post(
         url,
@@ -1117,7 +1347,7 @@ def _upload_blob(json_path: Path) -> None:
         timeout=30,
     )
     resp.raise_for_status()
-    log.info("uploaded blob: %s", resp.json())
+    log.info("uploaded blob (%s): %s", kind, resp.json())
 
 
 # --- CLI -------------------------------------------------------------------
@@ -1149,6 +1379,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "--rescore-only",
         action="store_true",
         help="Skip fetch / upsert / disqualifier recording. Dedup, rescore, write, upload.",
+    )
+    parser.add_argument(
+        "--reclassify",
+        action="store_true",
+        help="One-time backfill: re-run the niche classifier (OpenAI only, "
+        "no Gemini / scraping) on every enriched lead, then rebuild + upload. "
+        "Implies the rescore-only rebuild path.",
     )
     parser.add_argument(
         "--apollo-top-n",
