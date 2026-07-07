@@ -1201,10 +1201,24 @@ def _signal_type_label(sig: Signal) -> str:
     return "other"
 
 
+def _date_confidence(sig: Signal) -> str:
+    """fractionaljobs.io stamps a batch / syndication date, not the real
+    posting date, so its signals carry LOW date confidence — the copy must
+    not claim a specific date for them. Every other source (WWR pubDate,
+    JobSpy / Adzuna date_posted, EDGAR filed_on) is a real event date."""
+    if (sig.payload or {}).get("site") == "fractionaljobs":
+        return "low"
+    return "high"
+
+
 def _plain_words(sig: Signal, now: datetime) -> str:
     when = _rough_when(_signal_age_days(sig, now))
     p = sig.payload or {}
     if sig.type == SignalType.JOB_POSTED_FRACTIONAL_CFO:
+        # Low date confidence (fractionaljobs batch date): present tense,
+        # no specific date claim.
+        if _date_confidence(sig) == "low":
+            return "is advertising for a fractional / interim CFO"
         return f"posted a fractional / interim CFO opening {when}"
     if sig.type == SignalType.JOB_POSTED_FINANCE_LEAD:
         role = _clean_role_title(p.get("title"))
@@ -1226,6 +1240,7 @@ def _inventory_signal(sig: Signal, now: datetime) -> dict[str, Any]:
     return {
         "type": _signal_type_label(sig),
         "date": dt.date().isoformat(),
+        "date_confidence": _date_confidence(sig),
         "plain_words_description": _plain_words(sig, now),
     }
 

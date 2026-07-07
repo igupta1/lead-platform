@@ -91,6 +91,25 @@ def test_plain_words_per_type():
     assert "reg cf" in daily_run._plain_words(fc, now).lower()
 
 
+def test_date_confidence_softens_board_copy():
+    now = _NOW
+    # fractionaljobs.io -> low confidence, no specific date in the copy
+    board = _sig(SignalType.JOB_POSTED_FRACTIONAL_CFO,
+                 payload={"title": "Chief Financial Officer", "site": "fractionaljobs",
+                          "date_posted": _recent(15)})
+    assert daily_run._date_confidence(board) == "low"
+    pw = daily_run._plain_words(board, now)
+    assert "fractional" in pw.lower() and "ago" not in pw.lower()
+    assert daily_run._inventory_signal(board, now)["date_confidence"] == "low"
+
+    # WWR / job board -> high confidence, keeps the specific date
+    wwr = _sig(SignalType.JOB_POSTED_FRACTIONAL_CFO,
+               payload={"title": "Fractional CFO", "site": "weworkremotely",
+                        "date_posted": _recent(5)})
+    assert daily_run._date_confidence(wwr) == "high"
+    assert "ago" in daily_run._plain_words(wwr, now).lower()
+
+
 # --- _build_inventory qualification ---------------------------------------
 
 
