@@ -284,6 +284,49 @@ def _is_megacorp_subsidiary(name: str) -> bool:
     return cleaned in _MEGACORP_BRAND_NAMES
 
 
+# National NGO giants that slip the ≤75 headcount cap because they file with
+# null headcount (the CARE / care.org class, same failure mode as Canon USA).
+# nonprofit stays a legitimate served niche, so this is EXACT-match on the
+# national brand only — a local "Catholic Charities of Denver" chapter, which
+# can be a real fractional-CFO client, is deliberately NOT matched.
+_LARGE_NGO_NAMES: frozenset[str] = frozenset(
+    name.lower() for name in (
+        "CARE", "CARE USA",
+        "Catholic Charities", "Catholic Charities USA",
+        "United Way", "United Way Worldwide",
+        "American Red Cross", "The American Red Cross", "Red Cross",
+        "The Salvation Army", "Salvation Army",
+        "Goodwill", "Goodwill Industries", "Goodwill Industries International",
+        "Habitat for Humanity", "Habitat for Humanity International",
+        "YMCA", "YWCA",
+        "Feeding America",
+        "Boys & Girls Clubs of America", "Boys and Girls Clubs of America",
+        "St. Jude", "St. Jude Children's Research Hospital",
+        "Make-A-Wish", "Make-A-Wish Foundation",
+        "UNICEF", "USA for UNICEF",
+        "World Wildlife Fund", "WWF",
+        "Doctors Without Borders",
+        "Oxfam", "Oxfam America",
+        "Save the Children",
+        "American Cancer Society",
+        "American Heart Association",
+        "Planned Parenthood", "Planned Parenthood Federation of America",
+        "AARP",
+        "Sierra Club",
+        "ACLU", "American Civil Liberties Union",
+        "Teach for America",
+        "The Nature Conservancy",
+        "March of Dimes",
+        "Special Olympics",
+        "The Humane Society", "Humane Society of the United States",
+    )
+)
+
+
+def _is_large_ngo(name: str) -> bool:
+    return name.strip().lower() in _LARGE_NGO_NAMES
+
+
 def _is_form_d_noise(lead: Lead) -> bool:
     """Vintage-year / street-SPV / tranche / real-estate / vehicle
     regexes from the EDGAR source applied retroactively. Gated to
@@ -408,6 +451,8 @@ def _disqualification_reason(lead: Lead) -> str | None:
         return "financial_vehicle"
     if _is_megacorp_subsidiary(lead.name):
         return "megacorp_subsidiary"
+    if _is_large_ngo(lead.name):
+        return "oversized_ngo"
     # Recruiting firms + auto dealers — apply the source-level name
     # patterns retroactively so leads ingested under a prior version
     # of the pipeline get swept out. Required by 3rd-review reqs #5
@@ -653,6 +698,43 @@ def _parse_yesno(raw_value: str | None) -> bool:
     return raw_value.strip().lower().startswith("y")
 
 
+# Generic corporate words that carry no identity — ignored when matching a
+# company name to a domain.
+_DOMAIN_NAME_GENERIC: frozenset[str] = frozenset({
+    "inc", "llc", "corp", "corporation", "co", "company", "ltd", "limited",
+    "group", "holdings", "technologies", "technology", "tech", "solutions",
+    "services", "systems", "labs", "global", "international", "the", "and",
+    "partners", "ventures", "capital", "enterprises",
+})
+
+
+def _name_tokens_for_domain(name: str) -> list[str]:
+    toks = re.findall(r"[a-z0-9]+", name.lower())
+    return [t for t in toks if t not in _DOMAIN_NAME_GENERIC and len(t) >= 2]
+
+
+def _domain_matches_name(name: str, domain: str | None) -> bool:
+    """Guard against a mis-resolved domain — Gemini keys its lookup on the
+    company NAME and sometimes returns an unrelated brand's site (e.g.
+    "Poaster Technologies Inc." -> warp.co). Keep the domain only if it shares
+    a meaningful token with the name (or matches its initials); otherwise it's
+    dropped (a domainless lead beats a wrong one). No domain -> nothing to
+    check; an all-generic name -> can't judge, keep."""
+    if not domain:
+        return True
+    root = domain.lower().split(".")[0]
+    toks = _name_tokens_for_domain(name)
+    if not root or not toks:
+        return True
+    for t in toks:
+        if t in root or root in t:
+            return True
+    # Acronym match — use ALL words (incl. generic) so a leading generic word
+    # doesn't break it (International Business Machines -> ibm).
+    initials = "".join(w[0] for w in re.findall(r"[a-z0-9]+", name.lower()))
+    return len(initials) >= 2 and root.startswith(initials)
+
+
 def lookup_company(lead: Lead) -> _Lookup:
     raw = llm.call_gemini(_LOOKUP_PROMPT.format(name=lead.name))
     return _Lookup(
@@ -700,6 +782,15 @@ Rules:
 - Consumer product brands are "dtc_brand" / "cpg_food_beverage" /
   "apparel_fashion" / "beauty_personal_care" — NOT "marketplace" (a
   platform connecting third-party buyers and sellers).
+- Classify by the company's PRIMARY operating business. A SERVICES or
+  operations company is NOT a manufacturer: aircraft charter / aviation
+  management / air transport is "fleet_services" or "unknown", NOT
+  "aerospace_defense" (which is only for companies that MANUFACTURE aircraft,
+  defense hardware, or components). Likewise a company that installs,
+  distributes, resells, or services physical goods is not "manufacturing".
+- If the company clearly serves MULTIPLE unrelated industries, or you cannot
+  confidently pick ONE child, return "unknown" — do not default to the most
+  prominent-sounding bucket.
 - If the value_prop is "unknown" or too thin to judge, return "unknown".
   Do NOT guess "other" or a soft default — "unknown" is the correct
   answer when you cannot tell.
@@ -956,16 +1047,32 @@ def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool
             ),
         )
 
+    # A1: guard against a mis-resolved domain. Gemini keys its lookup on the
+    # company name and occasionally returns an unrelated brand's site (Poaster
+    # Technologies -> warp.co). If the domain doesn't match the name, drop BOTH
+    # the domain and the value_prop — they came from the same answer, which was
+    # describing the wrong company. The lead becomes domainless (System B flags
+    # it for a manual google) rather than carrying a false claim.
+    lookup_domain = lookup.domain
+    lookup_value_prop = lookup.value_prop
+    if lookup.domain and not _domain_matches_name(lead.name, lookup.domain):
+        log.info(
+            "enrich: dropping mismatched domain %r for lead %d (%s)",
+            lookup.domain, lead.id, lead.name,
+        )
+        lookup_domain = None
+        lookup_value_prop = None
+
     # Classify the granular niche from the freshly-fetched value_prop
     # (so a SUPRANATURALS-style supplements brand doesn't get tagged by
     # its finance-lead signal); derive the coarse industry from it.
-    niche = classify_niche(lead, value_prop=lookup.value_prop)
+    niche = classify_niche(lead, value_prop=lookup_value_prop)
 
     updates: dict[str, object] = {
         "industry": taxonomy.parent_of(niche),
         "niche": niche,
         "country": "US" if lookup.country == "US" else None,
-        "value_prop": lookup.value_prop,
+        "value_prop": lookup_value_prop,
     }
     if not has_apollo:
         # SEC-filed Form D officer beats the Gemini web guess when the
@@ -973,12 +1080,12 @@ def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool
         officer_name, officer_title = _form_d_operator_officer(lead)
         updates.update(
             headcount=lookup.headcount if lookup.headcount is not None else lead.headcount,
-            domain=lookup.domain,
+            domain=lookup_domain,
             dm_name=officer_name or lookup.dm_name,
             dm_title=officer_title if officer_name else lookup.dm_title,
         )
-    elif lookup.domain and not lead.domain:
-        updates["domain"] = lookup.domain
+    elif lookup_domain and not lead.domain:
+        updates["domain"] = lookup_domain
     db.update_lead(conn, lead.id, **updates)
 
     db.append_signal(
