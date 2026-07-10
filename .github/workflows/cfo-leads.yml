@@ -96,9 +96,9 @@ jobs:
         run: |
           git config user.name  "cfo-leads-cron[bot]"
           git config user.email "cfo-leads-cron[bot]@users.noreply.github.com"
-          if [[ -n "$(git status --porcelain cfo_pipeline/data/leads.db cfo_pipeline/data/leads.json)" ]]; then
+          if [[ -n "$(git status --porcelain cfo_pipeline/data/leads.db)" ]]; then
             git pull --rebase --autostash origin master || true
-            git add cfo_pipeline/data/leads.db cfo_pipeline/data/leads.json
+            git add cfo_pipeline/data/leads.db
             git commit -m "cfo cron: nightly lead refresh ($(date -u +%Y-%m-%d))"
             git push
           else

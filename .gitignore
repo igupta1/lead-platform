@@ -1,0 +1,18 @@
+# Python
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/*.egg-info/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# Secrets
+.env
+**/.env
+
+# Blob-redundant JSON output — the served copy lives in Vercel Blob (uploaded by
+# each daily run). Only the SQLite DB is committed, as the pipeline's incremental
+# state. Do NOT ignore leads.db.
+**/data/leads.json
+**/data/smoke/

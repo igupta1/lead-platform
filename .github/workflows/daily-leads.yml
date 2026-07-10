@@ -76,9 +76,9 @@ jobs:
         run: |
           git config user.name  "leads-cron[bot]"
           git config user.email "leads-cron[bot]@users.noreply.github.com"
-          if [[ -n "$(git status --porcelain pipeline/data/leads.db pipeline/data/leads.json)" ]]; then
+          if [[ -n "$(git status --porcelain pipeline/data/leads.db)" ]]; then
             git pull --rebase --autostash origin master || true
-            git add pipeline/data/leads.db pipeline/data/leads.json
+            git add pipeline/data/leads.db
             git commit -m "cron: nightly lead refresh ($(date -u +%Y-%m-%d))"
             git push
           else
