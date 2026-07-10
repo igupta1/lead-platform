@@ -16,7 +16,7 @@ import sqlite3
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import requests
 
@@ -41,6 +41,11 @@ log = logging.getLogger("insurance.daily_run")
 
 DEFAULT_DB_PATH = Path("data/leads.db")
 DEFAULT_OUTPUT_PATH = Path("data/leads.json")
+# Trucking new-carrier sub-inventory. A subset of the full insurance
+# inventory (leads carrying an FMCSA NEW_MOTOR_CARRIER_AUTHORITY signal),
+# published under its own Blob key so the outreach insurance-agency pack
+# can pull the trucking list independently of the P&C/growth list.
+DEFAULT_TRUCKING_OUTPUT_PATH = Path("data/trucking-leads.json")
 LOOKBACK_DAYS = 60  # matches business_filings._MAX_FILING_AGE_DAYS conceptually
 INSIGHT_THRESHOLD = 20.0
 INSIGHT_DELTA_THRESHOLD = 10.0
@@ -129,18 +134,7 @@ def main(argv: list[str] | None = None) -> int:
             len(score_changes), len(apollo_ids), fallback_dms, copy_calls,
         )
 
-        output = _build_output(conn)
-        args.output_path.parent.mkdir(parents=True, exist_ok=True)
-        args.output_path.write_text(json.dumps(output, indent=2, default=str))
-        log.info("wrote %s", args.output_path)
-
-        if args.upload:
-            try:
-                _upload_blob(args.output_path)
-            except Exception:
-                log.exception("upload failed")
-                return 1
-        return 0
+        return _emit_inventories(conn, args)
 
     candidates = _fetch_all(
         since=_utcnow() - timedelta(days=LOOKBACK_DAYS),
@@ -174,18 +168,7 @@ def main(argv: list[str] | None = None) -> int:
         len(score_changes), len(apollo_ids), fallback_dms, copy_calls,
     )
 
-    output = _build_output(conn)
-    args.output_path.parent.mkdir(parents=True, exist_ok=True)
-    args.output_path.write_text(json.dumps(output, indent=2, default=str))
-    log.info("wrote %s", args.output_path)
-
-    if args.upload:
-        try:
-            _upload_blob(args.output_path)
-        except Exception:
-            log.exception("upload failed")
-            return 1
-    return 0
+    return _emit_inventories(conn, args)
 
 
 # --- Stages ----------------------------------------------------------------
@@ -457,13 +440,28 @@ def _top_scoring_signal(lead: Lead) -> Signal | None:
 # --- JSON output -----------------------------------------------------------
 
 
-def _build_output(conn: sqlite3.Connection) -> dict[str, Any]:
+def _is_trucking_lead(lead: Lead) -> bool:
+    """A trucking new-carrier lead — carries an FMCSA operating-authority
+    signal, meaning a brand-new carrier that is federally required to have
+    insurance on file before it can operate. These are the leads the
+    trucking-insurance branch of the outreach pack wants."""
+    return any(
+        s.type == SignalType.NEW_MOTOR_CARRIER_AUTHORITY for s in lead.signals
+    )
+
+
+def _build_output(
+    conn: sqlite3.Connection,
+    *,
+    predicate: Callable[[Lead], bool] | None = None,
+) -> dict[str, Any]:
     now = _utcnow()
     return {
         "generated_at": now.isoformat(),
         "leads": [
             _lead_to_json(lead, now=now)
             for lead in db.iter_leads(conn)
+            if predicate is None or predicate(lead)
         ],
     }
 
@@ -581,13 +579,25 @@ def _signal_to_json(s: Signal, now: datetime) -> dict[str, Any]:
 # --- Upload ----------------------------------------------------------------
 
 
-def _upload_blob(json_path: Path) -> None:
-    url = os.environ.get("INSURANCE_UPLOAD_URL")
-    api_key = os.environ.get("INSURANCE_UPLOAD_API_KEY")
+def _upload_blob(
+    json_path: Path,
+    *,
+    url_env: str = "INSURANCE_UPLOAD_URL",
+    key_env: str = "INSURANCE_UPLOAD_API_KEY",
+    required: bool = True,
+) -> None:
+    url = os.environ.get(url_env)
+    api_key = os.environ.get(key_env)
     if not url or not api_key:
-        raise RuntimeError(
-            "--upload requires INSURANCE_UPLOAD_URL and INSURANCE_UPLOAD_API_KEY env vars"
-        )
+        if required:
+            raise RuntimeError(
+                f"--upload requires {url_env} and {key_env} env vars"
+            )
+        # Best-effort inventory (e.g. trucking during rollout): if its
+        # endpoint isn't configured yet, skip the upload but still keep the
+        # local file. Never fail the run over an optional inventory.
+        log.info("%s not set; skipping upload of %s", url_env, json_path.name)
+        return
     payload = json.loads(json_path.read_text())
     resp = requests.post(
         url,
@@ -596,7 +606,46 @@ def _upload_blob(json_path: Path) -> None:
         timeout=30,
     )
     resp.raise_for_status()
-    log.info("uploaded blob: %s", resp.json())
+    log.info("uploaded blob %s: %s", json_path.name, resp.json())
+
+
+def _write_json(output: dict[str, Any], path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(output, indent=2, default=str))
+    log.info("wrote %s (%d leads)", path, len(output.get("leads", [])))
+
+
+def _emit_inventories(conn: sqlite3.Connection, args: argparse.Namespace) -> int:
+    """Write, and optionally upload, both published inventories:
+
+    1. the full insurance inventory (every lead), and
+    2. the trucking new-carrier sub-inventory (FMCSA leads only), under its
+       own Blob key so the outreach insurance pack can pull it independently.
+
+    The trucking upload is best-effort — if ``TRUCKING_UPLOAD_URL`` isn't set
+    yet, its local file is still written and only the upload is skipped, so a
+    partial rollout never breaks the established insurance run. Returns the
+    process exit code (1 if a configured upload failed)."""
+    _write_json(_build_output(conn), args.output_path)
+    _write_json(
+        _build_output(conn, predicate=_is_trucking_lead),
+        args.trucking_output_path,
+    )
+
+    if not args.upload:
+        return 0
+    try:
+        _upload_blob(args.output_path)
+        _upload_blob(
+            args.trucking_output_path,
+            url_env="TRUCKING_UPLOAD_URL",
+            key_env="TRUCKING_UPLOAD_API_KEY",
+            required=False,
+        )
+    except Exception:
+        log.exception("upload failed")
+        return 1
+    return 0
 
 
 # --- CLI -------------------------------------------------------------------
@@ -606,6 +655,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="insurance_pipeline.daily_run")
     parser.add_argument("--db-path", type=Path, default=DEFAULT_DB_PATH)
     parser.add_argument("--output-path", type=Path, default=DEFAULT_OUTPUT_PATH)
+    parser.add_argument(
+        "--trucking-output-path",
+        type=Path,
+        default=DEFAULT_TRUCKING_OUTPUT_PATH,
+        help="Where to write the trucking new-carrier sub-inventory "
+        "(uploaded to TRUCKING_UPLOAD_URL when --upload is set).",
+    )
     parser.add_argument(
         "--limit", type=int, default=None, help="Per-source candidate cap"
     )
