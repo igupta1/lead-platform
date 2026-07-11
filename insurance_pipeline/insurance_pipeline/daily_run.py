@@ -46,6 +46,11 @@ DEFAULT_OUTPUT_PATH = Path("data/leads.json")
 # published under its own Blob key so the outreach insurance-agency pack
 # can pull the trucking list independently of the P&C/growth list.
 DEFAULT_TRUCKING_OUTPUT_PATH = Path("data/trucking-leads.json")
+# Commercial P&C sub-inventory. Growth / trigger-moment leads (funding, new
+# business filing, OSHA, permits) that aren't new trucking carriers — a softer,
+# incumbent-locked signal than trucking, published on its own Blob key for the
+# P&C branch of the outreach insurance pack.
+DEFAULT_PC_OUTPUT_PATH = Path("data/pc-leads.json")
 LOOKBACK_DAYS = 60  # matches business_filings._MAX_FILING_AGE_DAYS conceptually
 INSIGHT_THRESHOLD = 20.0
 INSIGHT_DELTA_THRESHOLD = 10.0
@@ -450,6 +455,17 @@ def _is_trucking_lead(lead: Lead) -> bool:
     )
 
 
+def _is_pc_lead(lead: Lead) -> bool:
+    """A commercial P&C lead — a growth / trigger-moment company (funding, new
+    business filing, OSHA, building permit) whose coverage needs just changed,
+    but NOT a new trucking carrier (that's its own sub-inventory). This is the
+    P&C branch of the insurance-agency outreach pack; a softer, incumbent-locked
+    signal than trucking, so it's kept separate and timed to the trigger."""
+    if _is_trucking_lead(lead):
+        return False
+    return any(s.type in _SCORING_SIGNAL_TYPES for s in lead.signals)
+
+
 def _build_output(
     conn: sqlite3.Connection,
     *,
@@ -616,20 +632,26 @@ def _write_json(output: dict[str, Any], path: Path) -> None:
 
 
 def _emit_inventories(conn: sqlite3.Connection, args: argparse.Namespace) -> int:
-    """Write, and optionally upload, both published inventories:
+    """Write, and optionally upload, the published inventories:
 
-    1. the full insurance inventory (every lead), and
-    2. the trucking new-carrier sub-inventory (FMCSA leads only), under its
-       own Blob key so the outreach insurance pack can pull it independently.
+    1. the full insurance inventory (every lead),
+    2. the trucking new-carrier sub-inventory (FMCSA leads only), and
+    3. the commercial-P&C sub-inventory (growth / trigger-moment leads, no
+       trucking) — each under its own Blob key so the outreach insurance pack
+       can pull the right list per sub-niche.
 
-    The trucking upload is best-effort — if ``TRUCKING_UPLOAD_URL`` isn't set
-    yet, its local file is still written and only the upload is skipped, so a
+    The sub-inventory uploads are best-effort — if their ``*_UPLOAD_URL`` isn't
+    set yet, the local file is still written and only the upload is skipped, so a
     partial rollout never breaks the established insurance run. Returns the
     process exit code (1 if a configured upload failed)."""
     _write_json(_build_output(conn), args.output_path)
     _write_json(
         _build_output(conn, predicate=_is_trucking_lead),
         args.trucking_output_path,
+    )
+    _write_json(
+        _build_output(conn, predicate=_is_pc_lead),
+        args.pc_output_path,
     )
 
     if not args.upload:
@@ -640,6 +662,12 @@ def _emit_inventories(conn: sqlite3.Connection, args: argparse.Namespace) -> int
             args.trucking_output_path,
             url_env="TRUCKING_UPLOAD_URL",
             key_env="TRUCKING_UPLOAD_API_KEY",
+            required=False,
+        )
+        _upload_blob(
+            args.pc_output_path,
+            url_env="PC_UPLOAD_URL",
+            key_env="PC_UPLOAD_API_KEY",
             required=False,
         )
     except Exception:
@@ -661,6 +689,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         default=DEFAULT_TRUCKING_OUTPUT_PATH,
         help="Where to write the trucking new-carrier sub-inventory "
         "(uploaded to TRUCKING_UPLOAD_URL when --upload is set).",
+    )
+    parser.add_argument(
+        "--pc-output-path",
+        type=Path,
+        default=DEFAULT_PC_OUTPUT_PATH,
+        help="Where to write the commercial-P&C sub-inventory "
+        "(uploaded to PC_UPLOAD_URL when --upload is set).",
     )
     parser.add_argument(
         "--limit", type=int, default=None, help="Per-source candidate cap"

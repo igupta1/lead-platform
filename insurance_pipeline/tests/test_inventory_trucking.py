@@ -74,22 +74,39 @@ def test_trucking_inventory_is_fmcsa_only(tmp_path: Path) -> None:
     assert "Gamma SaaS Co" not in names
 
 
+def test_pc_inventory_is_growth_leads_no_trucking(tmp_path: Path) -> None:
+    conn = _conn_with_mixed_leads(tmp_path)
+    pc = daily_run._build_output(conn, predicate=daily_run._is_pc_lead)
+    names = {lead["name"] for lead in pc["leads"]}
+    assert names == {"Gamma SaaS Co"}                    # the funding lead only
+    assert "Alpha Trucking LLC" not in names             # trucking excluded from P&C
+    # trucking and P&C partition the scoring leads with no overlap
+    for lead in daily_run.db.iter_leads(conn):
+        assert not (daily_run._is_trucking_lead(lead) and daily_run._is_pc_lead(lead))
+
+
 def test_emit_inventories_writes_both_files(tmp_path: Path) -> None:
     conn = _conn_with_mixed_leads(tmp_path)
 
     class _Args:
         output_path = tmp_path / "leads.json"
         trucking_output_path = tmp_path / "trucking-leads.json"
+        pc_output_path = tmp_path / "pc-leads.json"
         upload = False
 
     rc = daily_run._emit_inventories(conn, _Args())
     assert rc == 0
     assert _Args.output_path.exists()
     assert _Args.trucking_output_path.exists()
+    assert _Args.pc_output_path.exists()
 
     import json
 
     full = json.loads(_Args.output_path.read_text())
     trucking = json.loads(_Args.trucking_output_path.read_text())
+    pc = json.loads(_Args.pc_output_path.read_text())
     assert len(full["leads"]) == 3
     assert len(trucking["leads"]) == 2
+    assert len(pc["leads"]) == 1                          # the funding lead
+    # trucking + P&C partition the scoring leads
+    assert len(trucking["leads"]) + len(pc["leads"]) == len(full["leads"])
