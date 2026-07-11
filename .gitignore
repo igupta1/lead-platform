@@ -16,4 +16,5 @@
 # state. Do NOT ignore leads.db.
 **/data/leads.json
 **/data/trucking-leads.json
+**/data/bookkeeping-leads.json
 **/data/smoke/
