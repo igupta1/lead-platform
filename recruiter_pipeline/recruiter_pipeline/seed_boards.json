@@ -1,8 +1,16 @@
 {
-  "_comment": "Starter set of public ATS boards to poll. Grow this list (and add a discovery step later). provider is one of greenhouse|lever|ashby; slug is the company's board token in its ATS URL.",
+  "_comment": "ATS boards to poll. provider is greenhouse|lever|ashby; slug is the company's board token in its careers URL (boards.greenhouse.io/<slug>, jobs.lever.co/<slug>, jobs.ashbyhq.com/<slug>). The entries below are VERIFIED-live as of authoring, but they are LARGE companies chosen to prove the pipeline runs end-to-end. Big public companies already have in-house recruiting, so they are NOT real recruiter leads. For actual leads, replace/augment with SMB boards (smaller companies hiring heavily). Grow this list; board discovery is a later enhancement.",
   "boards": [
-    {"provider": "greenhouse", "slug": "example", "company": "Example Co"},
-    {"provider": "lever", "slug": "example", "company": "Example Co"},
-    {"provider": "ashby", "slug": "example", "company": "Example Co"}
+    {"provider": "greenhouse", "slug": "airbnb", "company": "Airbnb"},
+    {"provider": "greenhouse", "slug": "databricks", "company": "Databricks"},
+    {"provider": "greenhouse", "slug": "coinbase", "company": "Coinbase"},
+    {"provider": "greenhouse", "slug": "dropbox", "company": "Dropbox"},
+    {"provider": "greenhouse", "slug": "robinhood", "company": "Robinhood"},
+    {"provider": "greenhouse", "slug": "gitlab", "company": "GitLab"},
+    {"provider": "greenhouse", "slug": "anthropic", "company": "Anthropic"},
+    {"provider": "ashby", "slug": "ramp", "company": "Ramp"},
+    {"provider": "ashby", "slug": "notion", "company": "Notion"},
+    {"provider": "ashby", "slug": "linear", "company": "Linear"},
+    {"provider": "ashby", "slug": "openai", "company": "OpenAI"}
   ]
 }
