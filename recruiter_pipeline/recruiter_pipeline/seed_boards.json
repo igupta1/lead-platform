@@ -1,0 +1,8 @@
+{
+  "_comment": "Starter set of public ATS boards to poll. Grow this list (and add a discovery step later). provider is one of greenhouse|lever|ashby; slug is the company's board token in its ATS URL.",
+  "boards": [
+    {"provider": "greenhouse", "slug": "example", "company": "Example Co"},
+    {"provider": "lever", "slug": "example", "company": "Example Co"},
+    {"provider": "ashby", "slug": "example", "company": "Example Co"}
+  ]
+}
