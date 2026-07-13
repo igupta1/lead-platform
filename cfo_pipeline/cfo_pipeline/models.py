@@ -23,6 +23,13 @@ class SignalType(str, Enum):
     # Finance, Accounting / Finance Manager).
     JOB_POSTED_FINANCE_LEAD = "job_posted_finance_lead"
 
+    # Junior IC finance hire (bookkeeper, staff / junior accountant, AP /
+    # AR clerk, payroll / billing specialist). NOT a fractional-CFO buying
+    # signal — it scores SCORE_MIN in the CFO scorer and never reaches the
+    # CFO output. Captured for the separate bookkeeping sub-inventory
+    # (`bookkeeping_run`), tagged role_tier="junior".
+    JOB_POSTED_BOOKKEEPING = "job_posted_bookkeeping"
+
     # Secondary urgency signals (Form D + TechCrunch / PRNewswire RSS
     # collapsed into one type per spec).
     FUNDING_RAISED = "funding_raised"

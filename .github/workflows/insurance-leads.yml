@@ -5,8 +5,8 @@ name: Insurance lead refresh
 # "Insurance lead refresh"`. To resume: uncomment the schedule block
 # below and run `gh workflow enable "Insurance lead refresh"`.
 on:
-  # schedule:
-  #   - cron: "30 7 * * *"   # 07:30 UTC daily — offset from daily-leads.yml at 06:00 to avoid concurrent git pushes
+  schedule:
+    - cron: "30 7 * * *"   # 07:30 UTC daily — offset from daily-leads.yml at 06:00 to avoid concurrent git pushes
   workflow_dispatch:
     inputs:
       limit:
