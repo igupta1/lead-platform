@@ -1,0 +1,626 @@
+2026-07-21 10:06:44,972 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Chase Grace Southwind, LLC
+2026-07-21 10:06:45,226 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: DE Southwind, LLC
+2026-07-21 10:06:45,508 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: HVG Southwind Associates, LLC
+2026-07-21 10:06:46,552 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: East West Minerals Ltd.
+2026-07-21 10:06:46,767 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Rise Guyana SBX LLC
+2026-07-21 10:06:47,525 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: QP LFO AMP LLC
+2026-07-21 10:06:47,591 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Abundance Lila II, LLC
+2026-07-21 10:06:47,979 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: Pike Therapeutics Inc.
+2026-07-21 10:06:48,661 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Classic HudCo II, L.P. - Series 3 - LSF XII (Helix)
+2026-07-21 10:06:49,286 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Creek at 2645 Sub Class IIB Bond Holders, LLC
+2026-07-21 10:06:50,005 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Permira IX GP Commitment EUR SCSp
+2026-07-21 10:06:50,078 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Permira IX GP Commitment USD SCSp
+2026-07-21 10:06:50,795 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Kelchner Holdco LLC
+2026-07-21 10:06:51,018 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: PlayerSense Systems, Inc.
+2026-07-21 10:06:51,122 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: GEC Holdco LLC
+2026-07-21 10:06:51,808 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Trestle Financial, LLC
+2026-07-21 10:06:52,130 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: Numobag Disposable Isolation System Financing, LLC
+2026-07-21 10:06:52,977 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: CollPlant Biotechnologies Ltd  (CLGN)
+2026-07-21 10:06:53,033 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: CYABRA, INC.  (CYAB)
+2026-07-21 10:06:53,083 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: Precision Peptide Co Inc.
+2026-07-21 10:06:53,208 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Squarepoint Core International Feeder Ltd
+2026-07-21 10:06:53,315 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: ROSECLIFF NEXT GENERATION LLC - SERIES 2026 ACCESS
+2026-07-21 10:06:53,406 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: VOVX EXCHANGE LTD
+2026-07-21 10:06:53,653 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: 4749 NCE LLC
+2026-07-21 10:06:53,870 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Imperium Alternatives LLC
+2026-07-21 10:06:54,517 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: SOLCAP Generate 2026-B LLC
+2026-07-21 10:06:54,574 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: SOLCAP Generate 2026-A LLC
+2026-07-21 10:06:54,627 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Matra West Lebanon LLC
+2026-07-21 10:06:54,748 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Kamerra Raven, LLC
+2026-07-21 10:06:54,880 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: OGV, LLC
+2026-07-21 10:06:54,956 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: OHV, LLC
+2026-07-21 10:06:56,487 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: Principal Technologies Inc.
+2026-07-21 10:06:56,620 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: PG EB5 Gatlinburg Lender, LLC
+2026-07-21 10:06:56,620 INFO leadgen.sources.edgar_form_d: edgar efts: 101 operating-company candidates, 9 CFO-officer disqualifiers from 2026-06-21..2026-07-21
+2026-07-21 10:06:57,157 INFO leadgen.run: source edgar_form_d: 106 candidates, 9 disqualifiers
+2026-07-21 10:07:12,888 INFO leadgen.sources.edgar_form_c: edgar form-c: 94 operating-company candidates from 2026-06-21..2026-07-21
+2026-07-21 10:07:12,889 INFO leadgen.run: source edgar_form_c: 94 candidates, 0 disqualifiers
+2026-07-21 10:07:13,207 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebccf72cbaad44-IAD","status_code":403}
+2026-07-21 10:07:52,857 - INFO - JobSpy:Linkedin - finished scraping
+2026-07-21 10:07:52,976 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:07:52,976 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:07:53,279 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebcdf1a8c7c52c-IAD","status_code":403}
+2026-07-21 10:08:04,103 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:08:04,103 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:08:04,351 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebce36df53f46e-IAD","status_code":403}
+2026-07-21 10:08:29,642 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:08:29,642 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:08:29,887 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebced66e6f0653-IAD","status_code":403}
+2026-07-21 10:08:55,751 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:08:55,752 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:08:55,984 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebcf7999dddac8-IAD","status_code":403}
+2026-07-21 10:09:20,006 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:09:20,006 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:09:20,268 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd0113d7ceb29-IAD","status_code":403}
+2026-07-21 10:09:56,223 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:09:56,223 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:09:56,479 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd0f39bc8fca9-IAD","status_code":403}
+2026-07-21 10:10:04,443 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:10:04,443 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:10:04,691 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd126e908760e-IAD","status_code":403}
+2026-07-21 10:10:23,286 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:10:23,286 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:10:23,538 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd19caa411949-IAD","status_code":403}
+2026-07-21 10:10:45,117 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:10:45,117 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:10:45,372 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd2253ce6ea80-IAD","status_code":403}
+2026-07-21 10:11:05,008 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:11:05,008 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:11:05,280 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd2a179b61ff0-IAD","status_code":403}
+2026-07-21 10:11:16,029 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:11:16,029 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:11:16,306 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd2e65eac55c2-IAD","status_code":403}
+2026-07-21 10:11:27,768 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:11:27,769 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:11:28,077 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd3301ababffc-IAD","status_code":403}
+2026-07-21 10:11:40,779 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:11:40,779 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:11:41,030 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd38109d45e56-IAD","status_code":403}
+2026-07-21 10:12:01,918 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:12:01,918 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:12:02,185 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd4053e2d7e21-IAD","status_code":403}
+2026-07-21 10:12:12,166 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:12:12,166 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:12:12,605 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd4463de2cf26-IAD","status_code":403}
+2026-07-21 10:12:31,319 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:12:31,319 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:12:31,548 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd4bcdcb5b1ae-IAD","status_code":403}
+2026-07-21 10:12:42,835 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:12:42,835 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:12:43,096 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd504f9711ed2-IAD","status_code":403}
+2026-07-21 10:12:57,290 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:12:57,290 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:12:57,552 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd55f4bff9459-IAD","status_code":403}
+2026-07-21 10:13:08,969 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:13:08,969 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:13:09,207 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd5a82942760e-IAD","status_code":403}
+2026-07-21 10:13:57,300 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:13:57,300 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:13:57,654 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd6d6ec7b0db8-IAD","status_code":403}
+2026-07-21 10:14:06,161 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:14:06,161 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:14:06,445 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd70df92fe817-IAD","status_code":403}
+2026-07-21 10:14:32,049 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:14:32,049 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:14:32,390 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd7affbc1b341-IAD","status_code":403}
+2026-07-21 10:14:45,214 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:14:45,214 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:14:45,469 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd801dc126c97-IAD","status_code":403}
+2026-07-21 10:15:09,116 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:15:09,116 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:15:09,382 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd897395beb20-IAD","status_code":403}
+2026-07-21 10:15:27,519 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:15:27,519 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:15:27,789 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd90a2a5dc236-IAD","status_code":403}
+2026-07-21 10:15:43,338 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:15:43,338 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:15:43,592 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebd96d2a4c3708-IAD","status_code":403}
+2026-07-21 10:16:13,670 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:16:13,671 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:16:13,914 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebda2aab8c9441-IAD","status_code":403}
+2026-07-21 10:16:39,065 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:16:39,065 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:16:39,325 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebdac95ab29814-IAD","status_code":403}
+2026-07-21 10:16:53,657 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:16:53,657 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:16:53,916 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebdb248d26760e-IAD","status_code":403}
+2026-07-21 10:17:07,387 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:17:07,387 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:17:07,640 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebdb7a5bb17d12-IAD","status_code":403}
+2026-07-21 10:17:20,802 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:17:20,803 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:17:21,056 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebdbce4a508b3c-IAD","status_code":403}
+2026-07-21 10:17:40,733 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:17:40,733 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:17:41,006 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebdc4ad93167b8-IAD","status_code":403}
+2026-07-21 10:17:58,361 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:17:58,362 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:17:58,692 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebdcb96fd6b8e7-IAD","status_code":403}
+2026-07-21 10:18:13,821 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:18:13,821 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:18:14,102 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebdd19ba257ac1-IAD","status_code":403}
+2026-07-21 10:18:28,731 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:18:28,732 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:18:29,012 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebdd76997612a1-IAD","status_code":403}
+2026-07-21 10:18:46,650 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:18:46,650 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:18:46,936 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebdde6a9e8eb28-IAD","status_code":403}
+2026-07-21 10:19:00,747 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:19:00,747 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:19:01,009 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebde3eaa995e55-IAD","status_code":403}
+2026-07-21 10:19:10,918 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:19:10,918 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:19:11,219 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebde7e69fd0793-IAD","status_code":403}
+2026-07-21 10:19:22,668 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:19:22,669 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:19:22,959 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebdec7aa513ecb-IAD","status_code":403}
+2026-07-21 10:19:57,367 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 10:19:57,369 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 10:19:57,968 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ebdfa25ab2f497-IAD","status_code":403}
+2026-07-21 10:51:38,099 WARNING urllib3.connectionpool: Retrying (Retry(total=2, connect=3, read=None, redirect=None, status=3)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='www.linkedin.com', port=443): Read timed out. (read timeout=10)")': /jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=VP+of+IT&location=United+States&distance=50&pageNum=0&start=10&f_TPR=r2592000
+2026-07-21 11:43:57,850 WARNING urllib3.connectionpool: Retrying (Retry(total=2, connect=3, read=None, redirect=None, status=3)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='www.linkedin.com', port=443): Read timed out. (read timeout=10)")': /jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=VP+of+IT&location=United+States&distance=50&pageNum=0&start=20&f_TPR=r2592000
+2026-07-21 12:20:58,280 WARNING urllib3.connectionpool: Retrying (Retry(total=2, connect=3, read=None, redirect=None, status=3)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='www.linkedin.com', port=443): Read timed out. (read timeout=10)")': /jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=VP+of+IT&location=United+States&distance=50&pageNum=0&start=56&f_TPR=r2592000
+2026-07-21 12:20:59,548 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 12:20:59,548 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 12:20:59,879 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ec90edac8ac8ce-IAD","status_code":403}
+2026-07-21 12:43:43,163 WARNING urllib3.connectionpool: Retrying (Retry(total=2, connect=3, read=None, redirect=None, status=3)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='www.linkedin.com', port=443): Read timed out. (read timeout=10)")': /jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=Director+of+IT&location=United+States&distance=50&pageNum=0&start=9&f_TPR=r2592000
+2026-07-21 12:43:48,916 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 12:43:48,917 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 12:43:49,000 WARNING leadgen.sources.jobs: ADZUNA_APP_ID/ADZUNA_APP_KEY not set; skipping Adzuna
+2026-07-21 12:43:49,000 WARNING leadgen.sources.jobs: ADZUNA_APP_ID/ADZUNA_APP_KEY not set; skipping Adzuna
+2026-07-21 12:43:49,000 WARNING leadgen.sources.jobs: ADZUNA_APP_ID/ADZUNA_APP_KEY not set; skipping Adzuna
+2026-07-21 12:43:49,000 WARNING leadgen.sources.jobs: ADZUNA_APP_ID/ADZUNA_APP_KEY not set; skipping Adzuna
+2026-07-21 12:43:49,000 WARNING leadgen.sources.jobs: ADZUNA_APP_ID/ADZUNA_APP_KEY not set; skipping Adzuna
+2026-07-21 12:43:49,000 INFO leadgen.run: source jobs: 2121 candidates, 244 disqualifiers
+2026-07-21 12:43:50,034 INFO leadgen.sources.fractional_boards: fractionaljobs: 312 finance slugs found, capping page-fetches at 150
+2026-07-21 12:45:38,155 INFO leadgen.sources.fractional_boards: fractionaljobs: 132 fresh finance postings
+2026-07-21 12:45:38,164 INFO leadgen.run: source fractional_boards: 132 candidates, 0 disqualifiers
+2026-07-21 12:45:40,070 INFO mssp.sources.breaches: hhs_ocr: 2 breach candidates (100 rows scanned)
+2026-07-21 12:45:40,071 INFO mssp.sources.breaches: breaches source hhs_ocr returned 2 candidates
+2026-07-21 12:45:41,208 INFO mssp.sources.breaches: ca_ag: 46 breach candidates
+2026-07-21 12:45:41,208 INFO mssp.sources.breaches: breaches source ca_ag returned 46 candidates
+2026-07-21 12:45:41,319 INFO mssp.sources.breaches: wa_ag: 1 breach candidates
+2026-07-21 12:45:41,319 INFO mssp.sources.breaches: breaches source wa_ag returned 1 candidates
+2026-07-21 12:45:47,511 INFO mssp.sources.breaches: or_doj: 13 breach candidates
+2026-07-21 12:45:47,512 INFO mssp.sources.breaches: breaches source or_doj returned 13 candidates
+2026-07-21 12:45:47,512 INFO leadgen.run: source breaches: 62 candidates, 0 disqualifiers
+2026-07-21 12:45:49,273 INFO leadgen.run: ingest: 2346 candidates upserted
+2026-07-21 12:45:49,323 INFO leadgen.enrichment: purge: deleting 1515 (Glendale Community College) — blocked_name_pattern
+2026-07-21 12:45:49,324 INFO leadgen.enrichment: purge: deleting 1509 (Santa Monica Community College) — blocked_name_pattern
+2026-07-21 12:45:49,325 INFO leadgen.enrichment: purge: deleting 1504 (Nissan North America Inc.) — auto_dealer_name_pattern
+2026-07-21 12:45:49,325 INFO leadgen.enrichment: purge: deleting 1500 (Kubota North America Corporation) — likely_oversized_subsidiary
+2026-07-21 12:45:49,326 INFO leadgen.enrichment: purge: deleting 1497 (Monmouth University) — blocked_name_pattern
+2026-07-21 12:45:49,326 INFO leadgen.enrichment: purge: deleting 1493 (Markel Insurance) — finance_vertical
+2026-07-21 12:45:49,327 INFO leadgen.enrichment: purge: deleting 1490 (Lincoln Technical Institute) — auto_dealer_name_pattern
+2026-07-21 12:45:49,328 INFO leadgen.enrichment: purge: deleting 1486 (City of Foster City) — blocked_name_pattern
+2026-07-21 12:45:49,328 INFO leadgen.enrichment: purge: deleting 1482 (Fiesta Insurance Franchise Corporation) — finance_vertical
+2026-07-21 12:45:49,329 INFO leadgen.enrichment: purge: deleting 1478 (Ernst & Young LLP) — megacorp_subsidiary
+2026-07-21 12:45:49,329 INFO leadgen.enrichment: purge: deleting 1472 (Quontic Bank Acquisition Corp.) — finance_vertical
+2026-07-21 12:45:49,332 INFO leadgen.enrichment: purge: deleting 1406 (Forward Share Ventures) — blocked_name_pattern
+2026-07-21 12:45:49,332 INFO leadgen.enrichment: purge: deleting 1404 (Foreign Venture Group) — blocked_name_pattern
+2026-07-21 12:45:49,334 INFO leadgen.enrichment: purge: deleting 1353 (Agentis Capital) — finance_vertical
+2026-07-21 12:45:49,335 INFO leadgen.enrichment: purge: deleting 1350 (Add Ventures) — blocked_name_pattern
+2026-07-21 12:45:49,335 INFO leadgen.enrichment: purge: deleting 1349 (4Front Ventures) — blocked_name_pattern
+2026-07-21 12:45:49,335 INFO leadgen.enrichment: purge: deleting 1346 (West Hive Capital) — finance_vertical
+2026-07-21 12:45:49,336 INFO leadgen.enrichment: purge: deleting 1338 (BV Teck) — oversized=200
+2026-07-21 12:45:49,337 INFO leadgen.enrichment: purge: deleting 1337 (MUFG) — oversized=10000
+2026-07-21 12:45:49,337 INFO leadgen.enrichment: purge: deleting 1336 (Acertus) — oversized=5000
+2026-07-21 12:45:49,337 INFO leadgen.enrichment: purge: deleting 1123 (TechFlow, Inc) — oversized=500
+2026-07-21 12:45:49,338 INFO leadgen.enrichment: purge: deleting 499 (Sonic Automotive) — oversized=10000
+2026-07-21 12:45:49,339 INFO leadgen.enrichment: purge: deleting 1323 (Amazon Web Services) — megacorp_subsidiary
+2026-07-21 12:45:49,340 INFO leadgen.enrichment: purge: deleting 1321 (Travelers) — oversized=10000
+2026-07-21 12:45:49,340 INFO leadgen.enrichment: purge: deleting 1319 (Lennar) — oversized=10000
+2026-07-21 12:45:49,341 INFO leadgen.enrichment: purge: deleting 1292 (Infosys) — oversized=10000
+2026-07-21 12:45:49,342 INFO leadgen.enrichment: purge: deleting 1296 (Northrop Grumman) — megacorp_subsidiary
+2026-07-21 12:45:49,343 INFO leadgen.enrichment: purge: deleting 1225 (Booz Allen Hamilton) — megacorp_subsidiary
+2026-07-21 12:45:49,343 INFO leadgen.enrichment: purge: deleting 1295 (Farm Credit Financial Partners Inc) — oversized=500
+2026-07-21 12:45:49,344 INFO leadgen.enrichment: purge: deleting 1293 (Energy Transfer) — oversized=10000
+2026-07-21 12:45:49,345 INFO leadgen.enrichment: purge: deleting 1289 (Evolver Inc) — oversized=1000
+2026-07-21 12:45:49,345 INFO leadgen.enrichment: purge: deleting 1286 (Intone Networks) — oversized=500
+2026-07-21 12:45:49,346 INFO leadgen.enrichment: purge: deleting 1284 (Dominion Energy) — oversized=10000
+2026-07-21 12:45:49,347 INFO leadgen.enrichment: purge: deleting 879 (CAVA) — oversized=10000
+2026-07-21 12:45:49,347 INFO leadgen.enrichment: purge: deleting 1282 (AmpliFI Loyalty Solutions) — oversized=200
+2026-07-21 12:45:49,348 INFO leadgen.enrichment: purge: deleting 1281 (Copart, Inc) — oversized=10000
+2026-07-21 12:45:49,348 INFO leadgen.enrichment: purge: deleting 1279 (The Hartford) — oversized=10000
+2026-07-21 12:45:49,349 INFO leadgen.enrichment: purge: deleting 1278 (Cognizant) — oversized=10000
+2026-07-21 12:45:49,349 INFO leadgen.enrichment: purge: deleting 1275 (MetLife) — oversized=10000
+2026-07-21 12:45:49,350 INFO leadgen.enrichment: purge: deleting 1274 (Banner Health) — oversized=10000
+2026-07-21 12:45:49,350 INFO leadgen.enrichment: purge: deleting 1183 (L3Harris) — oversized=10000
+2026-07-21 12:45:49,351 INFO leadgen.enrichment: purge: deleting 1269 (Spectrum) — oversized=10000
+2026-07-21 12:45:49,351 INFO leadgen.enrichment: purge: deleting 1267 (shine systems) — oversized=200
+2026-07-21 12:45:49,352 INFO leadgen.enrichment: purge: deleting 1264 (General Atomics) — oversized=10000
+2026-07-21 12:45:49,353 INFO leadgen.enrichment: purge: deleting 1262 (LSEG (London Stock Exchange Group)) — oversized=10000
+2026-07-21 12:45:49,353 INFO leadgen.enrichment: purge: deleting 1260 (KBR) — oversized=10000
+2026-07-21 12:45:49,354 INFO leadgen.enrichment: purge: deleting 1259 (Intuitive Research and Technology Corporation) — oversized=500
+2026-07-21 12:45:49,354 INFO leadgen.enrichment: purge: deleting 1073 (Google) — megacorp_subsidiary
+2026-07-21 12:45:49,355 INFO leadgen.enrichment: purge: deleting 704 (Arvato) — oversized=10000
+2026-07-21 12:45:49,356 INFO leadgen.enrichment: purge: deleting 1248 (Akima) — oversized=10000
+2026-07-21 12:45:49,356 INFO leadgen.enrichment: purge: deleting 1247 (LS Technologies, LLC) — oversized=500
+2026-07-21 12:45:49,357 INFO leadgen.enrichment: purge: deleting 1245 (DMI) — oversized=5000
+2026-07-21 12:45:49,357 INFO leadgen.enrichment: purge: deleting 1244 (Salesforce) — oversized=10000
+2026-07-21 12:45:49,358 INFO leadgen.enrichment: purge: deleting 1234 (State Street) — oversized=10000
+2026-07-21 12:45:49,359 INFO leadgen.enrichment: purge: deleting 1242 (Wells Fargo) — oversized=10000
+2026-07-21 12:45:49,359 INFO leadgen.enrichment: purge: deleting 1241 (Lowe's Home Improvement) — oversized=5000
+2026-07-21 12:45:49,360 INFO leadgen.enrichment: purge: deleting 1239 (Charles Schwab) — oversized=10000
+2026-07-21 12:45:49,360 INFO leadgen.enrichment: purge: deleting 1238 (Citizens) — oversized=10000
+2026-07-21 12:45:49,360 INFO leadgen.enrichment: purge: deleting 1237 (Palo Alto Networks) — oversized=10000
+2026-07-21 12:45:49,361 INFO leadgen.enrichment: purge: deleting 1236 (Peraton) — oversized=10000
+2026-07-21 12:45:49,361 INFO leadgen.enrichment: purge: deleting 434 (JPMorganChase) — oversized=10000
+2026-07-21 12:45:49,362 INFO leadgen.enrichment: purge: deleting 1232 (Scientific Research Corporation) — oversized=5000
+2026-07-21 12:45:49,363 INFO leadgen.enrichment: purge: deleting 652 (Raytheon) — megacorp_subsidiary
+2026-07-21 12:45:49,363 INFO leadgen.enrichment: purge: deleting 1231 (FedEx) — oversized=10000
+2026-07-21 12:45:49,363 INFO leadgen.enrichment: purge: deleting 1230 (James Madison University) — blocked_name_pattern
+2026-07-21 12:45:49,364 INFO leadgen.enrichment: purge: deleting 1229 (ROHDE & SCHWARZ GmbH & Co. KG) — oversized=10000
+2026-07-21 12:45:49,364 INFO leadgen.enrichment: purge: deleting 1228 (Advanced Systems Design) — oversized=200
+2026-07-21 12:45:49,365 INFO leadgen.enrichment: purge: deleting 1227 (Semper Valens Solutions) — oversized=500
+2026-07-21 12:45:49,365 INFO leadgen.enrichment: purge: deleting 1226 (Collins Aerospace) — oversized=10000
+2026-07-21 12:45:49,366 INFO leadgen.enrichment: purge: deleting 1224 (SMX) — oversized=1000
+2026-07-21 12:45:49,366 INFO leadgen.enrichment: purge: deleting 1223 (Computer World Services) — oversized=500
+2026-07-21 12:45:49,367 INFO leadgen.enrichment: purge: deleting 1221 (BAKER GROUP) — oversized=5000
+2026-07-21 12:45:49,367 INFO leadgen.enrichment: purge: deleting 1220 (SK shieldus America, Inc.) — likely_oversized_subsidiary
+2026-07-21 12:45:49,368 INFO leadgen.enrichment: purge: deleting 1216 (Norel Service Co., Inc.) — oversized=200
+2026-07-21 12:45:49,368 INFO leadgen.enrichment: purge: deleting 1215 (Tract Capital Management) — blocked_name_pattern
+2026-07-21 12:45:49,369 INFO leadgen.enrichment: purge: deleting 1206 (Panasonic North America) — likely_oversized_subsidiary
+2026-07-21 12:45:49,369 INFO leadgen.enrichment: purge: deleting 1195 (World Wide Technology) — oversized=10000
+2026-07-21 12:45:49,370 INFO leadgen.enrichment: purge: deleting 1187 (Amazon.com) — megacorp_subsidiary
+2026-07-21 12:45:49,371 INFO leadgen.enrichment: purge: deleting 1193 (Lewis Brisbois Bisgaard & Smith LLP) — oversized=5000
+2026-07-21 12:45:49,371 INFO leadgen.enrichment: purge: deleting 1191 (Farmers and Merchants Bank of Long Beach) — finance_vertical
+2026-07-21 12:45:49,372 INFO leadgen.enrichment: purge: deleting 1163 (Advanced IT Concepts, Inc.) — oversized=200
+2026-07-21 12:45:49,373 INFO leadgen.enrichment: purge: deleting 1188 (Oregon Metro) — oversized=5000
+2026-07-21 12:45:49,374 INFO leadgen.enrichment: purge: deleting 1186 (Touro University New York) — blocked_name_pattern
+2026-07-21 12:45:49,375 INFO leadgen.enrichment: purge: deleting 1182 (Vi) — oversized=5000
+2026-07-21 12:45:49,375 INFO leadgen.enrichment: purge: deleting 1181 (Klaviyo) — oversized=5000
+2026-07-21 12:45:49,376 INFO leadgen.enrichment: purge: deleting 1180 (LEADER BANK) — finance_vertical
+2026-07-21 12:45:49,377 INFO leadgen.enrichment: purge: deleting 1177 (R1 RCM) — oversized=10000
+2026-07-21 12:45:49,377 INFO leadgen.enrichment: purge: deleting 1175 (RELX Group) — oversized=5000
+2026-07-21 12:45:49,378 INFO leadgen.enrichment: purge: deleting 1174 (LexisNexis Legal & Professional) — oversized=10000
+2026-07-21 12:45:49,378 INFO leadgen.enrichment: purge: deleting 1173 (Texas Health and Human Services Commission) — oversized=10000
+2026-07-21 12:45:49,379 INFO leadgen.enrichment: purge: deleting 1171 (Payscale) — oversized=1000
+2026-07-21 12:45:49,379 INFO leadgen.enrichment: purge: deleting 1170 (Collectors) — oversized=5000
+2026-07-21 12:45:49,380 INFO leadgen.enrichment: purge: deleting 1169 (Pennsylvania Higher Education Assistance Agency (PHEAA)) — public_company_ticker
+2026-07-21 12:45:49,380 INFO leadgen.enrichment: purge: deleting 1167 (Froedtert & MCW) — oversized=10000
+2026-07-21 12:45:49,381 INFO leadgen.enrichment: purge: deleting 1166 (SCA Health) — oversized=10000
+2026-07-21 12:45:49,381 INFO leadgen.enrichment: purge: deleting 1165 (GEODIS) — oversized=10000
+2026-07-21 12:45:49,382 INFO leadgen.enrichment: purge: deleting 1164 (Blue Cross Blue Shield) — finance_vertical
+2026-07-21 12:45:49,382 INFO leadgen.enrichment: purge: deleting 1161 (U.S. House of Representatives) — blocked_name_pattern
+2026-07-21 12:45:49,383 INFO leadgen.enrichment: purge: deleting 1160 (Auria) — oversized=500
+2026-07-21 12:45:49,383 INFO leadgen.enrichment: purge: deleting 1159 (NV5) — oversized=5000
+2026-07-21 12:45:49,384 INFO leadgen.enrichment: purge: deleting 1157 (Vireo Health) — oversized=1000
+2026-07-21 12:45:49,385 INFO leadgen.enrichment: purge: deleting 1141 (ITW) — oversized=10000
+2026-07-21 12:45:49,385 INFO leadgen.enrichment: purge: deleting 1140 (Cape Fox Shared Services) — oversized=1000
+2026-07-21 12:45:49,386 INFO leadgen.enrichment: purge: deleting 1139 (Yorktown Systems Group) — oversized=500
+2026-07-21 12:45:49,386 INFO leadgen.enrichment: purge: deleting 1135 (Palmetto Technology Group (PTG)) — public_company_ticker
+2026-07-21 12:45:49,387 INFO leadgen.enrichment: purge: deleting 1132 (Texas State Technical College) — blocked_name_pattern
+2026-07-21 12:45:49,387 INFO leadgen.enrichment: purge: deleting 1127 (New York City Department of Youth and Community Development) — blocked_name_pattern
+2026-07-21 12:45:49,388 INFO leadgen.enrichment: purge: deleting 1126 (Focus) — oversized=200
+2026-07-21 12:45:49,388 INFO leadgen.enrichment: purge: deleting 1125 (SEACORP) — oversized=1000
+2026-07-21 12:45:49,388 INFO leadgen.enrichment: purge: deleting 1122 (ServIT Inc) — oversized=200
+2026-07-21 12:45:49,389 INFO leadgen.enrichment: purge: deleting 1120 (Bottleless Nation) — oversized=500
+2026-07-21 12:45:49,389 INFO leadgen.enrichment: purge: deleting 1116 (Delaware Nation Industries) — oversized=5000
+2026-07-21 12:45:49,390 INFO leadgen.enrichment: purge: deleting 1112 (Dynamic NC) — oversized=500
+2026-07-21 12:45:49,391 INFO leadgen.enrichment: purge: deleting 904 (HDR) — oversized=10000
+2026-07-21 12:45:49,391 INFO leadgen.enrichment: purge: deleting 1086 (Manatt, Phelps & Phillips, LLP) — financial_vehicle
+2026-07-21 12:45:49,392 INFO leadgen.enrichment: purge: deleting 1083 (Community Clinic of Maui) — oversized=200
+2026-07-21 12:45:49,393 INFO leadgen.enrichment: purge: deleting 1082 (UPS) — oversized=10000
+2026-07-21 12:45:49,394 INFO leadgen.enrichment: purge: deleting 1080 (OCHIN) — oversized=5000
+2026-07-21 12:45:49,394 INFO leadgen.enrichment: purge: deleting 1079 (Gatekeeper Systems) — oversized=200
+2026-07-21 12:45:49,395 INFO leadgen.enrichment: purge: deleting 1078 (Baton Rouge General) — oversized=5000
+2026-07-21 12:45:49,395 INFO leadgen.enrichment: purge: deleting 1077 (Cox Automotive) — oversized=10000
+2026-07-21 12:45:49,396 INFO leadgen.enrichment: purge: deleting 1076 (The Primary Health Network) — oversized=1000
+2026-07-21 12:45:49,396 INFO leadgen.enrichment: purge: deleting 1072 (Elara Caring) — oversized=10000
+2026-07-21 12:45:49,397 INFO leadgen.enrichment: purge: deleting 1071 (Public Partnerships LLC) — oversized=5000
+2026-07-21 12:45:49,398 INFO leadgen.enrichment: purge: deleting 1060 (University of Florida) — blocked_name_pattern
+2026-07-21 12:45:49,399 INFO leadgen.enrichment: purge: deleting 750 (DOWC) — oversized=200
+2026-07-21 12:45:49,400 INFO leadgen.enrichment: purge: deleting 1030 (TDIndustries) — oversized=5000
+2026-07-21 12:45:49,400 INFO leadgen.enrichment: purge: deleting 1028 (MAHLE) — oversized=10000
+2026-07-21 12:45:49,401 INFO leadgen.enrichment: purge: deleting 1026 (Orkin) — oversized=10000
+2026-07-21 12:45:49,401 INFO leadgen.enrichment: purge: deleting 1025 (Universal Engineering Sciences) — oversized=5000
+2026-07-21 12:45:49,402 INFO leadgen.enrichment: purge: deleting 1024 (Maine Water) — oversized=200
+2026-07-21 12:45:49,403 INFO leadgen.enrichment: purge: deleting 1023 (Ferrotec (USA) Corporation) — oversized=500
+2026-07-21 12:45:49,403 INFO leadgen.enrichment: purge: deleting 1021 (Liberty Tire Recycling, LLC) — oversized=5000
+2026-07-21 12:45:49,404 INFO leadgen.enrichment: purge: deleting 1020 (Schreiber Foods) — oversized=10000
+2026-07-21 12:45:49,405 INFO leadgen.enrichment: purge: deleting 1014 (South Jersey Port Corporation) — oversized=200
+2026-07-21 12:45:49,405 INFO leadgen.enrichment: purge: deleting 1012 (DMN TRANSPORT) — oversized=200
+2026-07-21 12:45:49,406 INFO leadgen.enrichment: purge: deleting 993 (Empire State College) — blocked_name_pattern
+2026-07-21 12:45:49,407 INFO leadgen.enrichment: purge: deleting 992 (Chewy) — oversized=10000
+2026-07-21 12:45:49,407 INFO leadgen.enrichment: purge: deleting 990 (The Michaels Organization) — oversized=5000
+2026-07-21 12:45:49,408 INFO leadgen.enrichment: purge: deleting 989 (MasTec Inc) — megacorp_subsidiary
+2026-07-21 12:45:49,409 INFO leadgen.enrichment: purge: deleting 988 (MasTec Utility Services) — megacorp_subsidiary
+2026-07-21 12:45:49,409 INFO leadgen.enrichment: purge: deleting 987 (Wieland Group) — oversized=10000
+2026-07-21 12:45:49,410 INFO leadgen.enrichment: purge: deleting 986 (DPR Construction) — oversized=10000
+2026-07-21 12:45:49,411 INFO leadgen.enrichment: purge: deleting 983 (SRS Distribution) — oversized=10000
+2026-07-21 12:45:49,411 INFO leadgen.enrichment: purge: deleting 982 (Sabcon Underground LLC) — oversized=200
+2026-07-21 12:45:49,412 INFO leadgen.enrichment: purge: deleting 981 (Joyce/Dayton Corp) — oversized=200
+2026-07-21 12:45:49,412 INFO leadgen.enrichment: purge: deleting 980 (MPOWERHealth) — oversized=500
+2026-07-21 12:45:49,413 INFO leadgen.enrichment: purge: deleting 979 (GROWMARK) — oversized=5000
+2026-07-21 12:45:49,413 INFO leadgen.enrichment: purge: deleting 978 (UNITEC) — oversized=1000
+2026-07-21 12:45:49,414 INFO leadgen.enrichment: purge: deleting 977 (Le Sueur Inc.) — oversized=500
+2026-07-21 12:45:49,414 INFO leadgen.enrichment: purge: deleting 975 (Atlantis Management Group LLC) — oversized=1000
+2026-07-21 12:45:49,415 INFO leadgen.enrichment: purge: deleting 974 (K2 Insurance Services, LLC) — finance_vertical
+2026-07-21 12:45:49,415 INFO leadgen.enrichment: purge: deleting 972 (S&J Transportation Services, Inc.) — oversized=200
+2026-07-21 12:45:49,416 INFO leadgen.enrichment: purge: deleting 969 (Cultivate Behavioral Health & Education) — oversized=1000
+2026-07-21 12:45:49,416 INFO leadgen.enrichment: purge: deleting 966 (Herschend Family Entertainment) — oversized=5000
+2026-07-21 12:45:49,417 INFO leadgen.enrichment: purge: deleting 955 (Builders Capital) — finance_vertical
+2026-07-21 12:45:49,418 INFO leadgen.enrichment: purge: deleting 948 (Wellpath) — oversized=10000
+2026-07-21 12:45:49,419 INFO leadgen.enrichment: purge: deleting 947 (Oak View Group) — oversized=10000
+2026-07-21 12:45:49,419 INFO leadgen.enrichment: purge: deleting 946 (The Salvation Army) — oversized_ngo
+2026-07-21 12:45:49,420 INFO leadgen.enrichment: purge: deleting 945 (D.R. Horton) — oversized=10000
+2026-07-21 12:45:49,420 INFO leadgen.enrichment: purge: deleting 944 (Optum) — oversized=10000
+2026-07-21 12:45:49,420 INFO leadgen.enrichment: purge: deleting 943 (Stallion Infrastructure Services) — oversized=1000
+2026-07-21 12:45:49,421 INFO leadgen.enrichment: purge: deleting 942 (Waste Pro) — oversized=5000
+2026-07-21 12:45:49,421 INFO leadgen.enrichment: purge: deleting 939 (Camping World) — oversized=10000
+2026-07-21 12:45:49,422 INFO leadgen.enrichment: purge: deleting 936 (Supreme Group) — oversized=10000
+2026-07-21 12:45:49,423 INFO leadgen.enrichment: purge: deleting 933 (Westgate Resorts) — oversized=10000
+2026-07-21 12:45:49,424 INFO leadgen.enrichment: purge: deleting 916 (Ranpak) — oversized=1000
+2026-07-21 12:45:49,424 INFO leadgen.enrichment: purge: deleting 932 (Hickel CPA) — cfo_competitor_name
+2026-07-21 12:45:49,425 INFO leadgen.enrichment: purge: deleting 927 (Channel Fish Company) — oversized=200
+2026-07-21 12:45:49,426 INFO leadgen.enrichment: purge: deleting 905 (Vantedge Medical) — oversized=5000
+2026-07-21 12:45:49,427 INFO leadgen.enrichment: purge: deleting 903 (Vistra Energy) — oversized=10000
+2026-07-21 12:45:49,428 INFO leadgen.enrichment: purge: deleting 899 (LifeStance Health) — oversized=10000
+2026-07-21 12:45:49,429 INFO leadgen.enrichment: purge: deleting 898 (AAA Life Insurance Company) — finance_vertical
+2026-07-21 12:45:49,429 INFO leadgen.enrichment: purge: deleting 897 (Regent Venture Partners) — blocked_name_pattern
+2026-07-21 12:45:49,430 INFO leadgen.enrichment: purge: deleting 406 (Troon) — oversized=10000
+2026-07-21 12:45:49,431 INFO leadgen.enrichment: purge: deleting 449 (Mitsubishi Heavy Industries America) — oversized=500
+2026-07-21 12:45:49,431 INFO leadgen.enrichment: purge: deleting 873 (Wingate University) — blocked_name_pattern
+2026-07-21 12:45:49,432 INFO leadgen.enrichment: purge: deleting 872 (KSM Castings USA, Inc.) — likely_oversized_subsidiary
+2026-07-21 12:45:49,432 INFO leadgen.enrichment: purge: deleting 870 (Mattress Firm) — oversized=10000
+2026-07-21 12:45:49,433 INFO leadgen.enrichment: purge: deleting 868 (Webster Five) — oversized=200
+2026-07-21 12:45:49,434 INFO leadgen.enrichment: purge: deleting 866 (ServiceSource Inc.) — oversized=5000
+2026-07-21 12:45:49,435 INFO leadgen.enrichment: purge: deleting 865 (Georgia Department of Corrections) — blocked_name_pattern
+2026-07-21 12:45:49,436 INFO leadgen.enrichment: purge: deleting 864 (Ash Properties) — oversized=200
+2026-07-21 12:45:49,436 INFO leadgen.enrichment: purge: deleting 863 (Quast, Janke & Company CPA's) — cfo_competitor_name
+2026-07-21 12:45:49,437 INFO leadgen.enrichment: purge: deleting 859 (Big Sandy Area Development District) — oversized=200
+2026-07-21 12:45:49,437 INFO leadgen.enrichment: purge: deleting 856 (Welltower, Inc) — oversized=1000
+2026-07-21 12:45:49,438 INFO leadgen.enrichment: purge: deleting 854 (Akerman LLP) — oversized=5000
+2026-07-21 12:45:49,438 INFO leadgen.enrichment: purge: deleting 850 (Trilogy Behavioral Healthcare) — oversized=500
+2026-07-21 12:45:49,439 INFO leadgen.enrichment: purge: deleting 847 (LifeScape) — oversized=5000
+2026-07-21 12:45:49,440 INFO leadgen.enrichment: purge: deleting 844 (Emigrant Bank) — finance_vertical
+2026-07-21 12:45:49,440 INFO leadgen.enrichment: purge: deleting 826 (Belstra) — oversized=500
+2026-07-21 12:45:49,441 INFO leadgen.enrichment: purge: deleting 824 (Lee's MarketPlace) — oversized=5000
+2026-07-21 12:45:49,441 INFO leadgen.enrichment: purge: deleting 823 (Town Pump) — oversized=5000
+2026-07-21 12:45:49,442 INFO leadgen.enrichment: purge: deleting 822 (Marquette Management) — oversized=500
+2026-07-21 12:45:49,443 INFO leadgen.enrichment: purge: deleting 814 (Capri Bookkeeping Solutions, LLC) — cfo_competitor_name
+2026-07-21 12:45:49,444 INFO leadgen.enrichment: purge: deleting 812 (Dental Accounting Group) — cfo_competitor_name
+2026-07-21 12:45:49,445 INFO leadgen.enrichment: purge: deleting 797 (Cloverbelt Credit Union) — finance_vertical
+2026-07-21 12:45:49,445 INFO leadgen.enrichment: purge: deleting 795 (GT Investments USA) — likely_oversized_subsidiary
+2026-07-21 12:45:49,446 INFO leadgen.enrichment: purge: deleting 788 (Robert Bias CPA) — cfo_competitor_name
+2026-07-21 12:45:49,446 INFO leadgen.enrichment: purge: deleting 786 (Hacker, Nelson & Co., CPAs) — cfo_competitor_name
+2026-07-21 12:45:49,447 INFO leadgen.enrichment: purge: deleting 779 (Yellowstone Bank) — finance_vertical
+2026-07-21 12:45:49,448 INFO leadgen.enrichment: purge: deleting 775 (Michael V. Joyner & Co., CPA, PA) — cfo_competitor_name
+2026-07-21 12:45:49,448 INFO leadgen.enrichment: purge: deleting 772 (Boreman & Babb, CPA's) — cfo_competitor_name
+2026-07-21 12:45:49,449 INFO leadgen.enrichment: purge: deleting 767 (Derby Fabricating Solutions) — oversized=200
+2026-07-21 12:45:49,450 INFO leadgen.enrichment: purge: deleting 765 (Cecil College) — blocked_name_pattern
+2026-07-21 12:45:49,451 INFO leadgen.enrichment: purge: deleting 758 (Taylor Morrison) — oversized=5000
+2026-07-21 12:45:49,451 INFO leadgen.enrichment: purge: deleting 757 (Metrocare) — oversized=5000
+2026-07-21 12:45:49,452 INFO leadgen.enrichment: purge: deleting 756 (University of New Haven) — blocked_name_pattern
+2026-07-21 12:45:49,452 INFO leadgen.enrichment: purge: deleting 755 (Fann Contracting, Inc.) — oversized=500
+2026-07-21 12:45:49,453 INFO leadgen.enrichment: purge: deleting 753 (Kentucky State University) — blocked_name_pattern
+2026-07-21 12:45:49,453 INFO leadgen.enrichment: purge: deleting 751 (ASC Engineered Solutions) — oversized=5000
+2026-07-21 12:45:49,454 INFO leadgen.enrichment: purge: deleting 749 (Montana State University) — blocked_name_pattern
+2026-07-21 12:45:49,454 INFO leadgen.enrichment: purge: deleting 747 (Volunteers of America) — oversized=10000
+2026-07-21 12:45:49,455 INFO leadgen.enrichment: purge: deleting 746 (Beacon College) — blocked_name_pattern
+2026-07-21 12:45:49,455 INFO leadgen.enrichment: purge: deleting 745 (Marymount University) — blocked_name_pattern
+2026-07-21 12:45:49,456 INFO leadgen.enrichment: purge: deleting 743 (High Point & Affiliated Organizations) — oversized=5000
+2026-07-21 12:45:49,456 INFO leadgen.enrichment: purge: deleting 741 (Garda Capital Partners) — blocked_name_pattern
+2026-07-21 12:45:49,456 INFO leadgen.enrichment: purge: deleting 740 (Natura I a Plant Interscapes Company) — oversized=200
+2026-07-21 12:45:49,457 INFO leadgen.enrichment: purge: deleting 739 (Rock Dental Brands) — oversized=1000
+2026-07-21 12:45:49,457 INFO leadgen.enrichment: purge: deleting 738 (Embry-Riddle Aeronautical University) — blocked_name_pattern
+2026-07-21 12:45:49,458 INFO leadgen.enrichment: purge: deleting 736 (North American Savings Bank) — finance_vertical
+2026-07-21 12:45:49,458 INFO leadgen.enrichment: purge: deleting 735 (UASI - United Audit Systems, Inc.) — oversized=500
+2026-07-21 12:45:49,459 INFO leadgen.enrichment: purge: deleting 734 (Texas Water Development Board) — oversized=500
+2026-07-21 12:45:49,459 INFO leadgen.enrichment: purge: deleting 733 (Academies of Math and Science) — oversized=1000
+2026-07-21 12:45:49,460 INFO leadgen.enrichment: purge: deleting 732 (GFA World) — oversized=200
+2026-07-21 12:45:49,460 INFO leadgen.enrichment: purge: deleting 731 (Lollypop Farm Humane Society of Greater Rochester) — oversized=200
+2026-07-21 12:45:49,460 INFO leadgen.enrichment: purge: deleting 730 (CarMax) — oversized=10000
+2026-07-21 12:45:49,461 INFO leadgen.enrichment: purge: deleting 729 (Linde) — oversized=10000
+2026-07-21 12:45:49,461 INFO leadgen.enrichment: purge: deleting 725 (Communities In Schools) — oversized=200
+2026-07-21 12:45:49,462 INFO leadgen.enrichment: purge: deleting 724 (South Texas Health System) — oversized=1000
+2026-07-21 12:45:49,462 INFO leadgen.enrichment: purge: deleting 723 (Schnackel Engineers, Inc.) — oversized=200
+2026-07-21 12:45:49,463 INFO leadgen.enrichment: purge: deleting 721 (Avista Corporation) — oversized=5000
+2026-07-21 12:45:49,464 INFO leadgen.enrichment: purge: deleting 720 (SHINE Technologies) — oversized=500
+2026-07-21 12:45:49,464 INFO leadgen.enrichment: purge: deleting 437 (Flex) — oversized=10000
+2026-07-21 12:45:49,465 INFO leadgen.enrichment: purge: deleting 718 (Planned Parenthood) — oversized_ngo
+2026-07-21 12:45:49,465 INFO leadgen.enrichment: purge: deleting 717 (Denver Center for the Performing Arts) — oversized=1000
+2026-07-21 12:45:49,466 INFO leadgen.enrichment: purge: deleting 716 (Highland Community College) — blocked_name_pattern
+2026-07-21 12:45:49,467 INFO leadgen.enrichment: purge: deleting 715 (SharkNinja) — oversized=5000
+2026-07-21 12:45:49,467 INFO leadgen.enrichment: purge: deleting 713 (THREADED FASTENERS INC) — oversized=200
+2026-07-21 12:45:49,467 INFO leadgen.enrichment: purge: deleting 712 (Ruiz Foods) — oversized=5000
+2026-07-21 12:45:49,468 INFO leadgen.enrichment: purge: deleting 710 (Glazd Insurance, Inc.) — finance_vertical
+2026-07-21 12:45:49,468 INFO leadgen.enrichment: purge: deleting 707 (Rapid Response Monitoring) — oversized=1000
+2026-07-21 12:45:49,469 INFO leadgen.enrichment: purge: deleting 706 (Bartlett Regional Hospital) — oversized=1000
+2026-07-21 12:45:49,469 INFO leadgen.enrichment: purge: deleting 701 (SYNAGRO Technologies, Inc) — oversized=1000
+2026-07-21 12:45:49,470 INFO leadgen.enrichment: purge: deleting 688 (District Capital Partners) — blocked_name_pattern
+2026-07-21 12:45:49,471 INFO leadgen.enrichment: purge: deleting 682 (Bon Secours Mercy Health) — oversized=10000
+2026-07-21 12:45:49,471 INFO leadgen.enrichment: purge: deleting 681 (Omaha Airport Authority) — oversized=200
+2026-07-21 12:45:49,472 INFO leadgen.enrichment: purge: deleting 680 (CSW Industrials) — oversized=1000
+2026-07-21 12:45:49,472 INFO leadgen.enrichment: purge: deleting 679 (Uber) — oversized=10000
+2026-07-21 12:45:49,472 INFO leadgen.enrichment: purge: deleting 677 (Greco Aluminum Railings U.S.A. Inc.) — likely_oversized_subsidiary
+2026-07-21 12:45:49,473 INFO leadgen.enrichment: purge: deleting 676 (Formation Financial Consulting Inc) — cfo_competitor_name
+2026-07-21 12:45:49,473 INFO leadgen.enrichment: purge: deleting 672 (Peak American Financial Group) — oversized=200
+2026-07-21 12:45:49,474 INFO leadgen.enrichment: purge: deleting 407 (KW Property Management) — oversized=5000
+2026-07-21 12:45:49,474 INFO leadgen.enrichment: purge: deleting 660 (Boeing) — megacorp_subsidiary
+2026-07-21 12:45:49,475 INFO leadgen.enrichment: purge: deleting 658 (Avature) — oversized=5000
+2026-07-21 12:45:49,476 INFO leadgen.enrichment: purge: deleting 657 (White Cap) — oversized=10000
+2026-07-21 12:45:49,476 INFO leadgen.enrichment: purge: deleting 653 (Broadridge) — oversized=10000
+2026-07-21 12:45:49,477 INFO leadgen.enrichment: purge: deleting 651 (Intuit) — oversized=10000
+2026-07-21 12:45:49,478 INFO leadgen.enrichment: purge: deleting 650 (Baldwin Richardson Foods) — oversized=500
+2026-07-21 12:45:49,478 INFO leadgen.enrichment: purge: deleting 649 (Hanger) — oversized=10000
+2026-07-21 12:45:49,479 INFO leadgen.enrichment: purge: deleting 648 (SSR Mining) — oversized=5000
+2026-07-21 12:45:49,479 INFO leadgen.enrichment: purge: deleting 646 (TARKETT) — oversized=10000
+2026-07-21 12:45:49,480 INFO leadgen.enrichment: purge: deleting 645 (Collective Health) — oversized=1000
+2026-07-21 12:45:49,481 INFO leadgen.enrichment: purge: deleting 644 (DoiT) — oversized=1000
+2026-07-21 12:45:49,481 INFO leadgen.enrichment: purge: deleting 643 (Progress Residential) — oversized=5000
+2026-07-21 12:45:49,482 INFO leadgen.enrichment: purge: deleting 289 (Hoxton Circle) — recruiter_name_pattern
+2026-07-21 12:45:49,482 INFO leadgen.enrichment: purge: deleting 642 (KLS Martin Group) — oversized=5000
+2026-07-21 12:45:49,483 INFO leadgen.enrichment: purge: deleting 641 (MacLean Power Systems) — oversized=5000
+2026-07-21 12:45:49,483 INFO leadgen.enrichment: purge: deleting 640 (Okta) — oversized=10000
+2026-07-21 12:45:49,484 INFO leadgen.enrichment: purge: deleting 638 (Frontier Airlines) — oversized=10000
+2026-07-21 12:45:49,485 INFO leadgen.enrichment: purge: deleting 637 (Palm Bay International) — oversized=500
+2026-07-21 12:45:49,486 INFO leadgen.enrichment: purge: deleting 626 (MGM Resorts International) — oversized=10000
+2026-07-21 12:45:49,486 INFO leadgen.enrichment: purge: deleting 625 (Thermo Fisher Scientific) — oversized=10000
+2026-07-21 12:45:49,487 INFO leadgen.enrichment: purge: deleting 624 (The Marzetti Company) — oversized=5000
+2026-07-21 12:45:49,488 INFO leadgen.enrichment: purge: deleting 622 (Martin Management Group) — oversized=500
+2026-07-21 12:45:49,489 INFO leadgen.enrichment: purge: deleting 426 (HHM Hotels) — oversized=10000
+2026-07-21 12:45:49,490 INFO leadgen.enrichment: purge: deleting 606 (Sojitz Corporation of America) — likely_oversized_subsidiary
+2026-07-21 12:45:49,490 INFO leadgen.enrichment: purge: deleting 602 (HealthEdge Software, Inc.) — oversized=5000
+2026-07-21 12:45:49,491 INFO leadgen.enrichment: purge: deleting 601 (Life Cycle Engineering) — oversized=1000
+2026-07-21 12:45:49,491 INFO leadgen.enrichment: purge: deleting 600 (EverDriven) — oversized=500
+2026-07-21 12:45:49,492 INFO leadgen.enrichment: purge: deleting 593 (Hiossen Inc.) — oversized=200
+2026-07-21 12:45:49,493 INFO leadgen.enrichment: purge: deleting 590 (The Richmond Group USA) — likely_oversized_subsidiary
+2026-07-21 12:45:49,493 INFO leadgen.enrichment: purge: deleting 582 (Gensler) — oversized=10000
+2026-07-21 12:45:49,494 INFO leadgen.enrichment: purge: deleting 579 (Suffolk Construction) — oversized=5000
+2026-07-21 12:45:49,495 INFO leadgen.enrichment: purge: deleting 576 (SKIDATA USA) — likely_oversized_subsidiary
+2026-07-21 12:45:49,495 INFO leadgen.enrichment: purge: deleting 380 (Highgate) — oversized=10000
+2026-07-21 12:45:49,496 INFO leadgen.enrichment: purge: deleting 565 (Coram AI) — oversized=200
+2026-07-21 12:45:49,497 INFO leadgen.enrichment: purge: deleting 563 (CSL Plasma) — oversized=10000
+2026-07-21 12:45:49,497 INFO leadgen.enrichment: purge: deleting 562 (Databricks) — oversized=10000
+2026-07-21 12:45:49,498 INFO leadgen.enrichment: purge: deleting 561 (Sola Insurance) — finance_vertical
+2026-07-21 12:45:49,498 INFO leadgen.enrichment: purge: deleting 552 (Salt Creek Capital) — finance_vertical
+2026-07-21 12:45:49,499 INFO leadgen.enrichment: purge: deleting 547 (Corpay) — oversized=10000
+2026-07-21 12:45:49,500 INFO leadgen.enrichment: purge: deleting 546 (Acrisure LLC) — oversized=10000
+2026-07-21 12:45:49,500 INFO leadgen.enrichment: purge: deleting 542 (Baxters North America) — likely_oversized_subsidiary
+2026-07-21 12:45:49,501 INFO leadgen.enrichment: purge: deleting 531 (GULF COPPER) — oversized=200
+2026-07-21 12:45:49,501 INFO leadgen.enrichment: purge: deleting 529 (Washington and Lee University) — blocked_name_pattern
+2026-07-21 12:45:49,502 INFO leadgen.enrichment: purge: deleting 528 (The Ranch at Rock Creek) — oversized=200
+2026-07-21 12:45:49,502 INFO leadgen.enrichment: purge: deleting 527 (ENTEK) — oversized=1000
+2026-07-21 12:45:49,503 INFO leadgen.enrichment: purge: deleting 523 (PulteGroup, Inc) — oversized=10000
+2026-07-21 12:45:49,503 INFO leadgen.enrichment: purge: deleting 522 (WAYNE BANK) — finance_vertical
+2026-07-21 12:45:49,504 INFO leadgen.enrichment: purge: deleting 521 (Onni Group) — oversized=5000
+2026-07-21 12:45:49,505 INFO leadgen.enrichment: purge: deleting 520 (Corning) — oversized=10000
+2026-07-21 12:45:49,505 INFO leadgen.enrichment: purge: deleting 516 (Green Bay Packaging) — oversized=10000
+2026-07-21 12:45:49,506 INFO leadgen.enrichment: purge: deleting 515 (Elim Christian Services) — oversized=500
+2026-07-21 12:45:49,506 INFO leadgen.enrichment: purge: deleting 514 (Ball Corporation) — oversized=10000
+2026-07-21 12:45:49,507 INFO leadgen.enrichment: purge: deleting 513 (AAA Washington) — oversized=1000
+2026-07-21 12:45:49,507 INFO leadgen.enrichment: purge: deleting 512 (Morris Group, Inc.) — oversized=1000
+2026-07-21 12:45:49,508 INFO leadgen.enrichment: purge: deleting 511 (CRYPTO.com) — oversized=200
+2026-07-21 12:45:49,508 INFO leadgen.enrichment: purge: deleting 509 (Ziply Fiber) — oversized=5000
+2026-07-21 12:45:49,509 INFO leadgen.enrichment: purge: deleting 508 (Army & Airforce Exchange Service) — oversized=10000
+2026-07-21 12:45:49,509 INFO leadgen.enrichment: purge: deleting 506 (Dobbs Peterbilt) — oversized=1000
+2026-07-21 12:45:49,510 INFO leadgen.enrichment: purge: deleting 505 (Baptist Memorial Health Care) — oversized=10000
+2026-07-21 12:45:49,511 INFO leadgen.enrichment: purge: deleting 503 (R-G Federal Credit Union) — finance_vertical
+2026-07-21 12:45:49,511 INFO leadgen.enrichment: purge: deleting 498 (Materion) — oversized=5000
+2026-07-21 12:45:49,512 INFO leadgen.enrichment: purge: deleting 497 (Western Flyer Xpress) — oversized=5000
+2026-07-21 12:45:49,513 INFO leadgen.enrichment: purge: deleting 496 (Telgian Corporation) — oversized=500
+2026-07-21 12:45:49,513 INFO leadgen.enrichment: purge: deleting 495 (Divisions Maintenance Group) — oversized=5000
+2026-07-21 12:45:49,514 INFO leadgen.enrichment: purge: deleting 493 (G L Homes of Florida Corporation) — oversized=1000
+2026-07-21 12:45:49,514 INFO leadgen.enrichment: purge: deleting 492 (T&G Constructors) — oversized=200
+2026-07-21 12:45:49,514 INFO leadgen.enrichment: purge: deleting 491 (DO & CO) — oversized=10000
+2026-07-21 12:45:49,515 INFO leadgen.enrichment: purge: deleting 251 (The Road Home) — oversized=500
+2026-07-21 12:45:49,516 INFO leadgen.enrichment: purge: deleting 490 (Mountain State Oral & Facial Surgery) — oversized=200
+2026-07-21 12:45:49,516 INFO leadgen.enrichment: purge: deleting 487 (Golden Valley Bank) — finance_vertical
+2026-07-21 12:45:49,517 INFO leadgen.enrichment: purge: deleting 484 (Howmet Aerospace) — oversized=10000
+2026-07-21 12:45:49,517 INFO leadgen.enrichment: purge: deleting 483 (Wingstop) — oversized=500
+2026-07-21 12:45:49,518 INFO leadgen.enrichment: purge: deleting 482 (Holman) — oversized=10000
+2026-07-21 12:45:49,518 INFO leadgen.enrichment: purge: deleting 479 (Page Transportation & Page E.T.C.) — oversized=200
+2026-07-21 12:45:49,519 INFO leadgen.enrichment: purge: deleting 477 (Epsen Hillmer Graphics) — oversized=200
+2026-07-21 12:45:49,519 INFO leadgen.enrichment: purge: deleting 476 (The Omni Group) — oversized=5000
+2026-07-21 12:45:49,520 INFO leadgen.enrichment: purge: deleting 473 (HOME OF GUIDING HANDS) — oversized=1000
+2026-07-21 12:45:49,520 INFO leadgen.enrichment: purge: deleting 470 (Texas Southern University) — blocked_name_pattern
+2026-07-21 12:45:49,521 INFO leadgen.enrichment: purge: deleting 464 (Polysport USA) — likely_oversized_subsidiary
+2026-07-21 12:45:49,522 INFO leadgen.enrichment: purge: deleting 450 (Aeroseal, LLC) — oversized=500
+2026-07-21 12:45:49,522 INFO leadgen.enrichment: purge: deleting 448 (DCI Engineers) — oversized=500
+2026-07-21 12:45:49,523 INFO leadgen.enrichment: purge: deleting 444 (Point32Health) — oversized=5000
+2026-07-21 12:45:49,523 INFO leadgen.enrichment: purge: deleting 443 (Brunswick) — oversized=10000
+2026-07-21 12:45:49,524 INFO leadgen.enrichment: purge: deleting 442 (Ingersoll-Rand) — oversized=10000
+2026-07-21 12:45:49,524 INFO leadgen.enrichment: purge: deleting 441 (Heritage South Community Credit Union) — finance_vertical
+2026-07-21 12:45:49,525 INFO leadgen.enrichment: purge: deleting 436 (Amcor) — oversized=10000
+2026-07-21 12:45:49,525 INFO leadgen.enrichment: purge: deleting 435 (San Diego Rescue Mission) — oversized=200
+2026-07-21 12:45:49,526 INFO leadgen.enrichment: purge: deleting 433 (Videojet Technologies) — oversized=5000
+2026-07-21 12:45:49,527 INFO leadgen.enrichment: purge: deleting 431 (Systems Planning and Analysis, Inc. (SPA)) — public_company_ticker
+2026-07-21 12:45:49,527 INFO leadgen.enrichment: purge: deleting 430 (Forvia) — oversized=10000
+2026-07-21 12:45:49,528 INFO leadgen.enrichment: purge: deleting 425 (EMC Precision) — oversized=200
+2026-07-21 12:45:49,528 INFO leadgen.enrichment: purge: deleting 422 (GFiber) — oversized=5000
+2026-07-21 12:45:49,529 INFO leadgen.enrichment: purge: deleting 421 (Care Options For Kids) — oversized=1000
+2026-07-21 12:45:49,530 INFO leadgen.enrichment: purge: deleting 420 (Cushman & Wakefield) — oversized=10000
+2026-07-21 12:45:49,530 INFO leadgen.enrichment: purge: deleting 417 (Gen USA LLC) — likely_oversized_subsidiary
+2026-07-21 12:45:49,531 INFO leadgen.enrichment: purge: deleting 414 (Thompson Health) — oversized=5000
+2026-07-21 12:45:49,531 INFO leadgen.enrichment: purge: deleting 408 (New York State Bar Association) — oversized=200
+2026-07-21 12:45:49,532 INFO leadgen.enrichment: purge: deleting 402 (Heywood Hospital) — oversized=5000
+2026-07-21 12:45:49,533 INFO leadgen.enrichment: purge: deleting 401 (Sky Ranches) — oversized=200
+2026-07-21 12:45:49,533 INFO leadgen.enrichment: purge: deleting 400 (Rehmann) — oversized=1000
+2026-07-21 12:45:49,533 INFO leadgen.enrichment: purge: deleting 397 (Captive Radiology) — oversized=200
+2026-07-21 12:45:49,535 INFO leadgen.enrichment: purge: deleting 382 (FRIEDE & ASSOCIATES LLC) — oversized=200
+2026-07-21 12:45:49,535 INFO leadgen.enrichment: purge: deleting 381 (Heidelberg USA) — oversized=1000
+2026-07-21 12:45:49,536 INFO leadgen.enrichment: purge: deleting 379 (Republic Services) — oversized=10000
+2026-07-21 12:45:49,536 INFO leadgen.enrichment: purge: deleting 378 (Andritz) — oversized=10000
+2026-07-21 12:45:49,537 INFO leadgen.enrichment: purge: deleting 373 (Agrace) — oversized=1000
+2026-07-21 12:45:49,538 INFO leadgen.enrichment: purge: deleting 372 (SMS Data Products Group, Inc) — oversized=1000
+2026-07-21 12:45:49,538 INFO leadgen.enrichment: purge: deleting 370 (California Dental Association) — oversized=200
+2026-07-21 12:45:49,539 INFO leadgen.enrichment: purge: deleting 368 (BDO) — oversized=10000
+2026-07-21 12:45:49,539 INFO leadgen.enrichment: purge: deleting 367 (Lendistry) — oversized=500
+2026-07-21 12:45:49,540 INFO leadgen.enrichment: purge: deleting 366 (ADC LTD NM) — oversized=1000
+2026-07-21 12:45:49,540 INFO leadgen.enrichment: purge: deleting 365 (North Greenville University) — blocked_name_pattern
+2026-07-21 12:45:49,541 INFO leadgen.enrichment: purge: deleting 364 (Dana-Farber Cancer Institute) — oversized=5000
+2026-07-21 12:45:49,541 INFO leadgen.enrichment: purge: deleting 362 (Thor Solutions, LLC) — oversized=200
+2026-07-21 12:45:49,542 INFO leadgen.enrichment: purge: deleting 361 (Flexsteel Industries) — oversized=5000
+2026-07-21 12:45:49,542 INFO leadgen.enrichment: purge: deleting 360 (NMC CAT) — oversized=500
+2026-07-21 12:45:49,543 INFO leadgen.enrichment: purge: deleting 359 (Serenity Healthcare) — oversized=1000
+2026-07-21 12:45:49,544 INFO leadgen.enrichment: purge: deleting 355 (Studio Number One (SNO)) — public_company_ticker
+2026-07-21 12:45:49,545 INFO leadgen.enrichment: purge: deleting 342 (Keiter) — oversized=200
+2026-07-21 12:45:49,545 INFO leadgen.enrichment: purge: deleting 337 (Spark) — oversized=10000
+2026-07-21 12:45:49,546 INFO leadgen.enrichment: purge: deleting 325 (United States Department Of Defense) — blocked_name_pattern
+2026-07-21 12:45:49,547 INFO leadgen.enrichment: purge: deleting 324 (Virginia Community College System) — blocked_name_pattern
+2026-07-21 12:45:49,547 INFO leadgen.enrichment: purge: deleting 322 (US Department of Veterans Affairs) — blocked_name_pattern
+2026-07-21 12:45:49,548 INFO leadgen.enrichment: purge: deleting 321 (Tully Rinckey PLLC) — oversized=200
+2026-07-21 12:45:49,548 INFO leadgen.enrichment: purge: deleting 320 (Catholic Charities) — oversized_ngo
+2026-07-21 12:45:49,549 INFO leadgen.enrichment: purge: deleting 313 (Dark Horse CPAs) — cfo_competitor_name
+2026-07-21 12:45:49,549 INFO leadgen.enrichment: purge: deleting 308 (The Douglaston Companies) — oversized=200
+2026-07-21 12:45:49,550 INFO leadgen.enrichment: purge: deleting 307 (ABB) — oversized=10000
+2026-07-21 12:45:49,551 INFO leadgen.enrichment: purge: deleting 306 (WGI) — oversized=1000
+2026-07-21 12:45:49,551 INFO leadgen.enrichment: purge: deleting 305 (Corgan) — oversized=500
+2026-07-21 12:45:49,552 INFO leadgen.enrichment: purge: deleting 304 (Visa) — oversized=10000
+2026-07-21 12:45:49,553 INFO leadgen.enrichment: purge: deleting 303 (Memorial Medical Center) — oversized=5000
+2026-07-21 12:45:49,553 INFO leadgen.enrichment: purge: deleting 302 (CPI Card Group) — oversized=5000
+2026-07-21 12:45:49,553 INFO leadgen.enrichment: purge: deleting 300 (Advanced Drainage Systems) — oversized=5000
+2026-07-21 12:45:49,554 INFO leadgen.enrichment: purge: deleting 298 (Egnyte) — oversized=5000
+2026-07-21 12:45:49,555 INFO leadgen.enrichment: purge: deleting 296 (WesTech Engineering, LLC) — oversized=1000
+2026-07-21 12:45:49,555 INFO leadgen.enrichment: purge: deleting 295 (Belmont College) — blocked_name_pattern
+2026-07-21 12:45:49,556 INFO leadgen.enrichment: purge: deleting 292 (University of West Georgia) — blocked_name_pattern
+2026-07-21 12:45:49,556 INFO leadgen.enrichment: purge: deleting 291 (Hitachi Energy) — oversized=10000
+2026-07-21 12:45:49,557 INFO leadgen.enrichment: purge: deleting 290 (PCHS of Alaska) — oversized=200
+2026-07-21 12:45:49,557 INFO leadgen.enrichment: purge: deleting 288 (King County, WA) — oversized=10000
+2026-07-21 12:45:49,558 INFO leadgen.enrichment: purge: deleting 286 (CoveCare Center) — oversized=200
+2026-07-21 12:45:49,559 INFO leadgen.enrichment: purge: deleting 280 (Treaty Oak Financial) — finance_vertical
+2026-07-21 12:45:49,559 INFO leadgen.enrichment: purge: deleting 273 (Advanced Bookkeeping Services) — cfo_competitor_name
+2026-07-21 12:45:49,560 INFO leadgen.enrichment: purge: deleting 272 (Cydcor) — oversized=200
+2026-07-21 12:45:49,560 INFO leadgen.enrichment: purge: deleting 267 (CareFlite) — oversized=1000
+2026-07-21 12:45:49,561 INFO leadgen.enrichment: purge: deleting 253 (Your Part-Time Controller, LLC) — oversized=1000
+2026-07-21 12:45:49,562 INFO leadgen.enrichment: purge: deleting 258 (Crunch Fitness) — oversized=5000
+2026-07-21 12:45:49,562 INFO leadgen.enrichment: purge: deleting 257 (CASAS International, Inc) — oversized=200
+2026-07-21 12:45:49,563 INFO leadgen.enrichment: purge: deleting 250 (United Surgical Partners) — oversized=10000
+2026-07-21 12:45:49,564 INFO leadgen.enrichment: purge: deleting 246 (Paranet Solutions) — oversized=200
+2026-07-21 12:45:49,564 INFO leadgen.enrichment: purge: deleting 243 (Beam Accounting Inc.) — cfo_competitor_name
+2026-07-21 12:45:49,565 INFO leadgen.enrichment: purge: deleting 241 (Lucida Tax + Accounting Solutions) — cfo_competitor_name
+2026-07-21 12:45:49,566 INFO leadgen.enrichment: purge: deleting 236 (Hoist & Crane Service Group) — oversized=500
+2026-07-21 12:45:49,566 INFO leadgen.enrichment: purge: deleting 235 (BETE Fog Nozzle) — oversized=200
+2026-07-21 12:45:49,566 INFO leadgen.enrichment: purge: deleting 209 (Ascent CFO Solutions) — cfo_competitor_name
+2026-07-21 12:45:49,567 INFO leadgen.enrichment: purge: deleting 234 (GBMC HealthCare) — oversized=5000
+2026-07-21 12:45:49,567 INFO leadgen.enrichment: purge: deleting 233 (Windham Brannon) — oversized=200
+2026-07-21 12:45:49,568 INFO leadgen.enrichment: purge: deleting 225 (The CFO Centre USA) — likely_oversized_subsidiary
+2026-07-21 12:45:49,569 INFO leadgen.enrichment: purge: deleting 216 (Aereos) — oversized=200
+2026-07-21 12:45:49,570 INFO leadgen.enrichment: purge: deleting 204 (Broadview at Purchase College) — blocked_name_pattern
+2026-07-21 12:45:49,570 INFO leadgen.enrichment: purge: deleting 196 (Musicow US Vol. 1 LLC) — zero_headcount
+2026-07-21 12:45:49,571 INFO leadgen.enrichment: purge: deleting 189 (Sarahs Constellation LLC) — zero_headcount
+2026-07-21 12:45:49,572 INFO leadgen.enrichment: purge: deleting 187 (Pathfinder Resources, Inc.) — zero_headcount
+2026-07-21 12:45:49,573 INFO leadgen.enrichment: purge: deleting 180 (Social Impact Solar HoldCo LLC) — zero_headcount
+2026-07-21 12:45:49,573 INFO leadgen.enrichment: purge: deleting 178 (IOTTY Smart Home, Inc.) — zero_headcount
+2026-07-21 12:45:49,574 INFO leadgen.enrichment: purge: deleting 164 (Reiturn Inc.) — zero_headcount
+2026-07-21 12:45:49,575 INFO leadgen.enrichment: purge: deleting 152 (Immanent, LLC) — zero_headcount
+2026-07-21 12:45:49,576 INFO leadgen.enrichment: purge: deleting 149 (Funk Harbor Spirits, Inc.) — zero_headcount
+2026-07-21 12:45:49,576 INFO leadgen.enrichment: purge: deleting 145 (Behind the Meter HoldCo LLC) — zero_headcount
+2026-07-21 12:45:49,577 INFO leadgen.enrichment: purge: deleting 139 (Gridwater Inc) — zero_headcount
+2026-07-21 12:45:49,577 INFO leadgen.enrichment: purge: deleting 137 (GFL Sports & Entertainment Inc.) — zero_headcount
+2026-07-21 12:45:49,578 INFO leadgen.enrichment: purge: deleting 135 (CESL SITE 1 LLC) — zero_headcount
+2026-07-21 12:45:49,579 INFO leadgen.enrichment: purge: deleting 121 (MRH CF, LLC) — zero_headcount
+2026-07-21 12:45:49,579 INFO leadgen.enrichment: purge: deleting 117 (Last Call for Redemption LLC) — zero_headcount
+2026-07-21 12:45:49,580 INFO leadgen.enrichment: purge: deleting 115 (Rayrok Corp.) — zero_headcount
+2026-07-21 12:45:49,580 INFO leadgen.enrichment: purge: deleting 113 (1000 Hawthorn Crossings LLC) — zero_headcount
+2026-07-21 12:45:49,581 INFO leadgen.enrichment: purge: deleting 106 (Culpepper Arlington Restaurant, LLC) — zero_headcount
+2026-07-21 12:45:49,585 INFO leadgen.enrichment: purge: deleting 17 (PRUCO LIFE INSURANCE CO) — finance_vertical
+2026-07-21 12:45:49,586 INFO leadgen.enrichment: purge: deleting 16 (Ocean Thermal Energy Corp  (CPWR)) — public_company_ticker
+2026-07-21 12:45:49,590 INFO leadgen.run: purged 433 disqualified leads
+2026-07-21 12:45:50,086 INFO leadgen.run: wrote accounting-leads.json (738 leads)
+2026-07-21 12:45:50,118 INFO leadgen.run: wrote cfo-leads.json (552 leads)
+2026-07-21 12:45:50,152 INFO leadgen.run: wrote mssp-leads.json (98 leads)
+2026-07-21 12:45:50,181 INFO leadgen.run: wrote msp-leads.json (40 leads)
+2026-07-21 12:45:50,208 INFO leadgen.run: wrote cloud-leads.json (157 leads)

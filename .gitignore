@@ -15,4 +15,7 @@
 # each daily run). Only the SQLite DB is committed, as the pipeline's incremental
 # state. Do NOT ignore leads.db.
 **/data/leads.json
+**/data/*-leads.json
+**/data/inventory.json
 **/data/smoke/
+**/data/taxonomy.json

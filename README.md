@@ -1,37 +1,52 @@
 # lead-platform
 
-Buying-signal lead pipelines. Each package scrapes signals about SMBs (jobs,
-funding, headcount, breaches), scores them for a vertical, and uploads a JSON
-inventory to Vercel Blob, which the website and outreach engines read over HTTP.
+Buying-signal lead-magnet platform. One package, `leadgen/`, that finds SMBs
+(<100 employees) showing public buying signals, dedupes them into one company
+store, and emits one lead inventory per niche — the companies that go *inside*
+the gift the outreach engine sends.
 
-Three independent sibling packages — **no shared imports** (each owns its DB
-schema, scoring weights, enrichment prompt, Apollo title list, and output shape):
+**A niche is a query, not a pipeline.** Shared sources are fetched once and
+written into one deduped `leads.db`; each company is scored for every niche it
+qualifies for, so a company that filed a Form D *and* is hiring a Controller is
+one record that can surface in both the Accounting and CFO inventories.
 
-| Package | Vertical | Daily cron |
-|---|---|---|
-| `pipeline/msp_pipeline/` | MSP / MSSP / cloud | `.github/workflows/daily-leads.yml` |
-| `cfo_pipeline/` | Fractional CFO | `.github/workflows/cfo-leads.yml` |
-| `insurance_pipeline/` | Insurance | `.github/workflows/insurance-leads.yml` |
+## Niches & signals
+
+| Niche | Signals |
+|---|---|
+| Accounting / Bookkeeping | Form D/C funding · junior finance hire · finance-lead hire |
+| Fractional CFO | Fractional/interim CFO post · finance-lead hire · Form D funding |
+| MSSP | Breach (HHS OCR + state AGs) · security roles |
+| MSP | IT / helpdesk roles (incl. IT leadership) |
+| Cloud / DevOps | DevOps / SRE roles · Form D funding |
+
+## Sources (shared, fetched once)
+
+- **SEC Form D / Form C** — funding (`sources/edgar_form_d.py`, `edgar_form_c.py`).
+- **Job posts** — JobSpy + Adzuna + fractional boards (`sources/jobs.py`,
+  `fractional_boards.py`), classified into seven role signal types.
+- **Breaches** — HHS OCR Breach Portal + state AGs (`sources/breaches.py`).
+
+Every stored signal carries verbatim evidence + a source URL, or it isn't
+stored. Funding is SEC Form D/C only.
 
 ## Data model
 
-- **`<pkg>/data/leads.db`** — SQLite, the pipeline's incremental state. **Committed**
-  (the cron reads last run's DB to dedupe/enrich, then commits the updated one).
-- **`<pkg>/data/leads.json`** — the run output. **Not committed** — it's uploaded
-  to Vercel Blob every run (the served source) and is `.gitignore`d here.
+- **`leadgen/data/leads.db`** — SQLite, the platform's incremental state.
+  **Committed** (the cron reads it to dedupe/enrich, then commits it back).
+- **`leadgen/data/<niche>-leads.json`** — per-niche run output. **Not
+  committed** — uploaded to Vercel Blob each run and `.gitignore`d here.
 
-Each cron: checkout → run pipeline (`--upload` posts JSON to Blob) → commit the
-updated `leads.db`. The upload URL is the deployed site's `api/upload-*`
-endpoint, so moving this out of the website repo doesn't change anything.
+The single cron (`.github/workflows/daily-leads.yml`) does:
+checkout → run (`--upload` posts each niche inventory) → commit `leads.db`.
 
-## Run one locally
+## Run locally
 
 ```bash
-cd cfo_pipeline
+cd leadgen
 python3 -m venv .venv && . .venv/bin/activate
 pip install -e .
-python -m cfo_pipeline.daily_run --help
+cp .env.example .env      # fill in OPENAI_API_KEY, GEMINI_API_KEY, ...
+python -m leadgen.run --since-days 45 --enrich-budget 50   # writes data/*-leads.json
 python -m pytest -q
 ```
-
-See `docs/` for the build roadmap and per-milestone notes.

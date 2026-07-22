@@ -1,0 +1,1109 @@
+2026-07-21 14:17:09,573 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: Captal, Inc.
+2026-07-21 14:17:10,679 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Chase Grace Southwind, LLC
+2026-07-21 14:17:10,798 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: DE Southwind, LLC
+2026-07-21 14:17:10,889 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: HVG Southwind Associates, LLC
+2026-07-21 14:17:11,403 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: East West Minerals Ltd.
+2026-07-21 14:17:11,674 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Rise Guyana SBX LLC
+2026-07-21 14:17:11,829 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: UNIVERSE PRO INC
+2026-07-21 14:17:12,251 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Fortis Private Strategies IV, LLC
+2026-07-21 14:17:12,782 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: ParcoData Inc
+2026-07-21 14:17:12,983 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: WAGMI 197 - WAGMI Master LLC
+2026-07-21 14:17:13,220 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: QP LFO AMP LLC
+2026-07-21 14:17:13,396 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Abundance Lila II, LLC
+2026-07-21 14:17:14,602 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: FREX DB Series I DST
+2026-07-21 14:17:14,721 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: WDC X.AI, LLC
+2026-07-21 14:17:14,959 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: American Atomics Inc.
+2026-07-21 14:17:15,303 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: Pike Therapeutics Inc.
+2026-07-21 14:17:16,315 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Classic HudCo II, L.P. - Series 3 - LSF XII (Helix)
+2026-07-21 14:17:18,311 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Creek at 2645 Sub Class IIB Bond Holders, LLC
+2026-07-21 14:17:19,557 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Permira IX GP Commitment EUR SCSp
+2026-07-21 14:17:19,747 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Permira IX GP Commitment USD SCSp
+2026-07-21 14:17:20,636 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Kelchner Holdco LLC
+2026-07-21 14:17:21,637 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: PlayerSense Systems, Inc.
+2026-07-21 14:17:21,801 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: GEC Holdco LLC
+2026-07-21 14:17:22,672 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Trestle Financial, LLC
+2026-07-21 14:17:23,288 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: Numobag Disposable Isolation System Financing, LLC
+2026-07-21 14:17:23,906 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: CollPlant Biotechnologies Ltd  (CLGN)
+2026-07-21 14:17:23,997 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: CYABRA, INC.  (CYAB)
+2026-07-21 14:17:24,149 INFO leadgen.sources.edgar_form_d: edgar efts: CFO listed on Form D: Precision Peptide Co Inc.
+2026-07-21 14:17:24,779 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Squarepoint Core International Feeder Ltd
+2026-07-21 14:17:25,023 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: ROSECLIFF NEXT GENERATION LLC - SERIES 2026 ACCESS
+2026-07-21 14:17:25,178 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: VOVX EXCHANGE LTD
+2026-07-21 14:17:26,008 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: 4749 NCE LLC
+2026-07-21 14:17:26,455 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Imperium Alternatives LLC
+2026-07-21 14:17:27,800 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: SOLCAP Generate 2026-B LLC
+2026-07-21 14:17:27,935 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: SOLCAP Generate 2026-A LLC
+2026-07-21 14:17:28,031 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Matra West Lebanon LLC
+2026-07-21 14:17:28,316 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: Kamerra Raven, LLC
+2026-07-21 14:17:29,015 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: OGV, LLC
+2026-07-21 14:17:29,092 INFO leadgen.sources.edgar_form_d: edgar efts: skipping pooled fund: OHV, LLC
+2026-07-21 14:17:29,346 INFO leadgen.sources.edgar_form_d: edgar efts: 103 operating-company candidates, 10 CFO-officer disqualifiers from 2026-06-06..2026-07-21
+2026-07-21 14:17:29,585 INFO leadgen.run: source edgar_form_d: 111 candidates, 10 disqualifiers
+2026-07-21 14:17:56,500 INFO leadgen.sources.edgar_form_c: edgar form-c: 146 operating-company candidates from 2026-06-06..2026-07-21
+2026-07-21 14:17:56,500 INFO leadgen.run: source edgar_form_c: 146 candidates, 0 disqualifiers
+2026-07-21 14:17:56,828 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed3c3d8a1febe9-IAD","status_code":403}
+2026-07-21 14:18:08,188 - INFO - JobSpy:Linkedin - finished scraping
+2026-07-21 14:18:08,353 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:18:08,354 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:18:08,698 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed3c87999267fa-IAD","status_code":403}
+2026-07-21 14:18:19,288 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:18:19,288 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:18:19,544 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed3ccb9bc55e56-IAD","status_code":403}
+2026-07-21 14:18:39,301 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:18:39,303 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:18:39,584 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed3d48cea8d029-IAD","status_code":403}
+2026-07-21 14:19:00,952 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:19:00,952 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:19:01,236 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed3dd009e20c97-IAD","status_code":403}
+2026-07-21 14:19:25,575 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:19:25,577 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:19:25,853 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed3e6a0f5c9ddb-IAD","status_code":403}
+2026-07-21 14:19:41,675 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:19:41,675 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:19:41,932 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed3ece7ed24e48-IAD","status_code":403}
+2026-07-21 14:20:11,067 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:20:11,067 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:20:11,405 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed3f86bb7515df-IAD","status_code":403}
+2026-07-21 14:20:17,624 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:20:17,625 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:20:17,907 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed3faf4ca16c4d-IAD","status_code":403}
+2026-07-21 14:20:43,149 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:20:43,151 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:20:43,414 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed404ebd09c685-IAD","status_code":403}
+2026-07-21 14:20:55,673 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:20:55,673 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:20:55,979 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed409d48fec090-IAD","status_code":403}
+2026-07-21 14:21:09,157 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:21:09,157 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:21:09,417 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed40f13b2efab6-IAD","status_code":403}
+2026-07-21 14:21:20,692 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:21:20,692 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:21:21,021 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4139be4b7543-IAD","status_code":403}
+2026-07-21 14:21:33,639 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:21:33,640 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:21:33,919 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed418a5c7e7ae0-IAD","status_code":403}
+2026-07-21 14:21:57,761 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:21:57,761 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:21:58,134 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed42214ae9cf22-IAD","status_code":403}
+2026-07-21 14:22:23,256 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:22:23,257 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:22:23,542 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed42c08e3c1588-IAD","status_code":403}
+2026-07-21 14:22:45,616 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:22:45,616 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:22:45,906 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed434c4df1f9c5-IAD","status_code":403}
+2026-07-21 14:23:45,068 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:23:45,069 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:23:45,347 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed44bfcc708123-IAD","status_code":403}
+2026-07-21 14:23:57,423 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:23:57,423 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:23:57,682 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed450cf9e93d57-IAD","status_code":403}
+2026-07-21 14:24:27,464 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:24:27,464 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:24:27,812 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed45c939e7cb6f-IAD","status_code":403}
+2026-07-21 14:25:14,979 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:25:14,979 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:25:15,258 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed46f1ce0e2855-IAD","status_code":403}
+2026-07-21 14:25:26,861 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:25:26,861 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:25:27,146 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed473c0f9c5f02-IAD","status_code":403}
+2026-07-21 14:25:42,808 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:25:42,809 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:25:43,296 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed47a0ff0771e7-IAD","status_code":403}
+2026-07-21 14:26:00,889 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:26:00,890 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:26:01,143 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed48108b832ca1-IAD","status_code":403}
+2026-07-21 14:26:29,956 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:26:29,956 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:26:30,224 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed48c649fbcee9-IAD","status_code":403}
+2026-07-21 14:26:42,641 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:26:42,641 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:26:42,926 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed49159eaffa49-IAD","status_code":403}
+2026-07-21 14:26:55,132 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:26:55,132 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:26:55,474 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed49640ef2eb34-IAD","status_code":403}
+2026-07-21 14:27:10,192 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:27:10,192 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:27:10,534 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed49c20d86bffc-IAD","status_code":403}
+2026-07-21 14:27:25,110 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:27:25,110 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:27:25,380 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4a1f1c89ebeb-IAD","status_code":403}
+2026-07-21 14:27:37,853 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:27:37,853 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:27:38,126 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4a6ebd3d98ce-IAD","status_code":403}
+2026-07-21 14:28:02,659 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:28:02,660 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:28:02,947 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4b09daad7396-IAD","status_code":403}
+2026-07-21 14:28:14,952 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:28:14,952 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:28:15,227 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4b567cc2cf0a-IAD","status_code":403}
+2026-07-21 14:28:26,923 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:28:26,923 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:28:27,175 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4ba14cf537c1-IAD","status_code":403}
+2026-07-21 14:28:43,840 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:28:43,840 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:28:44,228 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4c0bca7d15a2-IAD","status_code":403}
+2026-07-21 14:29:00,489 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:29:00,489 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:29:00,807 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4c73480a5616-IAD","status_code":403}
+2026-07-21 14:29:27,660 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:29:27,660 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:29:27,912 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4d1ced5534bd-IAD","status_code":403}
+2026-07-21 14:30:01,311 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:30:01,311 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:30:01,590 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4def4f045655-IAD","status_code":403}
+2026-07-21 14:30:10,764 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:30:10,765 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:30:11,030 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4e2a585ffaae-IAD","status_code":403}
+2026-07-21 14:30:23,220 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:30:23,221 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:30:23,525 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4e785c5a5e49-IAD","status_code":403}
+2026-07-21 14:30:42,261 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:30:42,262 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:30:42,551 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4eef4a50df0a-IAD","status_code":403}
+2026-07-21 14:30:54,164 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:30:54,165 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:30:54,443 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4f39aa8eed3a-IAD","status_code":403}
+2026-07-21 14:31:14,682 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:31:14,683 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:31:14,956 - ERROR - JobSpy:ZipRecruiter - ZipRecruiter response status code 403 with response: {"error_code":"forbidden aa","error_message":"forbidden aa","request_id":"CFRAY:a1ed4fb9c8e5cf09-IAD","status_code":403}
+2026-07-21 14:31:29,166 - ERROR - JobSpy:Glassdoor - Glassdoor response status code 400
+2026-07-21 14:31:29,166 - ERROR - JobSpy:Glassdoor - Glassdoor: location not parsed
+2026-07-21 14:41:15,176 INFO leadgen.run: source jobs: 6600 candidates, 518 disqualifiers
+2026-07-21 14:41:16,343 INFO leadgen.sources.fractional_boards: fractionaljobs: 312 finance slugs found, capping page-fetches at 150
+2026-07-21 14:42:09,288 INFO leadgen.sources.fractional_boards: fractionaljobs: 132 fresh finance postings
+2026-07-21 14:42:09,297 INFO leadgen.run: source fractional_boards: 132 candidates, 0 disqualifiers
+2026-07-21 14:42:11,239 INFO mssp.sources.breaches: hhs_ocr: 18 breach candidates (100 rows scanned)
+2026-07-21 14:42:11,240 INFO mssp.sources.breaches: breaches source hhs_ocr returned 18 candidates
+2026-07-21 14:42:12,173 INFO mssp.sources.breaches: ca_ag: 62 breach candidates
+2026-07-21 14:42:12,173 INFO mssp.sources.breaches: breaches source ca_ag returned 62 candidates
+2026-07-21 14:42:12,269 INFO mssp.sources.breaches: wa_ag: 6 breach candidates
+2026-07-21 14:42:12,270 INFO mssp.sources.breaches: breaches source wa_ag returned 6 candidates
+2026-07-21 14:42:18,370 INFO mssp.sources.breaches: or_doj: 15 breach candidates
+2026-07-21 14:42:18,370 INFO mssp.sources.breaches: breaches source or_doj returned 15 candidates
+2026-07-21 14:42:18,370 INFO leadgen.run: source breaches: 101 candidates, 0 disqualifiers
+2026-07-21 14:42:25,369 INFO leadgen.run: ingest: 6825 candidates upserted
+2026-07-21 14:42:25,532 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:27,275 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:27,280 INFO leadgen.enrichment: enrich: deleting lead 1323 (AssetMark) — has_full_time_cfo
+2026-07-21 14:42:27,286 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:29,027 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:30,780 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:42:30,818 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:32,789 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:32,796 INFO leadgen.enrichment: enrich: deleting lead 1708 (Medtronic) — known_household_name
+2026-07-21 14:42:32,801 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:35,122 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:36,246 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:42:36,263 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:37,883 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:38,662 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:42:38,668 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:40,402 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:43,724 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:42:43,739 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:45,383 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:45,976 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:42:45,983 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:47,924 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:47,929 INFO leadgen.enrichment: enrich: deleting lead 3658 (Cerner Corporation) — known_household_name
+2026-07-21 14:42:47,935 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:51,031 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:51,977 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:42:51,984 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:53,931 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:53,936 INFO leadgen.enrichment: enrich: deleting lead 3656 (Yellow Corporation) — has_full_time_cfo
+2026-07-21 14:42:53,942 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:55,673 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:56,553 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:42:56,559 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:42:58,118 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:42:58,923 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:42:58,932 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:01,075 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:01,081 INFO leadgen.enrichment: enrich: deleting lead 3612 (The Washington Post) — known_household_name
+2026-07-21 14:43:01,086 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:03,150 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:03,875 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:03,892 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:05,798 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:06,470 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:06,476 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:08,464 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:08,471 INFO leadgen.enrichment: enrich: deleting lead 3652 (Columbia Pacific Advisors, LLC) — has_full_time_cfo
+2026-07-21 14:43:08,476 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:25,259 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:25,878 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:25,891 INFO leadgen.enrichment: enrich: deleting lead 3651 (Grandview School District) — public_sector_pattern
+2026-07-21 14:43:25,895 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:28,426 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:28,430 INFO leadgen.enrichment: enrich: deleting lead 3650 (Xsolis, Inc. (Alexian Brothers Health System, Banner Health, Hendrick Medical Center dba Hendrick Health, Infirmary Health, Legacy Health, Mayo Clinic, Rochester Regional Health, UW Medicine, Virginia Hospital Center)) — has_full_time_cfo
+2026-07-21 14:43:28,434 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:30,166 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:30,796 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:30,805 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:33,211 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:33,859 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:33,869 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:35,420 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:36,110 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:36,120 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:38,108 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:38,114 INFO leadgen.enrichment: enrich: deleting lead 3647 (the West Series of Lockton Companies, LLC) — has_full_time_cfo
+2026-07-21 14:43:38,121 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:40,239 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:40,982 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:40,992 INFO leadgen.enrichment: enrich: deleting lead 3645 (Bellflower Unified School District) — public_sector_pattern
+2026-07-21 14:43:40,994 INFO leadgen.enrichment: enrich: deleting lead 3644 (Los Angeles County Department of Public Social Services) — blocked_name_pattern
+2026-07-21 14:43:40,997 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:43,080 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:43,087 INFO leadgen.enrichment: enrich: deleting lead 3643 (Virta Medical PC) — has_full_time_cfo
+2026-07-21 14:43:43,095 INFO leadgen.enrichment: enrich: deleting lead 3642 (Nelson University) — blocked_name_pattern
+2026-07-21 14:43:43,099 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:44,913 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:45,529 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:45,539 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:47,161 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:47,166 INFO leadgen.enrichment: enrich: deleting lead 3639 (Alcott HR) — has_full_time_cfo
+2026-07-21 14:43:47,173 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:48,719 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:48,724 INFO leadgen.enrichment: enrich: deleting lead 3638 (Richard D. Jones, A Professional Law Corporation) — unknown_country
+2026-07-21 14:43:48,728 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:50,547 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:51,354 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:51,362 INFO leadgen.enrichment: enrich: deleting lead 3637 (Glendale Community College) — blocked_name_pattern
+2026-07-21 14:43:51,365 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:53,457 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:54,100 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:54,122 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:55,975 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:56,896 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:56,905 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:43:58,536 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:43:59,183 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:43:59,192 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:01,490 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:01,493 INFO leadgen.enrichment: enrich: deleting lead 3633 (Mercor.io Corporation) — recruiting_firm
+2026-07-21 14:44:01,498 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:03,196 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:03,749 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:44:03,768 INFO leadgen.enrichment: enrich: deleting lead 3631 (Santa Monica Community College) — blocked_name_pattern
+2026-07-21 14:44:03,772 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:05,644 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:06,332 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:44:06,340 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:07,885 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:08,440 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:44:08,448 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:10,015 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:10,019 INFO leadgen.enrichment: enrich: deleting lead 3627 (MCBS, LLC) — has_full_time_cfo
+2026-07-21 14:44:10,026 INFO leadgen.enrichment: enrich: deleting lead 3626 (Nissan North America Inc.) — auto_dealer_name_pattern
+2026-07-21 14:44:10,028 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:11,793 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:12,440 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:44:12,446 INFO leadgen.enrichment: enrich: deleting lead 3624 (Kubota North America Corporation) — likely_oversized_subsidiary
+2026-07-21 14:44:12,448 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:14,716 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:15,287 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:44:15,304 INFO leadgen.enrichment: enrich: deleting lead 3621 (Monmouth University) — blocked_name_pattern
+2026-07-21 14:44:15,306 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:17,479 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:17,484 INFO leadgen.enrichment: enrich: deleting lead 3620 (TriWest Healthcare Alliance) — has_full_time_cfo
+2026-07-21 14:44:17,491 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:19,017 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:19,945 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:44:19,954 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:22,170 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:22,702 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:44:22,710 INFO leadgen.enrichment: enrich: deleting lead 3617 (Markel Insurance) — finance_vertical
+2026-07-21 14:44:22,713 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:25,263 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:25,268 INFO leadgen.enrichment: enrich: deleting lead 3616 (L.A. Care Health Plan) — known_household_name
+2026-07-21 14:44:25,273 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:27,549 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:28,130 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:44:28,138 INFO leadgen.enrichment: enrich: deleting lead 3614 (Lincoln Technical Institute) — auto_dealer_name_pattern
+2026-07-21 14:44:28,141 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:30,507 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:30,512 INFO leadgen.enrichment: enrich: deleting lead 3613 (Wilmer Cutler Pickering Hale and Dorr LLP) — known_household_name
+2026-07-21 14:44:30,516 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:32,019 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:32,023 INFO leadgen.enrichment: enrich: deleting lead 3611 (Harbor Developmental Disabilities Foundation (d/b/a Harbor Regional Center)) — has_full_time_cfo
+2026-07-21 14:44:32,030 INFO leadgen.enrichment: enrich: deleting lead 3610 (City of Foster City) — blocked_name_pattern
+2026-07-21 14:44:32,033 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:43,184 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:43,189 INFO leadgen.enrichment: enrich: deleting lead 3609 (Cabot Packing LLC) — has_full_time_cfo
+2026-07-21 14:44:43,195 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:44,831 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:44,835 INFO leadgen.enrichment: enrich: deleting lead 3608 (HMC Fresh Foods, LLC) — has_full_time_cfo
+2026-07-21 14:44:44,844 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:46,355 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:47,127 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:44:47,139 INFO leadgen.enrichment: enrich: deleting lead 3606 (Fiesta Insurance Franchise Corporation) — finance_vertical
+2026-07-21 14:44:47,141 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:49,423 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:50,043 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:44:50,050 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:52,089 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:52,093 INFO leadgen.enrichment: enrich: deleting lead 3604 (Madera Community Hospital) — has_full_time_cfo
+2026-07-21 14:44:52,098 INFO leadgen.enrichment: enrich: deleting lead 3602 (Ernst & Young LLP) — megacorp_subsidiary
+2026-07-21 14:44:52,101 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:53,420 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:54,237 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:44:54,245 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:55,937 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:55,941 INFO leadgen.enrichment: enrich: deleting lead 3600 (DentaQuest LLC) — has_full_time_cfo
+2026-07-21 14:44:55,949 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:57,528 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:57,531 INFO leadgen.enrichment: enrich: deleting lead 3599 (Fox Rothschild LLP) — has_full_time_cfo
+2026-07-21 14:44:57,536 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:44:58,984 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:44:58,989 INFO leadgen.enrichment: enrich: deleting lead 3598 (Questo) — non_us_country='RO'
+2026-07-21 14:44:58,994 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:00,999 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:01,004 INFO leadgen.enrichment: enrich: deleting lead 3597 (BAYADA Home Health Care, Inc.) — known_household_name
+2026-07-21 14:45:01,010 INFO leadgen.enrichment: enrich: deleting lead 3596 (Quontic Bank Acquisition Corp.) — finance_vertical
+2026-07-21 14:45:01,013 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:03,304 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:03,310 INFO leadgen.enrichment: enrich: deleting lead 3595 (The Estée Lauder Companies) — known_household_name
+2026-07-21 14:45:03,315 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:04,860 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:05,505 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:05,518 INFO leadgen.enrichment: enrich: deleting lead 3593 (TransGlobal Insurance Agency, Inc.) — finance_vertical
+2026-07-21 14:45:05,520 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:07,144 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:07,149 INFO leadgen.enrichment: enrich: deleting lead 3591 (Lutheran Home for the Aged) — has_full_time_cfo
+2026-07-21 14:45:07,157 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:08,702 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:09,602 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:09,613 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:11,036 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:11,648 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:11,657 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:13,392 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:14,016 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:14,023 INFO leadgen.enrichment: enrich: deleting lead 3587 (Chickasaw Nation Department of Health) — blocked_name_pattern
+2026-07-21 14:45:14,026 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:15,951 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:15,957 INFO leadgen.enrichment: enrich: deleting lead 3585 (Ohio Living) — has_full_time_cfo
+2026-07-21 14:45:15,963 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:17,857 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:18,517 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:18,523 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:20,044 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:20,762 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:20,771 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:22,809 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:23,757 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:23,767 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:26,191 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:26,196 INFO leadgen.enrichment: enrich: deleting lead 3581 (Family Health Centers of Southern Indiana) — has_full_time_cfo
+2026-07-21 14:45:26,202 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:28,033 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:28,710 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:28,721 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:30,226 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:30,869 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:30,878 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:33,014 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:33,653 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:33,669 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:35,814 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:35,819 INFO leadgen.enrichment: enrich: deleting lead 3577 (UnitedHealth Care Services, Inc. Single Affiliated Covered Entity) — known_household_name
+2026-07-21 14:45:35,825 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:37,656 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:38,342 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:38,357 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:40,217 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:40,220 INFO leadgen.enrichment: enrich: deleting lead 3575 (Community First Health Plans, Inc.) — has_full_time_cfo
+2026-07-21 14:45:40,223 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:41,775 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:41,780 INFO leadgen.enrichment: enrich: deleting lead 3574 (Virta Health) — has_full_time_cfo
+2026-07-21 14:45:41,786 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:44,212 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:44,217 INFO leadgen.enrichment: enrich: deleting lead 3573 (Pinnacle Private Credit) — has_full_time_cfo
+2026-07-21 14:45:44,223 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:45,871 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:46,572 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:46,584 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:48,721 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:49,405 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:49,414 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:50,941 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:51,538 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:51,542 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:53,207 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:53,212 INFO leadgen.enrichment: enrich: deleting lead 3569 (Peckwater Brands) — non_us_country='GB'
+2026-07-21 14:45:53,217 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:55,169 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:55,708 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:45:55,711 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:58,036 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:45:58,040 INFO leadgen.enrichment: enrich: deleting lead 3567 (Panzer) — oversized_headcount=640
+2026-07-21 14:45:58,044 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:45:59,469 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:00,123 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:00,134 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:02,338 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:02,995 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:03,007 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:05,109 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:05,688 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:05,706 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:16,481 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:17,117 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:17,132 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:19,152 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:19,156 INFO leadgen.enrichment: enrich: deleting lead 3562 (Optiml) — non_us_country='CH'
+2026-07-21 14:46:19,160 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:20,766 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:21,412 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:21,424 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:23,553 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:24,208 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:24,219 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:25,786 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:26,502 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:26,517 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:28,245 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:28,250 INFO leadgen.enrichment: enrich: deleting lead 3558 (New London Architecture) — non_us_country='GB'
+2026-07-21 14:46:28,255 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:30,394 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:30,975 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:30,986 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:32,701 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:32,706 INFO leadgen.enrichment: enrich: deleting lead 3556 (Neuranics) — non_us_country='GB'
+2026-07-21 14:46:32,711 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:34,190 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:34,832 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:34,839 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:36,399 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:36,404 INFO leadgen.enrichment: enrich: deleting lead 3554 (Neighbor Pet Food) — has_full_time_cfo
+2026-07-21 14:46:36,412 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:38,212 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:38,776 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:38,783 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:40,580 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:41,186 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:41,193 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:42,816 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:42,819 INFO leadgen.enrichment: enrich: deleting lead 3551 (Mygwork) — non_us_country='GB'
+2026-07-21 14:46:42,821 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:44,703 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:45,357 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:45,372 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:47,295 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:48,008 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:48,019 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:49,597 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:49,599 INFO leadgen.enrichment: enrich: deleting lead 3548 (Monsoon Consulting) — non_us_country='IE'
+2026-07-21 14:46:49,601 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:51,487 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:52,207 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:46:52,215 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:54,138 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:54,142 INFO leadgen.enrichment: enrich: deleting lead 3546 (Mission Edge) — recruiting_firm
+2026-07-21 14:46:54,149 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:55,849 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:46:55,858 INFO leadgen.enrichment: enrich: deleting lead 3545 (Mikuta) — non_us_country='DE'
+2026-07-21 14:46:55,862 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:46:57,631 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:00,396 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:47:00,404 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:01,828 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:01,834 INFO leadgen.enrichment: enrich: deleting lead 3543 (Metalex) — oversized_headcount=770
+2026-07-21 14:47:01,838 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:03,188 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:03,192 INFO leadgen.enrichment: enrich: deleting lead 3542 (Maze) — non_us_country='FR'
+2026-07-21 14:47:03,197 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:11,045 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:11,049 ERROR leadgen.run: enrich failed for lead id=3541 (Mashup Group)
+Traceback (most recent call last):
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/run.py", line 117, in enrich_all
+    if enrichment.enrich(conn, lead, force=force):
+       ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/enrichment.py", line 892, in enrich
+    lookup = lookup_company(lead)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/enrichment.py", line 708, in lookup_company
+    raw = llm.call_gemini(_LOOKUP_PROMPT.format(name=lead.name))
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 280, in call_gemini
+    return _call_gemini_text(prompt)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 306, in _call_gemini_text
+    return _with_retries(go, what="call_gemini text")
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 138, in _with_retries
+    return fn()
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 299, in go
+    raise LLMError("call_gemini text: empty response")
+leadgen.llm.LLMError: call_gemini text: empty response
+2026-07-21 14:47:11,060 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:12,818 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:12,823 INFO leadgen.enrichment: enrich: deleting lead 3540 (Mars Discovery District) — non_us_country='CA'
+2026-07-21 14:47:12,828 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:15,105 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:15,110 INFO leadgen.enrichment: enrich: deleting lead 3539 (Lyva Labs) — non_us_country='GB'
+2026-07-21 14:47:15,116 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:16,903 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:18,628 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:47:18,638 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:20,664 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:20,669 INFO leadgen.enrichment: enrich: deleting lead 3537 (Loyal) — has_full_time_cfo
+2026-07-21 14:47:20,677 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:22,111 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:22,826 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:47:22,841 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:24,397 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:25,177 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:47:25,187 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:27,534 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:28,101 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:47:28,113 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:30,289 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:30,991 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:47:31,014 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:32,964 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:32,969 INFO leadgen.enrichment: enrich: deleting lead 3532 (Lamington Group) — non_us_country='GB'
+2026-07-21 14:47:32,972 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:34,292 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:35,011 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:47:35,019 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:36,952 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:37,565 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:47:37,570 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:39,111 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:39,117 INFO leadgen.enrichment: enrich: deleting lead 3529 (Kamispro) — recruiting_firm
+2026-07-21 14:47:39,125 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:44,920 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:45,660 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:47:45,666 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:47,582 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:48,322 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:47:48,330 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:50,009 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:50,013 INFO leadgen.enrichment: enrich: deleting lead 3526 (Intellihealth) — non_us_country='IN'
+2026-07-21 14:47:50,017 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:52,020 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:52,022 INFO leadgen.enrichment: enrich: deleting lead 3525 (Innovation Asset Collective) — non_us_country='CA'
+2026-07-21 14:47:52,025 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:53,735 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:54,726 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:47:54,735 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:57,331 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:57,336 INFO leadgen.enrichment: enrich: deleting lead 3523 (Holon Health) — oversized_headcount=670
+2026-07-21 14:47:57,342 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:47:59,499 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:47:59,504 INFO leadgen.enrichment: enrich: deleting lead 3522 (High 5 Games) — oversized_headcount=290
+2026-07-21 14:47:59,508 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:01,493 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:01,498 INFO leadgen.enrichment: enrich: deleting lead 3521 (Herrmann Global) — cfo_competitor
+2026-07-21 14:48:01,505 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:02,991 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:04,498 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:48:04,502 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:06,003 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:06,008 INFO leadgen.enrichment: enrich: deleting lead 3519 (Heal Care Group) — non_us_country='GB'
+2026-07-21 14:48:06,011 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:08,187 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:08,192 INFO leadgen.enrichment: enrich: deleting lead 3518 (Gpeks) — non_us_country='CA'
+2026-07-21 14:48:08,197 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:09,940 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:09,946 INFO leadgen.enrichment: enrich: deleting lead 3517 (Good Trouble) — non_us_country='AU'
+2026-07-21 14:48:09,950 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:11,506 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:11,511 INFO leadgen.enrichment: enrich: deleting lead 3516 (Good Maven 605B6) — non_us_country='GB'
+2026-07-21 14:48:11,516 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:13,391 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:14,024 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:48:14,032 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:15,582 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:16,270 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:48:16,295 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:18,566 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:18,572 INFO leadgen.enrichment: enrich: deleting lead 3513 (Futuresight) — non_us_country='CA'
+2026-07-21 14:48:18,576 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:21,016 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:21,024 INFO leadgen.enrichment: enrich: deleting lead 3512 (Fusemachines) — oversized_headcount=440
+2026-07-21 14:48:21,028 INFO leadgen.enrichment: enrich: deleting lead 3511 (Forward Share Ventures) — blocked_name_pattern
+2026-07-21 14:48:21,030 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:22,435 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:22,442 INFO leadgen.enrichment: enrich: deleting lead 3510 (Fort Worth Symphony Orchestra) — oversized_headcount=390
+2026-07-21 14:48:22,445 INFO leadgen.enrichment: enrich: deleting lead 3509 (Foreign Venture Group) — blocked_name_pattern
+2026-07-21 14:48:22,448 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:24,243 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:25,040 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:48:25,056 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:27,515 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:28,074 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:48:28,091 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:30,379 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:31,340 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:48:31,347 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:34,295 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:34,300 INFO leadgen.enrichment: enrich: deleting lead 3505 (Fanalysis) — non_us_country='GB'
+2026-07-21 14:48:34,304 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:35,589 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:36,343 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:48:36,352 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:38,715 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:39,282 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:48:39,445 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:48:41,061 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:48:41,065 INFO leadgen.enrichment: enrich: deleting lead 3502 (Equanimo) — non_us_country='ES'
+2026-07-21 14:48:41,069 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:20,077 ERROR leadgen.run: enrich failed for lead id=3501 (Equals 5)
+Traceback (most recent call last):
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_transports/default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+        pool_request.request
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/connection.py", line 103, in handle_request
+    return self._connection.handle_request(request)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 136, in handle_request
+    raise exc
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+        self.READ_NUM_BYTES, timeout=timeout
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_backends/sync.py", line 126, in read
+    with map_exceptions(exc_map):
+         ~~~~~~~~~~~~~~^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadError: [Errno 54] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/run.py", line 117, in enrich_all
+    if enrichment.enrich(conn, lead, force=force):
+       ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/enrichment.py", line 892, in enrich
+    lookup = lookup_company(lead)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/enrichment.py", line 708, in lookup_company
+    raw = llm.call_gemini(_LOOKUP_PROMPT.format(name=lead.name))
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 280, in call_gemini
+    return _call_gemini_text(prompt)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 306, in _call_gemini_text
+    return _with_retries(go, what="call_gemini text")
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 138, in _with_retries
+    return fn()
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 291, in go
+    resp = client.models.generate_content(
+        model=_DEFAULT_GEMINI_MODEL,
+        contents=prompt,
+        config=config,
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/google/genai/models.py", line 6558, in generate_content
+    response = self._generate_content(
+        model=model, contents=contents, config=parsed_config_to_call
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/google/genai/models.py", line 4986, in _generate_content
+    response = self._api_client.request(
+        'post', path, request_dict, http_options
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1650, in request
+    response = self._request(http_request, http_options, stream=False)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1443, in _request
+    return self._retry(self._request_once, http_request, stream)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ~~~~~~~~~~~~~~~~~^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1419, in _request_once
+    response = self._httpx_client.send(httpx_request, stream=stream)  # type: ignore[union-attr]
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_client.py", line 914, in send
+    response = self._send_handling_auth(
+        request,
+    ...<2 lines>...
+        history=[],
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+        request,
+        follow_redirects=follow_redirects,
+        history=history,
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_transports/default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadError: [Errno 54] Connection reset by peer
+2026-07-21 14:54:20,105 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:22,450 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:23,341 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:23,352 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:24,852 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:25,614 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:25,633 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:27,276 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:27,280 INFO leadgen.enrichment: enrich: deleting lead 3498 (Endexx) — has_full_time_cfo
+2026-07-21 14:54:27,286 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:28,945 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:29,476 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:29,484 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:30,794 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:31,363 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:31,372 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:33,185 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:33,796 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:33,808 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:36,016 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:36,628 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:36,642 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:38,919 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:39,679 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:39,687 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:41,449 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:42,113 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:42,120 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:43,909 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:44,424 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:44,440 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:46,331 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:46,929 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:46,942 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:48,389 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:48,395 INFO leadgen.enrichment: enrich: deleting lead 3490 (Daily Driven Exotics) — non_us_country='CA'
+2026-07-21 14:54:48,399 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:50,320 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:50,325 INFO leadgen.enrichment: enrich: deleting lead 3489 (Covenant Hr) — recruiting_firm
+2026-07-21 14:54:50,330 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:52,026 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:52,618 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:52,635 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:54,006 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:54,466 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:54,478 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:56,121 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:56,730 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:54:56,739 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:54:59,312 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:54:59,318 INFO leadgen.enrichment: enrich: deleting lead 3485 (Comment X) — oversized_headcount=1800
+2026-07-21 14:54:59,320 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:01,644 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:02,216 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:55:02,229 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:04,256 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:04,879 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:55:04,886 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:06,308 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:06,970 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:55:06,976 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:08,836 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:09,413 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:55:09,434 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:11,063 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:11,067 INFO leadgen.enrichment: enrich: deleting lead 3480 (Cavero Quantum) — non_us_country='GB'
+2026-07-21 14:55:11,070 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:13,290 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:13,295 INFO leadgen.enrichment: enrich: deleting lead 3479 (Cavalry) — cfo_competitor
+2026-07-21 14:55:13,302 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:14,644 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:16,871 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:55:16,891 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:18,355 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:18,360 INFO leadgen.enrichment: enrich: deleting lead 3477 (Carescribe) — non_us_country='GB'
+2026-07-21 14:55:18,364 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:19,988 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:20,536 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:55:20,544 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:22,331 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:22,336 INFO leadgen.enrichment: enrich: deleting lead 3475 (Broadview) — recruiting_firm
+2026-07-21 14:55:22,343 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:24,250 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:24,893 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:55:24,900 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:26,847 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:26,853 INFO leadgen.enrichment: enrich: deleting lead 3473 (Blumetric) — non_us_country='CA'
+2026-07-21 14:55:26,858 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:28,580 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:28,586 INFO leadgen.enrichment: enrich: deleting lead 3472 (Bigspark) — non_us_country='GB'
+2026-07-21 14:55:28,591 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:30,628 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:30,638 INFO leadgen.enrichment: enrich: deleting lead 3471 (B E Lending) — has_full_time_cfo
+2026-07-21 14:55:30,646 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:32,042 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:32,049 INFO leadgen.enrichment: enrich: deleting lead 3470 (Azolla Hydrogen) — non_us_country='CA'
+2026-07-21 14:55:32,056 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:34,209 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:34,215 INFO leadgen.enrichment: enrich: deleting lead 3469 (Aytm) — has_full_time_cfo
+2026-07-21 14:55:34,221 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:35,634 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:35,641 INFO leadgen.enrichment: enrich: deleting lead 3468 (Asymbl) — recruiting_firm
+2026-07-21 14:55:35,649 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:37,168 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:37,760 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:55:37,766 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:39,579 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:40,257 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:55:40,263 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:41,996 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:42,002 INFO leadgen.enrichment: enrich: deleting lead 3465 (Arkiplan) — non_us_country='AE'
+2026-07-21 14:55:42,007 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:43,924 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:43,929 INFO leadgen.enrichment: enrich: deleting lead 3464 (Aphios) — has_full_time_cfo
+2026-07-21 14:55:43,936 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:45,889 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:45,894 INFO leadgen.enrichment: enrich: deleting lead 3463 (Apex Wheels) — has_full_time_cfo
+2026-07-21 14:55:45,901 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:47,664 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:47,669 INFO leadgen.enrichment: enrich: deleting lead 3462 (American Military Communities) — has_full_time_cfo
+2026-07-21 14:55:47,680 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:49,670 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:49,678 INFO leadgen.enrichment: enrich: deleting lead 3461 (Alpaca) — oversized_headcount=470
+2026-07-21 14:55:49,684 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:51,449 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:52,130 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:55:52,138 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:53,973 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:53,978 INFO leadgen.enrichment: enrich: deleting lead 3459 (Akrivia Health) — non_us_country='GB'
+2026-07-21 14:55:53,982 INFO leadgen.enrichment: enrich: deleting lead 3458 (Agentis Capital) — finance_vertical
+2026-07-21 14:55:53,984 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:55,674 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:55,678 INFO leadgen.enrichment: enrich: deleting lead 3457 (Afree) — non_us_country='SE'
+2026-07-21 14:55:55,684 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:55:57,336 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:55:58,072 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:55:58,081 INFO leadgen.enrichment: enrich: deleting lead 3455 (Add Ventures) — blocked_name_pattern
+2026-07-21 14:55:58,083 INFO leadgen.enrichment: enrich: deleting lead 3454 (4Front Ventures) — blocked_name_pattern
+2026-07-21 14:55:58,084 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:00,015 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:00,734 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:56:00,743 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:02,677 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:03,403 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:56:03,412 INFO leadgen.enrichment: enrich: deleting lead 3451 (West Hive Capital) — finance_vertical
+2026-07-21 14:56:03,415 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:05,238 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:05,833 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:56:05,839 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:07,410 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:07,415 INFO leadgen.enrichment: enrich: deleting lead 3449 (Fxswede) — non_us_country='SE'
+2026-07-21 14:56:07,419 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:09,399 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:09,403 INFO leadgen.enrichment: enrich: deleting lead 3448 (Softledger) — has_full_time_cfo
+2026-07-21 14:56:09,408 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:11,563 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:11,570 INFO leadgen.enrichment: enrich: deleting lead 3447 (Dualentry) — has_full_time_cfo
+2026-07-21 14:56:11,577 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:12,967 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:13,675 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:56:13,693 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:16,328 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:16,332 INFO leadgen.enrichment: enrich: deleting lead 3445 (Versance Technologies Inc) — non_us_country='CA'
+2026-07-21 14:56:16,335 INFO leadgen.enrichment: enrich: deleting lead 3444 (Town of Scarborough) — blocked_name_pattern
+2026-07-21 14:56:16,338 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:17,881 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:18,491 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:56:18,499 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:20,191 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:20,198 INFO leadgen.enrichment: enrich: deleting lead 3442 (Regeneron Pharmaceuticals) — oversized_headcount=15410
+2026-07-21 14:56:20,202 INFO leadgen.enrichment: enrich: deleting lead 3441 (State of Indiana) — blocked_name_pattern
+2026-07-21 14:56:20,205 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:21,872 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:22,427 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:56:22,444 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:25,172 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:25,177 INFO leadgen.enrichment: enrich: deleting lead 3439 (EverBank) — oversized_headcount=2900
+2026-07-21 14:56:25,182 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:27,150 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:27,155 INFO leadgen.enrichment: enrich: deleting lead 3438 (BKF) — oversized_headcount=1090
+2026-07-21 14:56:27,160 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:28,952 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:28,961 INFO leadgen.enrichment: enrich: deleting lead 3437 (Harris Beach Murtha) — oversized_headcount=500
+2026-07-21 14:56:28,965 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:30,426 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:31,154 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:56:31,164 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:33,000 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:33,723 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 14:56:33,735 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:35,366 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:35,372 INFO leadgen.enrichment: enrich: deleting lead 3434 (SPIROL International Corporation) — oversized_headcount=370
+2026-07-21 14:56:35,377 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:37,496 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:37,501 INFO leadgen.enrichment: enrich: deleting lead 2924 (CGI Technologies and Solutions, Inc.) — non_us_country='CA'
+2026-07-21 14:56:37,507 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:39,812 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:39,815 INFO leadgen.enrichment: enrich: deleting lead 3433 (LiDestri Foods) — oversized_headcount=1250
+2026-07-21 14:56:39,819 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:41,682 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:41,686 INFO leadgen.enrichment: enrich: deleting lead 3432 (Ennoble Care) — has_full_time_cfo
+2026-07-21 14:56:41,689 INFO leadgen.enrichment: enrich: deleting lead 3431 (The Pennsylvania State University) — blocked_name_pattern
+2026-07-21 14:56:41,690 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 14:56:43,030 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 14:56:43,035 INFO leadgen.enrichment: enrich: deleting lead 3430 (The Misch Group) — recruiting_firm
+2026-07-21 14:56:43,042 INFO leadgen.enrichment: enrich: deleting lead 681 (AutoNation) — oversized=10000
+2026-07-21 14:56:43,044 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 15:29:27,704 ERROR leadgen.run: enrich failed for lead id=3429 (Fenstermaker)
+Traceback (most recent call last):
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_transports/default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+        pool_request.request
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/connection.py", line 103, in handle_request
+    return self._connection.handle_request(request)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 136, in handle_request
+    raise exc
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+        self.READ_NUM_BYTES, timeout=timeout
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_backends/sync.py", line 126, in read
+    with map_exceptions(exc_map):
+         ~~~~~~~~~~~~~~^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadError: [Errno 54] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/run.py", line 117, in enrich_all
+    if enrichment.enrich(conn, lead, force=force):
+       ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/enrichment.py", line 892, in enrich
+    lookup = lookup_company(lead)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/enrichment.py", line 708, in lookup_company
+    raw = llm.call_gemini(_LOOKUP_PROMPT.format(name=lead.name))
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 280, in call_gemini
+    return _call_gemini_text(prompt)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 306, in _call_gemini_text
+    return _with_retries(go, what="call_gemini text")
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 138, in _with_retries
+    return fn()
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/leadgen/llm.py", line 291, in go
+    resp = client.models.generate_content(
+        model=_DEFAULT_GEMINI_MODEL,
+        contents=prompt,
+        config=config,
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/google/genai/models.py", line 6558, in generate_content
+    response = self._generate_content(
+        model=model, contents=contents, config=parsed_config_to_call
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/google/genai/models.py", line 4986, in _generate_content
+    response = self._api_client.request(
+        'post', path, request_dict, http_options
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1650, in request
+    response = self._request(http_request, http_options, stream=False)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1443, in _request
+    return self._retry(self._request_once, http_request, stream)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ~~~~~~~~~~~~~~~~~^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1419, in _request_once
+    response = self._httpx_client.send(httpx_request, stream=stream)  # type: ignore[union-attr]
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_client.py", line 914, in send
+    response = self._send_handling_auth(
+        request,
+    ...<2 lines>...
+        history=[],
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+        request,
+        follow_redirects=follow_redirects,
+        history=history,
+    )
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_transports/default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/ishaangupta/Developer/lead-platform/leadgen/.venv/lib/python3.13/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadError: [Errno 54] Connection reset by peer
+2026-07-21 15:29:27,731 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 15:29:30,265 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 15:29:30,269 INFO leadgen.enrichment: enrich: deleting lead 3428 (Townsend Corporation) — oversized_headcount=3000
+2026-07-21 15:29:30,271 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 15:29:32,124 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 15:29:33,442 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 15:29:33,455 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 15:29:34,946 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 15:29:34,950 INFO leadgen.enrichment: enrich: deleting lead 3426 (Saige Partners) — recruiting_firm
+2026-07-21 15:29:34,959 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 15:29:36,641 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 15:29:36,645 INFO leadgen.enrichment: enrich: deleting lead 3425 (Chukchansi Gold) — oversized_headcount=1300
+2026-07-21 15:29:36,648 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 15:29:38,893 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 15:29:38,895 INFO leadgen.enrichment: enrich: deleting lead 3424 (Buffalo Academy Of Science Charter School) — oversized_headcount=310
+2026-07-21 15:29:38,899 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 15:29:40,646 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 15:29:41,704 INFO httpx: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-21 15:29:41,709 INFO google_genai.models: AFC is enabled with max remote calls: 10.
+2026-07-21 15:29:43,586 INFO httpx: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent "HTTP/1.1 200 OK"
+2026-07-21 15:29:43,589 INFO leadgen.enrichment: enrich: deleting lead 1859 (Brown Machine Group) — has_full_time_cfo
+2026-07-21 15:29:43,594 INFO google_genai.models: AFC is enabled with max remote calls: 10.
