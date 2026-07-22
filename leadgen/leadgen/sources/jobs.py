@@ -420,6 +420,33 @@ def _is_hotel_name(name: str) -> bool:
     return bool(_HOTEL_NAME_RE.search(name))
 
 
+# A company field that is nothing but a single generic corporate word
+# ("Enterprises", "Solutions", "Group", ...), optionally with a legal form
+# ("Enterprises LLC"), is a truncated / junk posting, not a targetable
+# company. Multi-token names ("Acme Enterprises") are fine.
+_GENERIC_STUB_TERMS = frozenset({
+    "enterprise", "enterprises", "solutions", "holding", "holdings", "group",
+    "services", "company", "corporation", "industries", "ventures",
+    "partners", "associates", "consulting", "technologies", "systems",
+    "international", "global", "management", "capital",
+})
+_LEGAL_FORM_TOKENS = frozenset({
+    "llc", "inc", "corp", "co", "ltd", "lp", "llp", "plc", "pllc", "pc",
+})
+
+
+def _is_generic_stub_name(name: str) -> bool:
+    """True when the company name is a single generic corporate word (e.g. a
+    lone "Enterprises"), ignoring any trailing legal form ("Enterprises LLC")
+    — a truncated/junk value, not a real company. Any multi-token name with a
+    real second word is never a stub."""
+    tokens = [
+        t for t in re.findall(r"[a-z0-9]+", name.lower())
+        if t not in _LEGAL_FORM_TOKENS
+    ]
+    return len(tokens) == 1 and tokens[0] in _GENERIC_STUB_TERMS
+
+
 def _is_public_sector(name: str, domain: str | None = None) -> bool:
     """Government / public-sector entity — not a fractional-CFO buyer.
     Private nonprofits that merely name a locality are exempted."""
@@ -745,6 +772,7 @@ def _fetch_from_jobspy(
                 or _is_auto_dealer_name(company)
                 or _is_hotel_name(company)
                 or _is_public_sector(company)
+                or _is_generic_stub_name(company)
             ):
                 continue
             if _is_automotive_title(title):
@@ -848,7 +876,11 @@ def _fetch_from_adzuna(
                 company = str((item.get("company") or {}).get("display_name") or "").strip()
                 if not title or not company:
                     continue
-                if _is_recruiter_name(company) or _is_auto_dealer_name(company):
+                if (
+                    _is_recruiter_name(company)
+                    or _is_auto_dealer_name(company)
+                    or _is_generic_stub_name(company)
+                ):
                     continue
                 if _is_automotive_title(title):
                     continue
