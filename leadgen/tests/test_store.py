@@ -73,7 +73,7 @@ def test_funding_signal_dedup_by_url(conn, make_sig):
 def test_merge_by_domain_collapses_spv_name_variants(conn, make_sig):
     # SEC SPV/tranche name variants that name-key dedup misses, but share a
     # domain once enriched.
-    a = db.upsert_lead(conn, LeadCandidate(
+    db.upsert_lead(conn, LeadCandidate(
         name="Lifesitenews 07Cfc", domain="lifesitenews.com",
         initial_signal=make_sig(SignalType.FUNDING_FORM_D, url="https://sec.gov/a")))
     db.upsert_lead(conn, LeadCandidate(

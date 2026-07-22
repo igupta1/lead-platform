@@ -64,7 +64,7 @@ def score_lead_for_niche(
 
     # Band from the strongest tier the company has any signal in.
     best_tier = min(
-        (niche.tier_index(s.type) for s in qualifying),
+        (t for s in qualifying if (t := niche.tier_index(s.type)) is not None),
         default=None,
     )
     assert best_tier is not None

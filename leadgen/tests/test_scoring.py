@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 
 from leadgen.models import Lead, SignalType
 from leadgen.niches import NICHES
-from leadgen import scoring
 from leadgen.scoring import score_all, score_lead_for_niche
 
 from tests.conftest import make_signal

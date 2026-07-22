@@ -391,7 +391,7 @@ def _fetch_efts_page(
     """Single page of EFTS results. Returns the parsed JSON or None on
     error. EFTS expects ``dateRange=custom`` with ``startdt`` / ``enddt``
     in YYYY-MM-DD."""
-    params = {
+    params: dict[str, str | int] = {
         "q": "",
         "forms": "D",
         "dateRange": "custom",

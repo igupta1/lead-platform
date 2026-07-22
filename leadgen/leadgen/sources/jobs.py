@@ -817,15 +817,16 @@ def _fetch_from_adzuna(
                 time.sleep(_ADZUNA_CALL_SPACING_S)  # stay under the per-minute cap
             first_call = False
             try:
+                adzuna_params: dict[str, str | int] = {
+                    "app_id": app_id,
+                    "app_key": app_key,
+                    "what": query,
+                    "max_days_old": max_days_old,
+                    "results_per_page": _ADZUNA_RESULTS_PER_PAGE,
+                }
                 response = requests.get(
                     f"{_ADZUNA_API_BASE}/{page}",
-                    params={
-                        "app_id": app_id,
-                        "app_key": app_key,
-                        "what": query,
-                        "max_days_old": max_days_old,
-                        "results_per_page": _ADZUNA_RESULTS_PER_PAGE,
-                    },
+                    params=adzuna_params,
                     timeout=15,
                 )
                 if response.status_code == 429:

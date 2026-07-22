@@ -530,25 +530,25 @@ def purge_disqualified(conn: sqlite3.Connection) -> int:
             continue
         by_key[lead.name_key] = lead
     for key, _name, reason in db.iter_disqualified(conn):
-        lead = by_key.get(key)
-        if lead is None or lead.id is None:
+        target = by_key.get(key)
+        if target is None or target.id is None:
             continue
         log.info(
-            "purge: deleting %d (%s) — disqualified=%s", lead.id, lead.name, reason
+            "purge: deleting %d (%s) — disqualified=%s", target.id, target.name, reason
         )
         try:
-            db.delete_lead(conn, lead.id)
+            db.delete_lead(conn, target.id)
             deleted += 1
         except Exception:
-            log.exception("purge: delete_lead failed for id=%s", lead.id)
+            log.exception("purge: delete_lead failed for id=%s", target.id)
 
     # Phase 2: regex disqualifier on what's left.
     for lead in db.iter_leads(conn):
         if lead.id is None:
             continue
-        reason = _disqualification_reason(lead)
-        if reason is not None:
-            log.info("purge: deleting %d (%s) — %s", lead.id, lead.name, reason)
+        dq_reason = _disqualification_reason(lead)
+        if dq_reason is not None:
+            log.info("purge: deleting %d (%s) — %s", lead.id, lead.name, dq_reason)
             try:
                 db.delete_lead(conn, lead.id)
                 deleted += 1

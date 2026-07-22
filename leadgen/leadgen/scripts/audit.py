@@ -122,7 +122,7 @@ def audit_niche(niche: str, payload: dict[str, Any], *, now: datetime) -> list[s
     lines.append(f"  freshness  : {_bucket_freshness(ages)}")
     lines.append(f"  enrichment : domain {_pct(with_domain,len(leads))}  headcount {_pct(with_hc,len(leads))}")
     if oversized:
-        lines.append(f"  ** VIOLATION: {len(oversized)} lead(s) >= {SIZE_CAP} employees: "
+        lines.append(f"  ** VIOLATION: {len(oversized)} lead(s) over the niche size cap: "
                      f"{[ld['name'] for ld in oversized][:5]}")
     if missing_evidence:
         lines.append(f"  ** VIOLATION: {len(missing_evidence)} lead(s) missing evidence/url: "
