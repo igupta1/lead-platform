@@ -368,12 +368,15 @@ _AUTOMOTIVE_TITLE_RE = re.compile(r"^\s*automotive\b", re.IGNORECASE)
 _MAX_POSTING_AGE_DAYS = 30
 _FRACTIONAL_MAX_POSTING_AGE_DAYS = 60
 
-# Scrape plans per query: high-volume boards take the big ask; LinkedIn and
-# Glassdoor are scraped gently to avoid anti-bot blocks (both fail closed).
+# Scrape plans per query: Indeed + Google take the big ask; LinkedIn is scraped
+# gently to avoid anti-bot blocks. ZipRecruiter (HTTP 403 Cloudflare block on
+# every request) and Glassdoor (HTTP 400 "location not parsed" — it rejects the
+# nationwide "United States" location) fail closed on every call in both CI and
+# local runs, returning zero leads while adding latency + error-log noise, so
+# they're dropped. Re-add if the upstream blocks lift.
 _JOBSPY_PLANS: tuple[tuple[tuple[str, ...], int], ...] = (
-    (("indeed", "zip_recruiter", "google"), 100),
+    (("indeed", "google"), 100),
     (("linkedin",), 25),
-    (("glassdoor",), 20),
 )
 
 # Indeed's company_employees_label / JobSpy's company_num_employees returns
