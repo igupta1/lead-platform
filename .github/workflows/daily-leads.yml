@@ -82,7 +82,7 @@ jobs:
           git config user.name  "leadgen-cron[bot]"
           git config user.email "leadgen-cron[bot]@users.noreply.github.com"
           if [[ -n "$(git status --porcelain leadgen/data/leads.db)" ]]; then
-            git pull --rebase --autostash origin master || true
+            git pull --rebase --autostash origin main || true
             git add leadgen/data/leads.db
             git commit -m "leadgen cron: nightly lead refresh ($(date -u +%Y-%m-%d))"
             git push
