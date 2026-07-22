@@ -26,9 +26,10 @@ Where headcount is available from the posting (Indeed's
 candidate so the SMB cap can short-circuit enrichment. City / state are
 parsed from the posting location onto the candidate.
 
-Backends: JobSpy (Indeed + ZipRecruiter + Google Jobs at volume; LinkedIn +
-Glassdoor scraped gently) + Adzuna API (paginated). No HN — the Who's-Hiring
-threads index the wrong demographic for these buyers.
+Backends: JobSpy (Indeed + Google Jobs at volume; LinkedIn scraped gently) +
+Adzuna API (paginated). ZipRecruiter + Glassdoor dropped — both fail closed
+(see _JOBSPY_PLANS). No HN — the Who's-Hiring threads index the wrong
+demographic for these buyers.
 """
 
 from __future__ import annotations
