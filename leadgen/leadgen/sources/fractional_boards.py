@@ -1,25 +1,33 @@
 """Fractional-specific job boards.
 
-Companies posting on fractional-talent boards are shopping for exactly
-the service being sold, so everything here emits
-``JOB_FRACTIONAL_CFO`` — the in-market top tier.
+A company posting on a fractional-talent board is shopping for exactly the
+kind of outside help these inventories sell — the in-market top signal. The
+board is niche-blind: each posting is routed through the shared jobs
+``classify`` and can feed ANY niche —
 
-Both backends are **date-filtered**. We refuse to ingest an undated
-posting into the in-market tier: with no event date it would score as
-"fresh" and float a possibly-filled role to the very top of the page.
+* fractional CFO / controller        -> ``job_fractional_cfo`` (cfo)
+* fractional / virtual CISO          -> ``job_security``       (mssp)
+* fractional CIO / IT director       -> ``job_it_leadership``  (msp)
+* fractional DevOps / cloud / SRE    -> ``job_cloud_devops``   (cloud)
 
-1. We Work Remotely (``remote-jobs.rss``): live listings, dated via
-   pubDate. Titles read ``"<Company>: <Role>"``; we keep only roles
-   that read fractional / interim / part-time (a plain remote
-   "Controller" is a full-time hire, not this signal).
-2. FractionalJobs.io: the sitemap lists ``/jobs/<role>-at-<company>``
-   URLs but carries no dates, so we fetch each finance-role page for
-   its ``Published:`` date and keep only recent ones. Company name is
-   read from the slug; anonymized listings ("...-at-a-saas-tool") are
-   skipped.
+A posting that doesn't map to any niche (a fractional CMO, head of sales, …)
+is dropped.
 
-Every network call fails closed — a broken board is logged and skipped,
-never breaks a run.
+Both backends are **date-filtered**. We refuse to ingest an undated posting
+into the in-market tier: with no event date it would score as "fresh" and
+float a possibly-filled role to the very top of the page.
+
+1. We Work Remotely (``remote-jobs.rss``): a GENERAL remote board, so we keep
+   only titles that are explicitly fractional / interim / part-time (a plain
+   remote "Security Engineer" is a full-time hire, not this signal).
+2. FractionalJobs.io: a fractional-only board. The sitemap lists
+   ``/jobs/<role>-at-<company>`` URLs but carries no dates, so we fetch each
+   in-scope role page for its ``Published:`` date and keep only recent ones.
+   Company name is read from the slug; anonymized listings
+   ("...-at-a-saas-tool") are skipped.
+
+Every network call fails closed — a broken board is logged and skipped, never
+breaks a run.
 """
 
 from __future__ import annotations
@@ -42,15 +50,34 @@ from leadgen.models import (
     SourceName,
 )
 from leadgen.sources.jobs import (
+    _PART_TIME_QUALIFIER_RE,
     _is_auto_dealer_name,
-    _is_fractional_cfo_title,
     _is_recruiter_name,
+    classify,
 )
 
 _log = logging.getLogger(__name__)
 
 _USER_AGENT = "ishaan-personal-website cfo-lead-magnet/0.1 (ishaangpta@g.ucla.edu)"
 _MAX_AGE_DAYS = 60  # matches the fractional scrape window in jobs.py
+
+
+def _signal_type_for(role: str, *, assume_fractional: bool) -> SignalType | None:
+    """Map a board posting's role title to its signal type via the shared
+    ``jobs.classify``, so one board feeds every niche.
+
+    ``classify``'s CFO bucket requires a part-time qualifier in the title. On
+    a fractional-only board (``assume_fractional=True``) a bare exec title
+    ("Chief Financial Officer") IS fractional, so we prepend the qualifier to
+    stop it dropping. On a general board (``assume_fractional=False`` — We
+    Work Remotely) we require the title to read fractional/interim itself, or
+    the role is a full-time hire and not this signal."""
+    is_fractional = bool(_PART_TIME_QUALIFIER_RE.search(role))
+    if not assume_fractional and not is_fractional:
+        return None
+    title = role if is_fractional else f"fractional {role}"
+    return classify(title)
+
 
 # --- We Work Remotely -------------------------------------------------------
 
@@ -102,7 +129,10 @@ def _fetch_wwr(since: datetime, max_age_days: int) -> list[LeadCandidate]:
         role = role.strip()
         if not company or not role:
             continue
-        if not _is_fractional_cfo_title(role):
+        # General board: only explicitly fractional/interim titles count, then
+        # route to whichever niche the role maps to.
+        sig_type = _signal_type_for(role, assume_fractional=False)
+        if sig_type is None:
             continue
         if _is_recruiter_name(company) or _is_auto_dealer_name(company):
             continue
@@ -115,6 +145,7 @@ def _fetch_wwr(since: datetime, max_age_days: int) -> list[LeadCandidate]:
         cand = _make_candidate(
             company=company,
             title=role,
+            sig_type=sig_type,
             url=str(entry.get("link") or ""),
             date_posted=date_posted,
             site="weworkremotely",
@@ -129,17 +160,23 @@ def _fetch_wwr(since: datetime, max_age_days: int) -> list[LeadCandidate]:
 
 _FJ_SITEMAP = "https://www.fractionaljobs.io/sitemap.xml"
 _FJ_JOB_RE = re.compile(r"https://www\.fractionaljobs\.io/jobs/([a-z0-9-]+)")
-# Finance-leadership role slugs on a fractional board (drops CMO/CTO/COO
-# and IC/bookkeeper roles).
-_FJ_FINANCE_SLUG_RE = re.compile(
-    r"(cfo|chief-financ|chief-finance|chief-accounting|controller|"
-    r"vp-finance|head-of-finance|director-of-finance|finance-director|fp-a|fpa)",
+# In-scope role slugs on the fractional board: finance (cfo / accounting),
+# security (mssp), IT leadership (msp) and cloud/devops (cloud). Marketing /
+# sales / ops / product / design / CMO / COO / CRO / CTO are left out (no
+# niche). This is a coarse pre-filter to bound the per-page fetches; the exact
+# routing (and the final drop of anything off-niche) is done by ``classify``.
+_FJ_ROLE_SLUG_RE = re.compile(
+    r"(cfo|chief-financ|chief-accounting|controller|vp-finance|head-of-finance|"
+    r"director-of-finance|finance-director|fp-a|fpa|"                              # finance
+    r"ciso|chief-information-security|security-officer|infosec|"                   # security -> mssp
+    r"cio|chief-information-officer|head-of-it|it-director|director-of-it|vp-of-it|"  # IT -> msp
+    r"devops|site-reliability|cloud-engineer|cloud-architect|platform-engineer)",  # cloud
     re.IGNORECASE,
 )
 _FJ_PUBLISHED_RE = re.compile(
     r"Published:\s*([A-Za-z]{3}\s+[A-Za-z]{3}\s+\d{1,2}\s+\d{4})"
 )
-_FJ_MAX_FETCHES = 150       # bound nightly load on the board
+_FJ_MAX_FETCHES = 250       # bound nightly load (covers four niches now)
 _FJ_FETCH_SPACING_S = 0.3
 
 
@@ -180,33 +217,40 @@ def _fetch_fractionaljobs(since: datetime, max_age_days: int) -> list[LeadCandid
         _log.exception("fractionaljobs sitemap fetch failed")
         return []
 
-    # Collect finance-role job slugs (deduped, order-preserving).
+    # Collect in-scope role job slugs (deduped, order-preserving).
     slugs: list[str] = []
     seen: set[str] = set()
     for m in _FJ_JOB_RE.finditer(sitemap):
         slug = m.group(1)
-        if slug in seen or not _FJ_FINANCE_SLUG_RE.search(slug):
+        if slug in seen or not _FJ_ROLE_SLUG_RE.search(slug):
             continue
         seen.add(slug)
         slugs.append(slug)
 
     if len(slugs) > _FJ_MAX_FETCHES:
         _log.info(
-            "fractionaljobs: %d finance slugs found, capping page-fetches at %d",
+            "fractionaljobs: %d in-scope slugs found, capping page-fetches at %d",
             len(slugs), _FJ_MAX_FETCHES,
         )
         slugs = slugs[:_FJ_MAX_FETCHES]
 
     candidates: list[LeadCandidate] = []
-    for i, slug in enumerate(slugs):
+    fetched = 0
+    for slug in slugs:
         parsed = _fj_split_slug(slug)
         if parsed is None:
             continue
         role, company = parsed
+        # Route to a niche BEFORE the page fetch — skip off-niche roles cheaply
+        # so they don't burn fetch budget.
+        sig_type = _signal_type_for(role, assume_fractional=True)
+        if sig_type is None:
+            continue
         if _is_recruiter_name(company) or _is_auto_dealer_name(company):
             continue
-        if i:
+        if fetched:
             time.sleep(_FJ_FETCH_SPACING_S)  # be polite
+        fetched += 1
         url = f"https://www.fractionaljobs.io/jobs/{slug}"
         try:
             r = requests.get(url, headers={"User-Agent": _USER_AGENT}, timeout=15)
@@ -221,6 +265,7 @@ def _fetch_fractionaljobs(since: datetime, max_age_days: int) -> list[LeadCandid
         cand = _make_candidate(
             company=company,
             title=role,
+            sig_type=sig_type,
             url=url,
             date_posted=posted.date().isoformat(),
             site="fractionaljobs",
@@ -228,7 +273,7 @@ def _fetch_fractionaljobs(since: datetime, max_age_days: int) -> list[LeadCandid
         )
         if cand is not None:
             candidates.append(cand)
-    _log.info("fractionaljobs: %d fresh finance postings", len(candidates))
+    _log.info("fractionaljobs: %d fresh in-market postings", len(candidates))
     return candidates
 
 
@@ -239,6 +284,7 @@ def _make_candidate(
     *,
     company: str,
     title: str,
+    sig_type: SignalType,
     url: str,
     date_posted: str,
     site: str,
@@ -253,7 +299,7 @@ def _make_candidate(
         domain=None,
         headcount=None,
         initial_signal=Signal(
-            type=SignalType.JOB_FRACTIONAL_CFO,
+            type=sig_type,
             source=SourceName.FRACTIONAL_BOARD,
             captured_at=captured_at,
             event_date=_parse_posted_date(date_posted),
@@ -272,9 +318,9 @@ def _make_candidate(
 def fetch(
     *, since: datetime, limit: int | None = None
 ) -> tuple[list[LeadCandidate], list[Disqualifier]]:
-    """Returns ``(candidates, disqualifiers)``; disqualifiers is always
-    empty (boards produce no CFO disqualifiers). Two-return shape so the
-    runner can treat it like the jobs / edgar sources."""
+    """Returns ``(candidates, disqualifiers)``; disqualifiers is always empty
+    (boards produce no disqualifiers). Two-return shape so the runner can
+    treat it like the jobs / edgar sources."""
     max_age_days = max(1, min((_utcnow() - since).days, _MAX_AGE_DAYS))
     candidates: list[LeadCandidate] = []
     for name, fn in (("weworkremotely", _fetch_wwr), ("fractionaljobs", _fetch_fractionaljobs)):
