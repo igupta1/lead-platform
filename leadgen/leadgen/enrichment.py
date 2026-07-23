@@ -39,7 +39,7 @@ from leadgen.sources.edgar_form_d import (
     _TRANCHE_SUFFIX_RE,
     _VINTAGE_YEAR_RE,
 )
-from leadgen.sources.jobs import (
+from leadgen.filters import (
     _is_auto_dealer_name,
     _is_hotel_name,
     _is_public_sector,

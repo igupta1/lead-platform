@@ -62,7 +62,9 @@ jobs:
           # and skips the upload cleanly.
           LEADS_UPLOAD_URL:      ${{ vars.LEADS_UPLOAD_URL }}
           LEADS_UPLOAD_API_KEY:  ${{ secrets.LEADS_UPLOAD_API_KEY }}
-          GEMINI_MIN_INTERVAL_S: "0.7"
+          GEMINI_MIN_INTERVAL_S: "0"     # paid tier — no client-side pacing
+          # Anomaly alerts (silent-source-failure guard). Unset -> no alert.
+          NTFY_TOPIC:            ${{ secrets.NTFY_TOPIC }}
           SINCE_DAYS:            ${{ inputs.since_days }}
           ENRICH_BUDGET:         ${{ inputs.enrich_budget }}
           REENRICH:              ${{ inputs.reenrich }}

@@ -49,10 +49,12 @@ from leadgen.models import (
     SignalType,
     SourceName,
 )
-from leadgen.sources.jobs import (
-    _PART_TIME_QUALIFIER_RE,
+from leadgen.filters import (
     _is_auto_dealer_name,
     _is_recruiter_name,
+)
+from leadgen.sources.jobs import (
+    _PART_TIME_QUALIFIER_RE,
     classify,
 )
 

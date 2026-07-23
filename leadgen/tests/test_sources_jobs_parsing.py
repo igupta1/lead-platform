@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+from leadgen import filters
 from leadgen.sources import jobs
 
 
@@ -117,15 +118,15 @@ def test_is_too_old_unknown_date_kept():
 
 def test_generic_stub_name_rejects_lone_generic_word():
     # A truncated/junk company field that is just one generic term.
-    assert jobs._is_generic_stub_name("Enterprises") is True
-    assert jobs._is_generic_stub_name("solutions") is True
-    assert jobs._is_generic_stub_name("  Group  ") is True
-    assert jobs._is_generic_stub_name("Holdings, LLC") is True  # one real token
+    assert filters._is_generic_stub_name("Enterprises") is True
+    assert filters._is_generic_stub_name("solutions") is True
+    assert filters._is_generic_stub_name("  Group  ") is True
+    assert filters._is_generic_stub_name("Holdings, LLC") is True  # one real token
 
 
 def test_generic_stub_name_keeps_real_companies():
     # Multi-token names are never stubs, even when they end in a generic word.
-    assert jobs._is_generic_stub_name("Acme Enterprises") is False
-    assert jobs._is_generic_stub_name("Palantir") is False
-    assert jobs._is_generic_stub_name("Stripe") is False
-    assert jobs._is_generic_stub_name("Redwood Holdings") is False
+    assert filters._is_generic_stub_name("Acme Enterprises") is False
+    assert filters._is_generic_stub_name("Palantir") is False
+    assert filters._is_generic_stub_name("Stripe") is False
+    assert filters._is_generic_stub_name("Redwood Holdings") is False
