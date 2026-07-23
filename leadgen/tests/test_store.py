@@ -38,7 +38,7 @@ def test_disqualifier_blocks_and_sweeps(conn, make_sig):
         name="Gamma Inc",
         initial_signal=make_sig(SignalType.FUNDING_FORM_D, url="https://sec.gov/3")))
     key = db.mark_disqualified(conn, Disqualifier(
-        name="Gamma Inc", reason="open_full_time_cfo_posting", source=SourceName.JOBS))
+        name="Gamma Inc", reason="cfo_competitor_per_llm", source=SourceName.COMPUTED))
     db.delete_lead_by_name_key(conn, key)
     assert list(db.iter_leads(conn)) == []
     # a later candidate with the same name is refused

@@ -27,8 +27,9 @@ def test_classify_maps_titles(title, expected):
 
 
 def test_full_time_cfo_is_not_a_signal():
-    # a plain CFO posting is a disqualifier, never JOB_FRACTIONAL_CFO
-    assert classify("Chief Financial Officer") != SignalType.JOB_FRACTIONAL_CFO
+    # a plain full-time CFO posting classifies into no bucket (it needs a
+    # part-time qualifier to reach JOB_FRACTIONAL_CFO), so it is dropped
+    assert classify("Chief Financial Officer") is None
 
 
 def test_exec_hired_is_gone():

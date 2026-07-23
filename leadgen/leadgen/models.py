@@ -55,13 +55,6 @@ class SignalType(str, Enum):
     # record count. Marked non-exclusive (public list). Feeds mssp.
     BREACH_DISCLOSED = "breach_disclosed"
 
-    # --- Disqualifier marker (NOT a stored signal) -----------------------
-    # Written to the ``disqualified`` table, never to ``Lead.signals`` — a
-    # negative gate (an open full-time CFO posting means the company has
-    # graduated past the fractional stage). Kept here so callers can name
-    # the reason when constructing a Disqualifier.
-    CFO_ROLE_OPEN = "cfo_role_open"
-
 
 class SourceName(str, Enum):
     JOBS = "jobs"
@@ -70,10 +63,6 @@ class SourceName(str, Enum):
     EDGAR_FORM_C = "edgar_form_c"
     BREACHES = "breaches"
     COMPUTED = "computed"
-
-
-# Signal types that must never appear in Lead.signals (disqualifier-only).
-_NON_STORABLE: frozenset[SignalType] = frozenset({SignalType.CFO_ROLE_OPEN})
 
 
 class Signal(BaseModel):
@@ -94,13 +83,6 @@ class Signal(BaseModel):
     evidence_text: str
     source_url: str
     payload: dict[str, Any] = Field(default_factory=dict)
-
-    @field_validator("type")
-    @classmethod
-    def _storable(cls, v: SignalType) -> SignalType:
-        if v in _NON_STORABLE:
-            raise ValueError(f"{v.value} is a disqualifier marker, not a storable Signal")
-        return v
 
     @field_validator("evidence_text", "source_url")
     @classmethod
@@ -152,9 +134,9 @@ class LeadCandidate(BaseModel):
 
 
 class Disqualifier(BaseModel):
-    """A company that must be permanently excluded from every niche. The
-    only producer today is the jobs source (an open full-time CFO posting),
-    but the shape allows future producers."""
+    """A company that must be permanently excluded from every niche. Produced
+    by the enrichment layer (CFO-services competitor, recruiting firm, auto
+    dealer per the web lookup); the shape allows future producers."""
 
     name: str
     reason: str

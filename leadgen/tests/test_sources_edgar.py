@@ -159,14 +159,15 @@ def test_parse_form_d_xml_extracts_offering_and_officers():
     assert d["industry_group"] == "Other Technology"
     assert d["revenue_range"] == "$1,000,000 - $4,999,999"
     assert d["is_pooled_fund"] is False
-    assert d["has_cfo_officer"] is False
     assert d["officers"] == [{"name": "Jane Doe", "title": "Chief Executive Officer"}]
 
 
-def test_parse_form_d_xml_flags_cfo_officer():
+def test_parse_form_d_xml_captures_officers():
+    # A CFO among the related persons is no longer a disqualifier; the officer
+    # is simply carried in the payload like any other.
     d = edgar_form_d._parse_form_d_xml(_FORM_D_XML_CFO)
-    assert d["has_cfo_officer"] is True
     assert d["officers"][0]["name"] == "Sam Smith"
+    assert "has_cfo_officer" not in d
 
 
 def test_parse_form_d_xml_flags_pooled_fund():
@@ -274,16 +275,17 @@ def test_form_d_efts_emits_contract_compliant_candidate(monkeypatch):
     assert sig.payload["biz_state"] == "CA"
 
 
-def test_form_d_efts_cfo_officer_becomes_disqualifier(monkeypatch):
+def test_form_d_efts_cfo_officer_still_produces_candidate(monkeypatch):
+    # A Form D that lists a CFO among the related persons is no longer
+    # disqualified — it produces an ordinary candidate, no disqualifiers.
     monkeypatch.setattr(edgar_form_d, "_fetch_efts_page", _form_d_efts_page)
     monkeypatch.setattr(edgar_form_d.requests, "get", _xml_getter(_FORM_D_XML_CFO))
 
     candidates, disqualifiers = edgar_form_d._fetch_from_efts(datetime(2026, 1, 1))
 
-    assert candidates == []
-    assert len(disqualifiers) == 1
-    assert disqualifiers[0].reason == "cfo_listed_on_form_d"
-    assert disqualifiers[0].source is SourceName.EDGAR_FORM_D
+    assert disqualifiers == []
+    assert len(candidates) == 1
+    assert candidates[0].name == "Acme Robotics Inc"
 
 
 def test_form_d_efts_pooled_fund_skipped(monkeypatch):

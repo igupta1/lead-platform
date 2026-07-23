@@ -18,10 +18,9 @@ applies to both.
 The EFTS path fetches each surviving filing's primary_doc.xml (it
 always did, for the pooled-fund check) and now mines it instead of
 discarding it: offering amount, related persons (officer names and
-titles — free DM data), industry group, revenue range. A related
-person titled CFO is a hard disqualifier — the company already has
-finance leadership — so ``fetch`` returns ``(candidates,
-disqualifiers)`` like the jobs source.
+titles — free DM data), industry group, revenue range. ``fetch``
+returns ``(candidates, disqualifiers)`` for a uniform source contract,
+but this source produces no disqualifiers (the list is always empty).
 
 Independent from insurance_pipeline. Mirror code, mirror filters;
 no cross-imports.
@@ -271,9 +270,6 @@ def _form_d_xml_url(adsh: str, cik: str) -> str | None:
     )
 
 
-# Word-boundary CFO detection in officer titles / relationship text.
-_CFO_OFFICER_RE = re.compile(r"\bcfo\b|chief\s+financial", re.IGNORECASE)
-
 # Operator titles worth surfacing as the DM (enrichment consumes this
 # ordering implicitly — first operator-titled officer wins).
 _MAX_OFFICERS_IN_PAYLOAD = 8
@@ -316,7 +312,6 @@ def _parse_form_d_xml(xml: str) -> dict[str, Any]:
         "industry_group": None,
         "revenue_range": None,
         "officers": [],
-        "has_cfo_officer": False,
     }
     try:
         root = ET.fromstring(xml)
@@ -360,8 +355,6 @@ def _parse_form_d_xml(xml: str) -> dict[str, Any]:
         ]
         title = clarification or ", ".join(relationships)
         officers.append({"name": name, "title": title})
-        if _CFO_OFFICER_RE.search(f"{clarification} {' '.join(relationships)}"):
-            details["has_cfo_officer"] = True
     details["officers"] = officers[:_MAX_OFFICERS_IN_PAYLOAD]
     return details
 
@@ -461,21 +454,6 @@ def _fetch_from_efts(
                     _log.info("edgar efts: skipping pooled fund: %s", company)
                     continue
 
-            # A related person titled CFO means the company already
-            # has finance leadership — hard exclude, sticky, same
-            # semantics as an open full-time CFO posting.
-            if details is not None and details["has_cfo_officer"]:
-                _log.info("edgar efts: CFO listed on Form D: %s", company)
-                disqualifiers.append(
-                    Disqualifier(
-                        name=company,
-                        reason="cfo_listed_on_form_d",
-                        source=SourceName.EDGAR_FORM_D,
-                        payload={"adsh": adsh, "filed_on": file_date},
-                    )
-                )
-                continue
-
             link = (
                 f"https://www.sec.gov/Archives/edgar/data/{int(ciks[0])}/{adsh.replace('-', '')}/{adsh}-index.htm"
                 if ciks and adsh else ""
@@ -536,9 +514,8 @@ def _fetch_from_efts(
             break
 
     _log.info(
-        "edgar efts: %d operating-company candidates, %d CFO-officer "
-        "disqualifiers from %s..%s",
-        len(candidates), len(disqualifiers), start_date, end_date,
+        "edgar efts: %d operating-company candidates from %s..%s",
+        len(candidates), start_date, end_date,
     )
     return candidates, disqualifiers
 
@@ -619,8 +596,8 @@ def fetch(
     """EFTS pages (deep backfill) ∪ getcurrent (freshness backstop),
     deduped on the operating-company name. Capped by ``limit`` if set.
 
-    Returns ``(candidates, disqualifiers)`` — the disqualifiers are
-    companies whose Form D lists a CFO among the related persons."""
+    Returns ``(candidates, disqualifiers)`` for a uniform source
+    contract; this source produces no disqualifiers (always empty)."""
     out: list[LeadCandidate] = []
     disqualifiers: list[Disqualifier] = []
     seen_names: set[str] = set()

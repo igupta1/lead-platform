@@ -226,8 +226,8 @@ _MEGACORP_PREFIX_RES: tuple[re.Pattern[str], ...] = (
 # Brand-name deny list. Distinct from _MEGACORP_PREFIX_RES because
 # these are CONSUMER-BRAND names (no parent prefix) that surface in
 # job scrapes as if they were standalone companies. Tinder slipped
-# past the lookup (`has_full_time_cfo=no`, null headcount), so the
-# upstream size / CFO checks aren't reliable for this class. Exact-match
+# past the lookup (null headcount), so the upstream size checks aren't
+# reliable for this class. Exact-match
 # on the normalized lead name is the durable fix — iterate this list
 # when new false positives appear on the dashboard.
 # Known recruiter / staffing firm names that don't carry the regex
@@ -515,8 +515,9 @@ def purge_disqualified(conn: sqlite3.Connection) -> int:
     """Pure-code pass. Two phases:
 
     1. Sweep the leads table for anything whose name_key sits in the
-       persistent ``disqualified`` table (CFO postings from the jobs
-       source). This is the new piece relative to insurance_pipeline.
+       persistent ``disqualified`` table (sticky CFO-competitor /
+       recruiting-firm / auto-dealer marks from enrichment). This is the
+       new piece relative to insurance_pipeline.
     2. Run the regex-based disqualifier on each lead (CFO competitors,
        financial vehicles, megacorps, oversized headcount).
     """
@@ -608,9 +609,6 @@ IS_AUTO_DEALER: <"yes" if this company is a car dealership, auto group, \
 or vehicle reseller. The 'Finance Director' / 'Finance Manager' there is \
 the person who arranges customer auto loans, NOT a corporate finance \
 executive. Otherwise "no".>
-HAS_FULL_TIME_CFO: <"yes" if the company appears to have a full-time CFO \
-already (named CFO on the leadership page, etc.), otherwise "no". Companies \
-with a full-time CFO are NOT prospects for a fractional CFO.>
 HOUSEHOLD_NAME: <"yes" if this is a widely-recognized company or brand the \
 average person would know — a national household name, a large public \
 company, a major retailer / bank / airline / tech company / hospital system \
@@ -639,9 +637,6 @@ _FIELD_RE = {
     "is_auto_dealer": re.compile(
         r"^IS_AUTO_DEALER:\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE
     ),
-    "has_full_time_cfo": re.compile(
-        r"^HAS_FULL_TIME_CFO:\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE
-    ),
     "household_name": re.compile(
         r"^HOUSEHOLD_NAME:\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE
     ),
@@ -665,7 +660,6 @@ class _Lookup(BaseModel):
     is_cfo_competitor: bool = False
     is_recruiting_firm: bool = False
     is_auto_dealer: bool = False
-    has_full_time_cfo: bool = False
     household_name: bool = False
     insight: str | None = None
 
@@ -715,7 +709,6 @@ def lookup_company(lead: Lead) -> _Lookup:
         is_cfo_competitor=_parse_yesno(_parse_field(raw, "is_cfo_competitor")),
         is_recruiting_firm=_parse_yesno(_parse_field(raw, "is_recruiting_firm")),
         is_auto_dealer=_parse_yesno(_parse_field(raw, "is_auto_dealer")),
-        has_full_time_cfo=_parse_yesno(_parse_field(raw, "has_full_time_cfo")),
         household_name=_parse_yesno(_parse_field(raw, "household_name")),
         insight=_parse_field(raw, "insight"),
     )
@@ -812,8 +805,8 @@ def _is_form_c_funding_only(lead: Lead) -> bool:
     """A Form C (Reg Crowdfunding) lead that arrived pre-filled from the
     filing (domain + headcount) and has no hiring signal. Its domain,
     size, and location are already known, and a tiny Reg-CF issuer won't
-    have a full-time CFO or be a CFO-services competitor — so it can be
-    enriched WITHOUT a Gemini grounded-search call (the light path)."""
+    be a CFO-services competitor — so it can be enriched WITHOUT a Gemini
+    grounded-search call (the light path)."""
     if _has_hiring_signal(lead):
         return False  # bullseye — worth the full lookup
     if lead.domain is None:
@@ -918,8 +911,6 @@ def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool
         disqualifier_reason = "recruiting_firm"
     elif lookup.is_auto_dealer:
         disqualifier_reason = "auto_dealer"
-    elif lookup.has_full_time_cfo:
-        disqualifier_reason = "has_full_time_cfo"
 
     if disqualifier_reason is not None:
         log.info(
@@ -930,7 +921,7 @@ def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool
         # Sticky disqualifiers — service providers that should stay out
         # across runs even if a fresh signal appears.
         if disqualifier_reason in (
-            "has_full_time_cfo", "recruiting_firm", "auto_dealer", "cfo_competitor",
+            "recruiting_firm", "auto_dealer", "cfo_competitor",
         ):
             from leadgen.models import Disqualifier
             db.mark_disqualified(

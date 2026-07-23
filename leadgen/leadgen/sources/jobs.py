@@ -16,10 +16,9 @@ into EXACTLY ONE :class:`SignalType` bucket (or dropped):
 * ``JOB_SECURITY`` — security engineer, infosec, SOC analyst, CISO.
 * ``JOB_CLOUD_DEVOPS`` — DevOps, SRE, cloud / platform engineering.
 
-A second, negative output: ``Disqualifier`` rows for *full-time* Chief
-Financial Officer postings. Those companies are buying a CFO, not a
-fractional one, so per spec they're dropped from every niche. The
-disqualifier is sticky: a CFO posting on day 1 still blocks a later Form D.
+A full-time "Chief Financial Officer" posting simply doesn't classify into
+any bucket (``classify`` returns None without a part-time qualifier), so it
+is dropped — the jobs source produces no disqualifiers.
 
 Where headcount is available from the posting (Indeed's
 ``company_num_employees``, surfaced by JobSpy) it's carried on the
@@ -52,6 +51,9 @@ from leadgen.models import (
     SourceName,
 )
 
+# ``Disqualifier`` is imported only to type the (now always empty)
+# disqualifiers half of the ``fetch`` return tuple.
+
 _log = logging.getLogger(__name__)
 
 # --- Search queries --------------------------------------------------------
@@ -61,9 +63,9 @@ _log = logging.getLogger(__name__)
 # per-group age window (fractional lives longer) is the one thing that
 # still travels with the query group.
 
-# Finance leadership one rung below CFO. Primary buy signal. "Chief
-# Financial Officer" is queried separately (see _CFO_QUERIES) so full-time
-# CFO postings become disqualifiers, not signals.
+# Finance leadership one rung below CFO. Primary buy signal. A full-time
+# "Chief Financial Officer" posting isn't queried — it doesn't classify into
+# any bucket without a part-time qualifier, so it would just be dropped.
 _FINANCE_LEAD_QUERIES: tuple[str, ...] = (
     "Controller",
     "Assistant Controller",
@@ -78,9 +80,6 @@ _FINANCE_LEAD_QUERIES: tuple[str, ...] = (
     # plain "Controller" search already returns them and _CONTROLLER_RE
     # classifies them, so a dedicated query would just burn scrape budget.
     "Chief Accounting Officer",
-)
-_CFO_QUERIES: tuple[str, ...] = (
-    "Chief Financial Officer",
 )
 # In-market queries. A company posting a Fractional / Interim / Part-time
 # CFO role is shopping for exactly the service sold — the hottest class.
@@ -278,10 +277,9 @@ _IT_SUPPORT_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-# --- CFO disqualifier regexes ----------------------------------------------
-# Detects "Chief Financial Officer" / stand-alone "CFO" — but excludes
-# part-time variants: a company hiring a Fractional / Interim / Part-time CFO
-# is the opposite of disqualified.
+# --- CFO title regexes -----------------------------------------------------
+# Detects "Chief Financial Officer" / stand-alone "CFO" and the part-time
+# qualifiers that route a CFO posting into the in-market fractional bucket.
 _CFO_TITLE_RE = re.compile(
     r"\b(chief\s+financial\s+officer|cfo)\b",
     re.IGNORECASE,
@@ -511,9 +509,9 @@ def _utcnow() -> datetime:
 # --- Finance classifier predicates -----------------------------------------
 
 def _is_finance_lead_title(title: str) -> bool:
-    """True when the posting is for a finance lead one rung below CFO. Always
-    called AFTER ``_is_cfo_disqualifier_title`` returns False, so a full-time
-    CFO posting isn't double-classified as both signal and disqualifier."""
+    """True when the posting is for a finance lead one rung below CFO. A
+    full-time "Chief Financial Officer" title has no dedicated match here, so
+    it falls through ``classify`` and is dropped rather than surfaced."""
     if not title:
         return False
     # Clerical / junior IC exclusion, UNLESS the title also names a genuine
@@ -537,27 +535,14 @@ def _is_finance_lead_title(title: str) -> bool:
     )
 
 
-def _is_cfo_disqualifier_title(title: str) -> bool:
-    """True when the title is for a full-time CFO. False for fractional /
-    interim / part-time variants — those companies are the buyer, not
-    disqualified."""
-    if not title:
-        return False
-    if not _CFO_TITLE_RE.search(title):
-        return False
-    if _PART_TIME_QUALIFIER_RE.search(title):
-        return False
-    return True
-
-
 def _is_fractional_cfo_title(title: str) -> bool:
     """True when the company is in-market for fractional finance leadership:
     a CFO title or a finance-LEADERSHIP title, either carrying a part-time /
     interim / fractional / outsourced / contract qualifier. IC-level finance
     titles are NOT promoted here.
 
-    Checked after ``_is_cfo_disqualifier_title`` (which excludes full-time
-    CFOs) and before ``_is_finance_lead_title``."""
+    A full-time CFO title (no qualifier) fails the qualifier gate and is
+    dropped by ``classify``; it is checked before ``_is_finance_lead_title``."""
     if not title:
         return False
     if not _PART_TIME_QUALIFIER_RE.search(title):
@@ -588,8 +573,8 @@ def classify(title: str) -> SignalType | None:
 
     Finance tiers take precedence over the IT / security / cloud buckets, and
     are ordered most-specific first (fractional CFO -> finance lead -> junior
-    IC). Full-time CFO postings are diverted to the disqualifier gate by the
-    caller before this is reached, so they never surface here as a signal."""
+    IC). A full-time CFO posting matches no bucket (it needs a part-time
+    qualifier to reach JOB_FRACTIONAL_CFO), so it returns None and is dropped."""
     if not title:
         return None
     # Finance ladder.
@@ -715,17 +700,6 @@ def _make_candidate(
     )
 
 
-def _make_cfo_disqualifier(
-    *, company: str, title: str, site: str, url: str
-) -> Disqualifier:
-    return Disqualifier(
-        name=company,
-        reason="open_full_time_cfo_posting",
-        source=SourceName.JOBS,
-        payload={"title": title, "site": site, "url": url},
-    )
-
-
 # --- Backends --------------------------------------------------------------
 
 def _fetch_from_jobspy(
@@ -786,14 +760,6 @@ def _fetch_from_jobspy(
             date_posted = str(row.get("date_posted") or "")
             site = str(row.get("site") or "")
 
-            # Disqualifier gate first (sticky, and age-independent).
-            if _is_cfo_disqualifier_title(title):
-                disqualifiers.append(
-                    _make_cfo_disqualifier(
-                        company=company, title=title, site=site, url=url,
-                    )
-                )
-                continue
             if _is_too_old(date_posted, captured_at, max_age_days):
                 continue
             sig_type = classify(title)
@@ -892,13 +858,6 @@ def _fetch_from_adzuna(
                 url = str(item.get("redirect_url") or "").strip()
                 date_posted = str(item.get("created") or "")
 
-                if _is_cfo_disqualifier_title(title):
-                    disqualifiers.append(
-                        _make_cfo_disqualifier(
-                            company=company, title=title, site="adzuna", url=url,
-                        )
-                    )
-                    continue
                 if _is_too_old(date_posted, captured_at, max_age_days):
                     continue
                 sig_type = classify(title)
@@ -933,12 +892,11 @@ def _fetch_from_adzuna(
 def fetch(
     *, since: datetime, limit: int | None = None
 ) -> tuple[list[LeadCandidate], list[Disqualifier]]:
-    """Returns (job-posting candidates across all seven buckets, CFO
-    disqualifiers).
+    """Returns (job-posting candidates across all seven buckets, []).
 
-    Two-return signature: the jobs source is the only one that produces
-    disqualifiers (an open full-time CFO posting). The daily_run runner
-    branches on the return shape.
+    Two-return signature is kept for a uniform source contract, but the jobs
+    source no longer produces any disqualifiers — the disqualifiers list is
+    always empty. The daily_run runner branches on the return shape.
     """
     candidates: list[LeadCandidate] = []
     disqualifiers: list[Disqualifier] = []
@@ -948,12 +906,10 @@ def fetch(
     ] = (
         ("jobspy_fractional_cfo", _fetch_from_jobspy, _FRACTIONAL_CFO_QUERIES, _FRACTIONAL_MAX_POSTING_AGE_DAYS),
         ("jobspy_finance_leads", _fetch_from_jobspy, _FINANCE_LEAD_QUERIES, _MAX_POSTING_AGE_DAYS),
-        ("jobspy_cfo_disqualifiers", _fetch_from_jobspy, _CFO_QUERIES, _MAX_POSTING_AGE_DAYS),
         ("jobspy_junior_finance", _fetch_from_jobspy, _JUNIOR_FINANCE_QUERIES, _MAX_POSTING_AGE_DAYS),
         ("jobspy_it", _fetch_from_jobspy, _IT_QUERIES, _MAX_POSTING_AGE_DAYS),
         ("adzuna_fractional_cfo", _fetch_from_adzuna, _FRACTIONAL_CFO_QUERIES, _FRACTIONAL_MAX_POSTING_AGE_DAYS),
         ("adzuna_finance_leads", _fetch_from_adzuna, _FINANCE_LEAD_QUERIES, _MAX_POSTING_AGE_DAYS),
-        ("adzuna_cfo_disqualifiers", _fetch_from_adzuna, _CFO_QUERIES, _MAX_POSTING_AGE_DAYS),
         ("adzuna_junior_finance", _fetch_from_adzuna, _JUNIOR_FINANCE_QUERIES, _MAX_POSTING_AGE_DAYS),
         ("adzuna_it", _fetch_from_adzuna, _IT_QUERIES, _MAX_POSTING_AGE_DAYS),
     )

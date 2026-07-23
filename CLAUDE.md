@@ -10,8 +10,8 @@ them or vice-versa.
 
 - `sources/` — fetched once per run, each returns `LeadCandidate`s:
   `edgar_form_d` (Form D funding), `edgar_form_c` (Form C funding), `jobs`
-  (the seven job-post signal types + the full-time-CFO disqualifier),
-  `fractional_boards` (fractional-CFO posts), `breaches` (HHS OCR + state AGs).
+  (the seven job-post signal types), `fractional_boards` (fractional-CFO
+  posts), `breaches` (HHS OCR + state AGs).
 - `db.py` — the single company store: one row per company (fuzzy-deduped
   across every source), all signals attached, one score per niche.
 - `enrichment.py` — LLM (Gemini/OpenAI) enrichment: domain, headcount,

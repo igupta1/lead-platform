@@ -35,14 +35,3 @@ def test_evidence_is_stripped():
     )
     assert s.evidence_text == "Form D filed"
     assert s.source_url == "https://sec.gov/x"
-
-
-def test_disqualifier_marker_not_storable_as_signal():
-    with pytest.raises(Exception):
-        Signal(
-            type=SignalType.CFO_ROLE_OPEN,
-            source=SourceName.JOBS,
-            captured_at=_now(),
-            evidence_text="open full-time CFO",
-            source_url="https://jobs/x",
-        )

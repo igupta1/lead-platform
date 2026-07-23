@@ -312,9 +312,8 @@ def fetch(
     *, since: datetime, limit: int | None = None
 ) -> tuple[list[LeadCandidate], list[Disqualifier]]:
     """Returns ``(candidates, disqualifiers)`` to match the two-return
-    shape the runner branches on. Form C carries no related-persons
-    list, so disqualifiers is always empty (the Gemini has_full_time_cfo
-    check still applies downstream)."""
+    shape the runner branches on. Form C produces no disqualifiers, so
+    the list is always empty."""
     try:
         candidates = _fetch_from_efts(since)
     except Exception:
