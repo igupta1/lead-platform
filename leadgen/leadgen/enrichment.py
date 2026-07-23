@@ -107,6 +107,9 @@ _CFO_COMPETITOR_NAME_RES: tuple[re.Pattern[str], ...] = (
         r"\b(?:Fractional|Outsourced|Virtual|Part[-\s]?Time)\s+CFO\b",
         re.IGNORECASE,
     ),
+    # "vCFO" / "v-cfo" — a virtual-CFO provider brand (the plain "Virtual CFO"
+    # pattern above needs a space, so the abbreviated brand slips past it).
+    re.compile(r"\bv-?cfo\b", re.IGNORECASE),
     re.compile(r"\bCFO\s+(?:Services|Solutions|Partners|Group|Advisory|Consulting)\b", re.IGNORECASE),
     re.compile(
         r"\b(?:CPA|CPAs|Certified\s+Public\s+Accountants?)\b",
@@ -138,6 +141,26 @@ def _name_blocked(name: str) -> bool:
 
 def _is_cfo_competitor(name: str) -> bool:
     return any(p.search(name) for p in _CFO_COMPETITOR_NAME_RES)
+
+
+# The Gemini is_cfo_competitor yes/no flag occasionally misses an obvious
+# provider (e.g. "vcfo", whose own insight reads "...including fractional CFO
+# services"). Backstop it by reading the enrichment insight text: a company
+# that DESCRIBES ITSELF as providing fractional-CFO / accounting / bookkeeping
+# services is the competition, not a buyer. The insight is "what the company
+# does", so a real buyer's insight won't contain these provider phrases.
+_SERVICE_PROVIDER_INSIGHT_RE = re.compile(
+    r"\b(?:fractional|outsourced|virtual|part[-\s]?time)\s+cfo\b"
+    r"|\bcfo\s+services\b"
+    r"|\b(?:bookkeeping|accounting|tax)\s+(?:services|firm|solutions)\b",
+    re.IGNORECASE,
+)
+
+
+def _insight_is_service_provider(insight: str | None) -> bool:
+    if not insight:
+        return False
+    return bool(_SERVICE_PROVIDER_INSIGHT_RE.search(insight))
 
 
 # Financial-vehicle names that slip past EDGAR's source-level filter
@@ -905,7 +928,7 @@ def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool
         disqualifier_reason = f"oversized_headcount={effective_headcount}"
     elif lookup.household_name:
         disqualifier_reason = "known_household_name"
-    elif lookup.is_cfo_competitor:
+    elif lookup.is_cfo_competitor or _insight_is_service_provider(lookup.insight):
         disqualifier_reason = "cfo_competitor"
     elif lookup.is_recruiting_firm:
         disqualifier_reason = "recruiting_firm"

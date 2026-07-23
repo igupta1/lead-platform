@@ -37,8 +37,8 @@ from leadgen.models import (
 )
 from leadgen.sources.edgar_form_d import (
     _EFTS_PAGE_SIZE,
-    _EFTS_URL,
     _USER_AGENT,
+    _efts_get,
     _extract_name_from_display,
     _is_operating_company,
     _parse_iso_date,
@@ -175,7 +175,7 @@ def _fetch_form_c_details(adsh: str, cik: str) -> dict[str, Any] | None:
 def _fetch_efts_page(
     *, start_date: str, end_date: str, offset: int, hits: int
 ) -> dict[str, Any] | None:
-    params: dict[str, str | int] = {
+    return _efts_get({
         "q": "",
         "forms": "C",
         "dateRange": "custom",
@@ -183,19 +183,7 @@ def _fetch_efts_page(
         "enddt": end_date,
         "from": offset,
         "hits": hits,
-    }
-    try:
-        r = requests.get(
-            _EFTS_URL,
-            params=params,
-            headers={"User-Agent": _USER_AGENT, "Accept": "application/json"},
-            timeout=20,
-        )
-        r.raise_for_status()
-        return r.json()
-    except (requests.RequestException, ValueError) as exc:
-        _log.warning("edgar form-c efts page failed offset=%d: %s", offset, exc)
-        return None
+    })
 
 
 def _fetch_from_efts(

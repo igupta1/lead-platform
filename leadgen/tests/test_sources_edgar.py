@@ -426,3 +426,52 @@ def test_form_c_efts_drops_oversized_issuer(monkeypatch):
 
     candidates = edgar_form_c._fetch_from_efts(datetime(2026, 1, 1))
     assert candidates == []  # headcount 250 > _SMB_HEADCOUNT_CAP
+
+
+# --------------------------------------------------------------------------
+# _efts_get — retry/backoff so a transient SEC hiccup doesn't silently zero
+# out a whole night's funding (Form D and Form C share this helper).
+# --------------------------------------------------------------------------
+
+
+class _JsonResp:
+    def __init__(self, payload: dict) -> None:
+        self._payload = payload
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> dict:
+        return self._payload
+
+
+def test_efts_get_retries_transient_failure(monkeypatch):
+    payload = {"hits": {"total": {"value": 0}, "hits": []}}
+    calls = {"n": 0}
+
+    def _flaky_get(*args, **kwargs):
+        calls["n"] += 1
+        if calls["n"] < 2:
+            raise edgar_form_d.requests.RequestException("transient 500")
+        return _JsonResp(payload)
+
+    monkeypatch.setattr(edgar_form_d.time, "sleep", lambda *_a: None)
+    monkeypatch.setattr(edgar_form_d.requests, "get", _flaky_get)
+
+    out = edgar_form_d._efts_get({"forms": "D"})
+    assert out == payload
+    assert calls["n"] == 2  # failed once, retried, then succeeded
+
+
+def test_efts_get_gives_up_after_max_retries(monkeypatch):
+    calls = {"n": 0}
+
+    def _always_fail(*args, **kwargs):
+        calls["n"] += 1
+        raise edgar_form_d.requests.RequestException("down")
+
+    monkeypatch.setattr(edgar_form_d.time, "sleep", lambda *_a: None)
+    monkeypatch.setattr(edgar_form_d.requests, "get", _always_fail)
+
+    assert edgar_form_d._efts_get({"forms": "D"}) is None
+    assert calls["n"] == edgar_form_d._EFTS_MAX_RETRIES

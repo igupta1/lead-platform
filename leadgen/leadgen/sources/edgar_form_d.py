@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -378,13 +379,45 @@ def _fetch_form_d_details(adsh: str, cik: str) -> dict[str, Any] | None:
     return _parse_form_d_xml(r.text)
 
 
+# A transient SEC hiccup on the EFTS endpoint used to silently zero out a
+# whole night's funding: the error was swallowed to None and logged as a
+# normal "0 candidates". Retry a few times with backoff before giving up.
+_EFTS_MAX_RETRIES = 3
+_EFTS_RETRY_BACKOFF_S = 2.0
+
+
+def _efts_get(params: dict[str, str | int]) -> dict[str, Any] | None:
+    """GET one EFTS search page with retry/backoff. Returns parsed JSON, or
+    None only after every retry fails. Shared by the Form D and Form C
+    sources (which differ only in the ``forms`` param)."""
+    for attempt in range(_EFTS_MAX_RETRIES):
+        try:
+            r = requests.get(
+                _EFTS_URL,
+                params=params,
+                headers={"User-Agent": _USER_AGENT, "Accept": "application/json"},
+                timeout=20,
+            )
+            r.raise_for_status()
+            return r.json()
+        except (requests.RequestException, ValueError) as exc:
+            _log.warning(
+                "edgar efts page failed (attempt %d/%d): %s",
+                attempt + 1, _EFTS_MAX_RETRIES, exc,
+            )
+            if attempt + 1 == _EFTS_MAX_RETRIES:
+                return None
+            time.sleep(_EFTS_RETRY_BACKOFF_S * (attempt + 1))
+    return None
+
+
 def _fetch_efts_page(
     *, start_date: str, end_date: str, offset: int, hits: int
 ) -> dict[str, Any] | None:
     """Single page of EFTS results. Returns the parsed JSON or None on
     error. EFTS expects ``dateRange=custom`` with ``startdt`` / ``enddt``
     in YYYY-MM-DD."""
-    params: dict[str, str | int] = {
+    return _efts_get({
         "q": "",
         "forms": "D",
         "dateRange": "custom",
@@ -392,19 +425,7 @@ def _fetch_efts_page(
         "enddt": end_date,
         "from": offset,
         "hits": hits,
-    }
-    try:
-        r = requests.get(
-            _EFTS_URL,
-            params=params,
-            headers={"User-Agent": _USER_AGENT, "Accept": "application/json"},
-            timeout=20,
-        )
-        r.raise_for_status()
-        return r.json()
-    except (requests.RequestException, ValueError) as exc:
-        _log.warning("edgar efts page failed offset=%d: %s", offset, exc)
-        return None
+    })
 
 
 def _fetch_from_efts(
