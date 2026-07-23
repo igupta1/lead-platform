@@ -20,7 +20,7 @@ import re
 import sqlite3
 import unicodedata
 from collections.abc import Iterator
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -63,6 +63,17 @@ CREATE TABLE IF NOT EXISTS disqualified (
     source     TEXT NOT NULL,
     payload    TEXT NOT NULL DEFAULT '{}',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
+"""
+
+# One row per run: the per-source and per-niche counts, so the monitoring
+# step can compare a run against the previous one and flag a silent source
+# failure or a sharp niche drop.
+_DDL_RUN_STATS = """
+CREATE TABLE IF NOT EXISTS run_stats (
+    id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    ran_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    stats  TEXT NOT NULL DEFAULT '{}'
 )
 """
 
@@ -356,6 +367,7 @@ def init_db(path: Path) -> sqlite3.Connection:
     with conn:
         conn.execute(_DDL)
         conn.execute(_DDL_DISQUALIFIED)
+        conn.execute(_DDL_RUN_STATS)
         cur = conn.execute("PRAGMA table_info(leads)")
         existing_cols = {row[1] for row in cur.fetchall()}
         for col_name, col_type in _MIGRATIONS:
@@ -577,3 +589,59 @@ def set_scores(conn: sqlite3.Connection, lead_id: int, scores: dict[str, float])
         )
         if cur.rowcount == 0:
             raise ValueError(f"No lead with id={lead_id}")
+
+
+# --- Run stats + stale pruning --------------------------------------------
+
+
+def record_run_stats(conn: sqlite3.Connection, stats: dict[str, Any]) -> None:
+    """Append this run's stats (per-source + per-niche counts) for the next
+    run's monitoring to diff against."""
+    with conn:
+        conn.execute(
+            "INSERT INTO run_stats (ran_at, stats) VALUES (?, ?)",
+            (_utcnow(), json.dumps(stats)),
+        )
+
+
+def last_run_stats(conn: sqlite3.Connection) -> dict[str, Any] | None:
+    """The most recently recorded run's stats, or None if none yet. Call this
+    BEFORE ``record_run_stats`` so the comparison is against the prior run."""
+    cur = conn.execute("SELECT stats FROM run_stats ORDER BY id DESC LIMIT 1")
+    row = cur.fetchone()
+    return json.loads(row["stats"]) if row is not None else None
+
+
+def _signal_when(sig: dict[str, Any]) -> datetime:
+    """The event (or capture) time of a stored signal dict. Unparseable ->
+    ``datetime.max`` so an undatable signal is never the reason a lead is
+    pruned (keep-when-unsure)."""
+    raw = sig.get("event_date") or sig.get("captured_at")
+    if not raw:
+        return datetime.max
+    try:
+        dt = datetime.fromisoformat(str(raw))
+    except (TypeError, ValueError):
+        return datetime.max
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
+
+
+def prune_stale(
+    conn: sqlite3.Connection, *, max_age_days: int, now: datetime | None = None
+) -> int:
+    """Delete leads whose most-recent signal is older than ``max_age_days``,
+    keeping the committed DB and the emitted inventories lean. A company that's
+    still in-market re-signals, so a long-silent lead is stale. A lead with no
+    signals at all is also dropped. Returns rows deleted."""
+    cutoff = (now or _utcnow()) - timedelta(days=max_age_days)
+    deleted = 0
+    with conn:
+        rows = conn.execute("SELECT id, signals FROM leads").fetchall()
+        for row in rows:
+            sigs = json.loads(row["signals"] or "[]")
+            if not sigs or max(_signal_when(s) for s in sigs) < cutoff:
+                conn.execute("DELETE FROM leads WHERE id = ?", (row["id"],))
+                deleted += 1
+    return deleted

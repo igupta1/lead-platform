@@ -105,3 +105,34 @@ def test_set_scores_roundtrip(conn, make_sig):
         initial_signal=make_sig(SignalType.JOB_SECURITY, url="https://jobs/z")))
     db.set_scores(conn, lead.id, {"mssp": 82.0})
     assert db.get_lead(conn, lead_id=lead.id).scores == {"mssp": 82.0}
+
+
+def test_prune_stale_drops_old_keeps_fresh(conn, make_sig):
+    db.upsert_lead(conn, LeadCandidate(
+        name="Fresh Co",
+        initial_signal=make_sig(SignalType.JOB_IT_SUPPORT, url="https://jobs/f", days_ago=5)))
+    db.upsert_lead(conn, LeadCandidate(
+        name="Stale Co",
+        initial_signal=make_sig(SignalType.JOB_IT_SUPPORT, url="https://jobs/s", days_ago=120)))
+    assert len(list(db.iter_leads(conn))) == 2
+
+    pruned = db.prune_stale(conn, max_age_days=90)
+    assert pruned == 1
+    assert {ld.name for ld in db.iter_leads(conn)} == {"Fresh Co"}
+
+
+def test_prune_stale_keeps_lead_with_one_fresh_signal(conn, make_sig):
+    # Newest signal wins: an old signal + a fresh one -> kept.
+    lead = db.upsert_lead(conn, LeadCandidate(
+        name="Mixed Co",
+        initial_signal=make_sig(SignalType.FUNDING_FORM_D, url="https://sec/1", days_ago=200)))
+    db.append_signal(conn, lead.id, make_sig(SignalType.JOB_FINANCE_LEAD, url="https://jobs/m", days_ago=3))
+    assert db.prune_stale(conn, max_age_days=90) == 0
+    assert len(list(db.iter_leads(conn))) == 1
+
+
+def test_run_stats_roundtrip_returns_most_recent(conn):
+    assert db.last_run_stats(conn) is None
+    db.record_run_stats(conn, {"sources": {"jobs": 100}, "niches": {"cfo": 40}})
+    db.record_run_stats(conn, {"sources": {"jobs": 90}, "niches": {"cfo": 38}})
+    assert db.last_run_stats(conn) == {"sources": {"jobs": 90}, "niches": {"cfo": 38}}

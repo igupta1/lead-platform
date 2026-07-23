@@ -23,7 +23,7 @@ from typing import Any
 
 import requests
 
-from leadgen import db, enrichment, scoring, taxonomy
+from leadgen import db, enrichment, monitoring, scoring, taxonomy
 from leadgen.models import Disqualifier, Lead, LeadCandidate
 from leadgen.niches import NICHES, ORDER
 from leadgen.niches.base import NicheConfig
@@ -43,6 +43,9 @@ _SOURCES = (edgar_form_d, edgar_form_c, jobs, fractional_boards, breaches)
 DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "leads.db"
 DEFAULT_OUT_DIR = Path(__file__).resolve().parent.parent / "data"
 DEFAULT_SINCE_DAYS = 45
+# Drop leads with no signal in this many days — a still-in-market company
+# re-signals, so a long-silent lead is stale. Past the 60-day recency window.
+STALE_MAX_DAYS = 90
 
 
 def _utcnow() -> datetime:
@@ -63,9 +66,12 @@ def _call_source(mod: Any, since: datetime) -> tuple[list[LeadCandidate], list[D
     return list(res or []), []
 
 
-def fetch_all(since: datetime) -> tuple[list[LeadCandidate], list[Disqualifier]]:
+def fetch_all(
+    since: datetime,
+) -> tuple[list[LeadCandidate], list[Disqualifier], dict[str, int]]:
     candidates: list[LeadCandidate] = []
     disqualifiers: list[Disqualifier] = []
+    source_counts: dict[str, int] = {}
     for mod in _SOURCES:
         name = mod.__name__.rsplit(".", 1)[-1]
         try:
@@ -73,9 +79,11 @@ def fetch_all(since: datetime) -> tuple[list[LeadCandidate], list[Disqualifier]]
             log.info("source %s: %d candidates, %d disqualifiers", name, len(cands), len(dqs))
             candidates.extend(cands)
             disqualifiers.extend(dqs)
+            source_counts[name] = len(cands)
         except Exception:  # one flaky source must not kill the run
             log.exception("source %s failed", name)
-    return candidates, disqualifiers
+            source_counts[name] = 0  # a source that raised reads as 0 -> alertable
+    return candidates, disqualifiers, source_counts
 
 
 # --- Ingest ---------------------------------------------------------------
@@ -200,9 +208,12 @@ def project_niche(conn: Any, niche: NicheConfig, *, state: str | None, limit: in
     }
 
 
-def emit(conn: Any, out_dir: Path, *, only: str | None, state: str | None, limit: int | None) -> dict[str, Path]:
+def emit(
+    conn: Any, out_dir: Path, *, only: str | None, state: str | None, limit: int | None
+) -> tuple[dict[str, Path], dict[str, int]]:
     out_dir.mkdir(parents=True, exist_ok=True)
     written: dict[str, Path] = {}
+    niche_counts: dict[str, int] = {}
     for niche in ORDER:
         if only and niche.key != only:
             continue
@@ -211,12 +222,13 @@ def emit(conn: Any, out_dir: Path, *, only: str | None, state: str | None, limit
         path.write_text(json.dumps(payload, indent=2))
         log.info("wrote %s (%d leads)", path.name, payload["count"])
         written[niche.key] = path
+        niche_counts[niche.key] = payload["count"]
     # Shared vertical taxonomy (parent -> children), consumed by the outreach
     # engine's research/Gate-B matching.
     (out_dir / "taxonomy.json").write_text(
         json.dumps({"taxonomy": taxonomy.PARENT_CHILDREN}, indent=2)
     )
-    return written
+    return written, niche_counts
 
 
 # --- Upload ---------------------------------------------------------------
@@ -266,8 +278,9 @@ def main(argv: list[str] | None = None) -> int:
     conn = db.init_db(args.db)
     since = _utcnow() - timedelta(days=args.since_days)
 
+    source_counts: dict[str, int] = {}
     if not args.skip_fetch:
-        candidates, disqualifiers = fetch_all(since)
+        candidates, disqualifiers, source_counts = fetch_all(since)
         kept = ingest(conn, candidates, disqualifiers)
         log.info("ingest: %d candidates upserted", kept)
 
@@ -282,8 +295,21 @@ def main(argv: list[str] | None = None) -> int:
     merged = db.merge_by_domain(conn)
     log.info("merged %d domain-duplicate leads", merged)
 
+    pruned = db.prune_stale(conn, max_age_days=STALE_MAX_DAYS)
+    log.info("pruned %d stale leads (no signal in %d days)", pruned, STALE_MAX_DAYS)
+
     score_all(conn)
-    written = emit(conn, args.out_dir, only=args.niche, state=args.state, limit=args.limit)
+    written, niche_counts = emit(
+        conn, args.out_dir, only=args.niche, state=args.state, limit=args.limit
+    )
+
+    # Anomaly guard: diff this run vs. the previous one (alert on a silent
+    # source failure or a sharp niche drop), then record this run's counts.
+    # Only on a real fetch — an emit-only run has no source counts to compare.
+    if not args.skip_fetch:
+        stats = {"sources": source_counts, "niches": niche_counts}
+        monitoring.check(db.last_run_stats(conn), stats)
+        db.record_run_stats(conn, stats)
 
     if args.upload:
         for niche_key, path in written.items():
