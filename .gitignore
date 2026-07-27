@@ -7,6 +7,9 @@
 **/.mypy_cache/
 **/.ruff_cache/
 
+# Node (CI-only: the Vercel Blob publish step installs @vercel/blob)
+**/node_modules/
+
 # Secrets
 .env
 **/.env

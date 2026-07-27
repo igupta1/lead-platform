@@ -22,7 +22,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from leadgen import db, enrichment, monitoring, scoring, taxonomy
+from leadgen import db, enrichment, llm, monitoring, scoring, taxonomy
 from leadgen.models import Disqualifier, Lead, LeadCandidate
 from leadgen.niches import NICHES, ORDER
 from leadgen.niches.base import NicheConfig
@@ -126,6 +126,7 @@ def _plan_chunk(leads: list[Lead], workers: int) -> dict[Any, Any]:
     network work; no DB). Returns {lead.id: plan|None}; None means the lookup
     errored and the lead is skipped this run (retried next run)."""
     plans: dict[Any, Any] = {}
+    quota_skipped = 0
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {pool.submit(enrichment.plan_enrichment, lead, force=False): lead
                    for lead in leads}
@@ -133,9 +134,17 @@ def _plan_chunk(leads: list[Lead], workers: int) -> dict[Any, Any]:
             lead = futures[fut]
             try:
                 plans[lead.id] = fut.result()
+            except llm.GeminiQuotaExhausted:
+                # Expected on a big backlog: the day's Gemini quota is spent. These
+                # leads stay un-enriched and retry next run (needs_enrichment True).
+                plans[lead.id] = None
+                quota_skipped += 1
             except Exception:
                 log.exception("plan_enrichment failed for lead id=%s (%s)", lead.id, lead.name)
                 plans[lead.id] = None
+    if quota_skipped:
+        log.warning("enrich: %d leads skipped this chunk — gemini quota exhausted "
+                    "(they retry next run)", quota_skipped)
     return plans
 
 

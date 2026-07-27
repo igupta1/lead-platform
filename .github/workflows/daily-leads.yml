@@ -18,6 +18,11 @@ on:
         type: boolean
         required: false
         default: false
+      publish_only:
+        description: "Skip fetch+enrich; just re-project the committed leads.db and publish (fast, no Gemini)"
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write
@@ -67,10 +72,17 @@ jobs:
           SINCE_DAYS:            ${{ inputs.since_days }}
           ENRICH_BUDGET:         ${{ inputs.enrich_budget }}
           REENRICH:              ${{ inputs.reenrich }}
+          PUBLISH_ONLY:          ${{ inputs.publish_only }}
           # Concurrency for the Gemini/OpenAI enrichment lookups (paid tier).
           # Tune via a repo variable without editing this file; empty -> 12.
           ENRICH_WORKERS:        ${{ vars.ENRICH_WORKERS }}
         run: |
+          # publish_only: reproject the already-committed leads.db and publish,
+          # skipping the slow fetch + the Gemini enrichment (and its quota).
+          if [[ "$PUBLISH_ONLY" == "true" ]]; then
+            python -m leadgen.run --skip-fetch --skip-enrich
+            exit 0
+          fi
           # Enrichment lookups run --enrich-workers-wide in parallel (paid Gemini
           # tier), so a full nightly drain fits easily -> budget 0 (unlimited) so
           # the whole backlog refreshes every night. --time-budget-s stays a
@@ -91,34 +103,23 @@ jobs:
 
       - name: Publish inventory to Vercel Blob
         # Only when the run finished and emitted fresh JSON. Uses the official
-        # `vercel blob put` CLI with a short cache so the outreach engine reads
-        # same-day data. Public store -> outreach reads with NO token.
+        # @vercel/blob SDK (token-only auth — the `vercel` CLI needs a separate
+        # account login, the SDK does not) with a short cache so the outreach
+        # engine reads same-day data. Public store -> outreach reads with NO token.
         if: success()
         working-directory: leadgen
         env:
-          BLOB_RW_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
         run: |
-          if [[ -z "$BLOB_RW_TOKEN" ]]; then
+          if [[ -z "$BLOB_READ_WRITE_TOKEN" ]]; then
             echo "BLOB_READ_WRITE_TOKEN unset — skipping publish"; exit 0
           fi
-          npm i -g vercel@latest >/dev/null 2>&1
-          base=""
-          for f in data/*-leads.json data/taxonomy.json; do
-            [[ -f "$f" ]] || continue
-            name="$(basename "$f")"
-            out="$(vercel blob put "$f" \
-              --pathname "$name" \
-              --access public \
-              --allow-overwrite \
-              --content-type application/json \
-              --cache-control-max-age 300 \
-              --rw-token "$BLOB_RW_TOKEN")"
-            echo "$out"
-            url="$(echo "$out" | grep -oE 'https://[a-z0-9]+\.public\.blob\.vercel-storage\.com[^ ]*' | head -1)"
-            if [[ -n "$url" && -z "$base" ]]; then base="${url%/*}"; fi
-          done
+          npm i @vercel/blob@latest --no-save >/dev/null 2>&1
+          out="$(node scripts/publish_blob.mjs)"
+          echo "$out"
+          base="$(printf '%s\n' "$out" | sed -n 's/^OUTREACH base: //p')"
           if [[ -n "$base" ]]; then
-            echo "::notice title=Inventory published::OUTREACH: set LEADGEN_BLOB_BASE_URL=$base"
+            echo "::notice title=Inventory published::LEADGEN_BLOB_BASE_URL=$base"
           fi
 
       - name: Commit updated DB
