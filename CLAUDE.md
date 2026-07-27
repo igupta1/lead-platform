@@ -20,7 +20,13 @@ them or vice-versa.
 - `scoring.py` + `niches/` — niche config + the recency-weighted tiered scorer.
   Five niches: `accounting`, `cfo`, `mssp`, `msp`, `cloud`.
 - `run.py` — the one orchestrator: fetch → upsert → enrich → score → project
-  one inventory per niche → upload.
+  one inventory per niche → write local JSON. Enrichment runs the per-lead
+  Gemini/OpenAI lookups **concurrently** (`--enrich-workers`, default 12; needs a
+  paid Gemini tier / `GEMINI_MIN_INTERVAL_S=0`) — the network work is planned in
+  parallel (`enrichment.plan_enrichment`, no DB) and the writes applied serially
+  (`apply_enrichment`), so a full backlog refreshes each night. `--time-budget-s`
+  is a backstop that stops early (reserving time to emit/commit); progress is
+  committed per lead. Publishing to Vercel Blob happens in CI, not here.
 
 ## Signal contract (enforced in `models.py`)
 
@@ -30,9 +36,13 @@ proxies). No `exec_hired` / title-absence guessing.
 
 ## Data
 
-- `leadgen/data/leads.db` — SQLite incremental state, **committed** by the cron.
-- `leadgen/data/*-leads.json` — per-niche run output, **gitignored** (served
-  from Vercel Blob).
+- `leadgen/data/leads.db` — SQLite incremental state, **committed** by the cron
+  (`.github/workflows/daily-leads.yml`, 08:00 UTC daily; commits even on partial
+  failure so progress persists, and alerts via `NTFY_TOPIC` on failure/timeout).
+- `leadgen/data/*-leads.json` + `taxonomy.json` — per-niche run output,
+  **gitignored**, published nightly to a **public Vercel Blob** by the CI
+  `vercel blob put` step (stable pathnames, short cache). The outreach engine
+  reads them straight from that blob (no website in the path).
 
 ## Forbidden without explicit instruction
 

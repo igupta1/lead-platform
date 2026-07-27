@@ -23,6 +23,7 @@ from __future__ import annotations
 import logging
 import re
 import sqlite3
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from pydantic import BaseModel
@@ -855,60 +856,58 @@ def _form_c_location(lead: Lead) -> tuple[str | None, str | None]:
     return None, None
 
 
-def _enrich_form_c_light(conn: sqlite3.Connection, lead: Lead) -> bool:
-    """Light enrichment for a Form C lead: NO Gemini call. Domain,
-    headcount, and location come straight from the filing; only the
-    (separate, cheap) OpenAI industry classifier runs. The pure-code
-    disqualifier already ran in enrich()."""
-    assert lead.id is not None
-    niche = classify_niche(lead, insight=None)
-    updates: dict[str, object] = {
-        "industry": taxonomy.parent_of(niche),
-        "niche": niche,
-        "country": "US",
-        "enriched_at": _utcnow(),
-    }
-    city, state = _form_c_location(lead)
-    if city and not lead.city:
-        updates["city"] = city
-    if state and not lead.state:
-        updates["state"] = state
-    db.update_lead(conn, lead.id, **updates)
-    log.info(
-        "enrich (light/Form C): %d (%s) niche=%s — no Gemini call",
-        lead.id, lead.name, niche,
-    )
-    return True
+@dataclass
+class EnrichPlan:
+    """The outcome of the network + decision work for one lead, WITHOUT any DB
+    write — so it can be computed concurrently across leads and applied serially.
+
+      action == "skip"    — nothing needed (already enriched)
+      action == "delete"  — drop the lead; `sticky` also records a disqualifier
+      action == "update"  — write `updates` onto the lead
+    `reason` carries the delete reason / "form_c_light" / "enriched" for logs.
+    """
+    action: str
+    updates: dict[str, object] | None = None
+    reason: str | None = None
+    sticky: bool = False
 
 
-def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool:
-    """Web-lookup enrichment. Writes domain / headcount / city / state /
-    industry / niche / insight and stamps ``enriched_at``. Returns True
-    when the lead was enriched, False when it was skipped (already
-    enriched, no new signal) or deleted as disqualified."""
+def plan_enrichment(lead: Lead, *, force: bool = False) -> EnrichPlan:
+    """All the network work (Gemini grounded-search lookup + OpenAI niche
+    classification) and every purge/keep decision for ONE lead, returned as a
+    plan with NO database access. Safe to run concurrently across leads;
+    `apply_enrichment` then persists the plan serially. `enrich()` composes the
+    two, so single-lead behavior is unchanged."""
     if lead.id is None:
-        raise ValueError("enrich() requires a persisted lead (lead.id is None)")
+        raise ValueError("plan_enrichment() requires a persisted lead (lead.id is None)")
 
     if not needs_enrichment(lead, force):
-        log.debug("enrich: skip lead %d (%s) — already enriched, no new signals",
-                  lead.id, lead.name)
-        return False
+        return EnrichPlan("skip")
 
     reason = _disqualification_reason(lead)
     if reason is not None:
-        log.info("enrich: deleting lead %d (%s) — %s", lead.id, lead.name, reason)
-        db.delete_lead(conn, lead.id)
-        return False
+        return EnrichPlan("delete", reason=reason)
 
-    # Form C funding-only leads take the light path — the filing already
-    # carries domain / headcount / location, so no Gemini call is spent.
+    # Form C funding-only leads take the light path — the filing already carries
+    # domain / headcount / location, so no Gemini call is spent (OpenAI niche only).
     if _is_form_c_funding_only(lead):
-        return _enrich_form_c_light(conn, lead)
+        niche = classify_niche(lead, insight=None)
+        updates: dict[str, object] = {
+            "industry": taxonomy.parent_of(niche),
+            "niche": niche,
+            "country": "US",
+            "enriched_at": _utcnow(),
+        }
+        city, state = _form_c_location(lead)
+        if city and not lead.city:
+            updates["city"] = city
+        if state and not lead.state:
+            updates["state"] = state
+        return EnrichPlan("update", updates=updates, reason="form_c_light")
 
     lookup = lookup_company(lead)
 
     effective_headcount = lookup.headcount or lead.headcount
-
     oversized = (
         effective_headcount is not None and effective_headcount > _headcount_cap(lead)
     )
@@ -936,34 +935,16 @@ def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool
         disqualifier_reason = "auto_dealer"
 
     if disqualifier_reason is not None:
-        log.info(
-            "enrich: deleting lead %d (%s) — %s",
-            lead.id, lead.name, disqualifier_reason,
-        )
-        db.delete_lead(conn, lead.id)
-        # Sticky disqualifiers — service providers that should stay out
-        # across runs even if a fresh signal appears.
-        if disqualifier_reason in (
-            "recruiting_firm", "auto_dealer", "cfo_competitor",
-        ):
-            from leadgen.models import Disqualifier
-            db.mark_disqualified(
-                conn,
-                Disqualifier(
-                    name=lead.name,
-                    reason=f"{disqualifier_reason}_per_llm",
-                    source=SourceName.COMPUTED,
-                    payload={},
-                ),
-            )
-        return False
+        # Sticky disqualifiers — service providers that should stay out across
+        # runs even if a fresh signal appears.
+        sticky = disqualifier_reason in ("recruiting_firm", "auto_dealer", "cfo_competitor")
+        return EnrichPlan("delete", reason=disqualifier_reason, sticky=sticky)
 
     # Classify the granular niche from the freshly-fetched insight (so a
     # SUPRANATURALS-style supplements brand doesn't get tagged by its
     # finance-lead signal); derive the coarse industry from it.
     niche = classify_niche(lead, insight=lookup.insight)
-
-    updates: dict[str, object] = {
+    updates = {
         "industry": taxonomy.parent_of(niche),
         "niche": niche,
         "country": "US" if lookup.country == "US" else lead.country,
@@ -974,6 +955,49 @@ def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool
         "state": lookup.state or lead.state,
         "enriched_at": _utcnow(),
     }
-    db.update_lead(conn, lead.id, **updates)
+    return EnrichPlan("update", updates=updates, reason="enriched")
 
+
+def apply_enrichment(conn: sqlite3.Connection, lead: Lead, plan: EnrichPlan) -> bool:
+    """Persist a plan from `plan_enrichment`. All DB writes live here so they run
+    serially on the one SQLite connection. Returns True when the lead was
+    enriched, False when skipped or deleted."""
+    if lead.id is None:
+        raise ValueError("apply_enrichment() requires a persisted lead (lead.id is None)")
+
+    if plan.action == "skip":
+        log.debug("enrich: skip lead %d (%s) — already enriched, no new signals",
+                  lead.id, lead.name)
+        return False
+
+    if plan.action == "delete":
+        log.info("enrich: deleting lead %d (%s) — %s", lead.id, lead.name, plan.reason)
+        db.delete_lead(conn, lead.id)
+        if plan.sticky:
+            from leadgen.models import Disqualifier
+            db.mark_disqualified(
+                conn,
+                Disqualifier(
+                    name=lead.name,
+                    reason=f"{plan.reason}_per_llm",
+                    source=SourceName.COMPUTED,
+                    payload={},
+                ),
+            )
+        return False
+
+    updates = plan.updates or {}
+    db.update_lead(conn, lead.id, **updates)
+    if plan.reason == "form_c_light":
+        log.info("enrich (light/Form C): %d (%s) niche=%s — no Gemini call",
+                 lead.id, lead.name, updates.get("niche"))
     return True
+
+
+def enrich(conn: sqlite3.Connection, lead: Lead, *, force: bool = False) -> bool:
+    """Web-lookup enrichment for ONE lead: plan (network + decisions) then apply
+    (DB writes). Writes domain / headcount / city / state / industry / niche /
+    insight and stamps ``enriched_at``. Returns True when enriched, False when
+    skipped or deleted. The daily run parallelizes `plan_enrichment` across leads
+    (see `run.enrich_all`); this keeps a behavior-identical single-lead path."""
+    return apply_enrichment(conn, lead, plan_enrichment(lead, force=force))

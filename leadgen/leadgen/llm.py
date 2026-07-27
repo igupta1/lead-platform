@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import threading
 import time
 from typing import Any, Callable, TypeVar, overload
 
@@ -105,32 +106,40 @@ def _reset_gemini_quota_latch() -> None:
 
 _openai_client: OpenAI | None = None
 _gemini_client: genai.Client | None = None
+# Guards the lazy client init so parallel enrichment (many worker threads calling
+# call_gemini/call_openai at once) can't race two clients into existence. The
+# clients themselves are safe for concurrent requests once created.
+_client_lock = threading.Lock()
 
 
 def _get_openai() -> OpenAI:
     global _openai_client
     if _openai_client is None:
-        key = os.environ.get("OPENAI_API_KEY")
-        if not key:
-            raise LLMError("OPENAI_API_KEY not set in environment")
-        # timeout so a hung request raises (our _with_retries then handles it);
-        # max_retries=0 so the SDK doesn't double-retry on top of ours.
-        _openai_client = OpenAI(api_key=key, timeout=_REQUEST_TIMEOUT_S, max_retries=0)
+        with _client_lock:
+            if _openai_client is None:
+                key = os.environ.get("OPENAI_API_KEY")
+                if not key:
+                    raise LLMError("OPENAI_API_KEY not set in environment")
+                # timeout so a hung request raises (our _with_retries then handles
+                # it); max_retries=0 so the SDK doesn't double-retry on top of ours.
+                _openai_client = OpenAI(api_key=key, timeout=_REQUEST_TIMEOUT_S, max_retries=0)
     return _openai_client
 
 
 def _get_gemini() -> genai.Client:
     global _gemini_client
     if _gemini_client is None:
-        key = os.environ.get("GEMINI_API_KEY")
-        if not key:
-            raise LLMError("GEMINI_API_KEY not set in environment")
-        # http timeout (ms) so a hung grounded call raises instead of stalling
-        # the run; _with_retries / _is_retryable_genai then retry it.
-        _gemini_client = genai.Client(
-            api_key=key,
-            http_options=genai_types.HttpOptions(timeout=int(_REQUEST_TIMEOUT_S * 1000)),
-        )
+        with _client_lock:
+            if _gemini_client is None:
+                key = os.environ.get("GEMINI_API_KEY")
+                if not key:
+                    raise LLMError("GEMINI_API_KEY not set in environment")
+                # http timeout (ms) so a hung grounded call raises instead of
+                # stalling the run; _with_retries / _is_retryable_genai retry it.
+                _gemini_client = genai.Client(
+                    api_key=key,
+                    http_options=genai_types.HttpOptions(timeout=int(_REQUEST_TIMEOUT_S * 1000)),
+                )
     return _gemini_client
 
 

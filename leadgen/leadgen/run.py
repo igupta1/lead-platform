@@ -16,12 +16,11 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import os
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
-
-import requests
 
 from leadgen import db, enrichment, monitoring, scoring, taxonomy
 from leadgen.models import Disqualifier, Lead, LeadCandidate
@@ -43,6 +42,14 @@ _SOURCES = (edgar_form_d, edgar_form_c, jobs, fractional_boards, breaches)
 DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "leads.db"
 DEFAULT_OUT_DIR = Path(__file__).resolve().parent.parent / "data"
 DEFAULT_SINCE_DAYS = 45
+# Seconds reserved AFTER enrichment for purge/merge/prune/score/emit/upload so a
+# time-budgeted run always reaches the commit (never gets SIGKILLed mid-write).
+POST_ENRICH_RESERVE_S = 300
+# Concurrent Gemini/OpenAI lookups during enrichment. The per-lead network work
+# is I/O-bound, so a bounded pool cuts wall-clock ~N×; DB writes stay serial.
+# Requires a paid Gemini tier (GEMINI_MIN_INTERVAL_S=0) — free-tier RPM caps
+# would 429 under concurrency. Set 1 to force the old serial path.
+DEFAULT_ENRICH_WORKERS = 12
 # Drop leads with no signal in this many days — a still-in-market company
 # re-signals, so a long-silent lead is stale. Past the 60-day recency window.
 STALE_MAX_DAYS = 90
@@ -114,18 +121,74 @@ def ingest(conn: Any, candidates: list[LeadCandidate], disqualifiers: list[Disqu
 # --- Enrich ---------------------------------------------------------------
 
 
-def enrich_all(conn: Any, *, budget: int | None, force: bool) -> int:
+def _plan_chunk(leads: list[Lead], workers: int) -> dict[Any, Any]:
+    """Compute an `EnrichPlan` for each lead CONCURRENTLY (all the Gemini/OpenAI
+    network work; no DB). Returns {lead.id: plan|None}; None means the lookup
+    errored and the lead is skipped this run (retried next run)."""
+    plans: dict[Any, Any] = {}
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(enrichment.plan_enrichment, lead, force=False): lead
+                   for lead in leads}
+        for fut in as_completed(futures):
+            lead = futures[fut]
+            try:
+                plans[lead.id] = fut.result()
+            except Exception:
+                log.exception("plan_enrichment failed for lead id=%s (%s)", lead.id, lead.name)
+                plans[lead.id] = None
+    return plans
+
+
+def enrich_all(
+    conn: Any, *, budget: int | None, force: bool, deadline: float | None = None,
+    workers: int = DEFAULT_ENRICH_WORKERS,
+) -> int:
+    """Enrich up to `budget` leads, stopping early if `deadline`
+    (a `time.monotonic()` value) is reached. The per-lead network work
+    (`plan_enrichment`) runs concurrently across `workers` threads; the DB writes
+    (`apply_enrichment`) stay serial on the one connection. Each applied lead is
+    committed as it goes (`needs_enrichment` skips done ones), so stopping early
+    just resumes next run — a big backlog no longer times the job out.
+
+    `workers <= 1` forces the old fully-serial path (used by tests / free tier)."""
+    candidates = [lead for lead in db.iter_leads(conn)
+                  if enrichment.needs_enrichment(lead, force=force)]
+    if budget is not None:
+        candidates = candidates[:budget]
+    if not candidates:
+        return 0
+
     enriched = 0
-    for lead in list(db.iter_leads(conn)):
-        if budget is not None and enriched >= budget:
+    if workers <= 1:
+        for lead in candidates:
+            if deadline is not None and time.monotonic() >= deadline:
+                log.info("enrich: reached time budget after %d leads — resumes next run", enriched)
+                break
+            try:
+                if enrichment.enrich(conn, lead, force=force):
+                    enriched += 1
+            except Exception:
+                log.exception("enrich failed for lead id=%s (%s)", lead.id, lead.name)
+        return enriched
+
+    # Parallel: plan a chunk concurrently, then apply it serially. Chunking lets
+    # the time budget stop the run between chunks.
+    chunk_size = max(workers * 4, 32)
+    for start in range(0, len(candidates), chunk_size):
+        if deadline is not None and time.monotonic() >= deadline:
+            log.info("enrich: reached time budget after %d leads — resumes next run", enriched)
             break
-        if not enrichment.needs_enrichment(lead, force=force):
-            continue
-        try:
-            if enrichment.enrich(conn, lead, force=force):
-                enriched += 1
-        except Exception:
-            log.exception("enrich failed for lead id=%s (%s)", lead.id, lead.name)
+        chunk = candidates[start:start + chunk_size]
+        plans = _plan_chunk(chunk, workers)
+        for lead in chunk:                     # serial DB writes, original order
+            plan = plans.get(lead.id)
+            if plan is None:
+                continue
+            try:
+                if enrichment.apply_enrichment(conn, lead, plan):
+                    enriched += 1
+            except Exception:
+                log.exception("apply_enrichment failed for lead id=%s (%s)", lead.id, lead.name)
     return enriched
 
 
@@ -231,22 +294,12 @@ def emit(
     return written, niche_counts
 
 
-# --- Upload ---------------------------------------------------------------
-
-
-def upload(niche_key: str, path: Path) -> None:
-    base = os.environ.get("LEADS_UPLOAD_URL")
-    token = os.environ.get("LEADS_UPLOAD_API_KEY")
-    if not base:
-        log.info("LEADS_UPLOAD_URL unset — skipping upload of %s", path.name)
-        return
-    url = f"{base.rstrip('/')}?niche={niche_key}"
-    headers = {"Content-Type": "application/json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    resp = requests.post(url, data=path.read_bytes(), headers=headers, timeout=60)
-    resp.raise_for_status()
-    log.info("uploaded %s -> %s (%s)", path.name, url, resp.status_code)
+# --- Publish --------------------------------------------------------------
+# Publishing the per-niche JSON to Vercel Blob is done in CI (see
+# .github/workflows/daily-leads.yml) with the official `vercel blob put` CLI,
+# AFTER this run writes the files locally — stable public pathnames, overwritten
+# each night, with a short cache-control so the outreach engine reads same-day
+# data. This module stays pure-Python and fully offline.
 
 
 # --- CLI ------------------------------------------------------------------
@@ -263,10 +316,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limit", type=int, default=None, help="cap leads per niche")
     parser.add_argument("--enrich-budget", type=int, default=0,
                         help="max leads to enrich this run (0 = unlimited)")
+    parser.add_argument("--enrich-workers", type=int, default=DEFAULT_ENRICH_WORKERS,
+                        help="concurrent Gemini/OpenAI lookups during enrichment "
+                             "(needs a paid Gemini tier; 1 = serial)")
+    parser.add_argument("--time-budget-s", type=int, default=0,
+                        help="soft wall-clock budget for the whole run in seconds "
+                             "(0 = unlimited). Enrichment stops early to reserve "
+                             f"{POST_ENRICH_RESERVE_S}s for score/emit/commit, so the "
+                             "job always finishes cleanly under a CI timeout and "
+                             "commits its progress (which resumes next run).")
     parser.add_argument("--reenrich", action="store_true", help="force re-enrichment")
     parser.add_argument("--skip-fetch", action="store_true", help="score/emit only")
     parser.add_argument("--skip-enrich", action="store_true")
-    parser.add_argument("--upload", action="store_true")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
 
@@ -275,19 +336,30 @@ def main(argv: list[str] | None = None) -> int:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
+    run_start = time.monotonic()
     conn = db.init_db(args.db)
     since = _utcnow() - timedelta(days=args.since_days)
 
     source_counts: dict[str, int] = {}
     if not args.skip_fetch:
+        t0 = time.monotonic()
         candidates, disqualifiers, source_counts = fetch_all(since)
         kept = ingest(conn, candidates, disqualifiers)
-        log.info("ingest: %d candidates upserted", kept)
+        log.info("phase fetch+ingest: %d upserted in %.0fs", kept, time.monotonic() - t0)
 
     if not args.skip_enrich:
         budget = args.enrich_budget if args.enrich_budget > 0 else None
-        enriched = enrich_all(conn, budget=budget, force=args.reenrich)
-        log.info("enriched %d leads", enriched)
+        # Leave POST_ENRICH_RESERVE_S for the tail phases so the run always
+        # reaches emit/commit before any CI timeout kills the process.
+        deadline = (
+            run_start + args.time_budget_s - POST_ENRICH_RESERVE_S
+            if args.time_budget_s > 0 else None
+        )
+        t0 = time.monotonic()
+        enriched = enrich_all(conn, budget=budget, force=args.reenrich,
+                              deadline=deadline, workers=args.enrich_workers)
+        log.info("phase enrich: %d leads in %.0fs (%d workers)",
+                 enriched, time.monotonic() - t0, args.enrich_workers)
 
     purged = enrichment.purge_disqualified(conn)
     log.info("purged %d disqualified leads", purged)
@@ -298,10 +370,12 @@ def main(argv: list[str] | None = None) -> int:
     pruned = db.prune_stale(conn, max_age_days=STALE_MAX_DAYS)
     log.info("pruned %d stale leads (no signal in %d days)", pruned, STALE_MAX_DAYS)
 
+    t0 = time.monotonic()
     score_all(conn)
     written, niche_counts = emit(
         conn, args.out_dir, only=args.niche, state=args.state, limit=args.limit
     )
+    log.info("phase score+emit: %d niche file(s) in %.0fs", len(written), time.monotonic() - t0)
 
     # Anomaly guard: diff this run vs. the previous one (alert on a silent
     # source failure or a sharp niche drop), then record this run's counts.
@@ -311,13 +385,7 @@ def main(argv: list[str] | None = None) -> int:
         monitoring.check(db.last_run_stats(conn), stats)
         db.record_run_stats(conn, stats)
 
-    if args.upload:
-        for niche_key, path in written.items():
-            try:
-                upload(niche_key, path)
-            except Exception:
-                log.exception("upload failed for %s", niche_key)
-
+    log.info("run complete in %.0fs", time.monotonic() - run_start)
     return 0
 
 

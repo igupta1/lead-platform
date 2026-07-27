@@ -12,7 +12,7 @@ on:
       enrich_budget:
         description: "Max leads to enrich this run (0 = unlimited)"
         required: false
-        default: "900"
+        default: "0"
       reenrich:
         description: "Force re-enrichment on every lead"
         type: boolean
@@ -29,6 +29,9 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    # Backstop only. The run self-limits via --time-budget-s (below) and always
+    # commits its progress, so it should finish well under this and never be
+    # killed mid-write.
     timeout-minutes: 90
     steps:
       - name: Checkout
@@ -57,19 +60,27 @@ jobs:
           GEMINI_API_KEY:        ${{ secrets.GEMINI_API_KEY }}
           ADZUNA_APP_ID:         ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY:        ${{ secrets.ADZUNA_APP_KEY }}
-          # Single upload endpoint; run.py posts each niche as ?niche=<key>.
-          # Website wiring is pending — unset means the run writes local JSON
-          # and skips the upload cleanly.
-          LEADS_UPLOAD_URL:      ${{ vars.LEADS_UPLOAD_URL }}
-          LEADS_UPLOAD_API_KEY:  ${{ secrets.LEADS_UPLOAD_API_KEY }}
           GEMINI_MIN_INTERVAL_S: "0"     # paid tier — no client-side pacing
           # Anomaly alerts (silent-source-failure guard). Unset -> no alert.
           NTFY_TOPIC:            ${{ secrets.NTFY_TOPIC }}
+          # schedule runs leave inputs.* empty -> the defaults below apply.
           SINCE_DAYS:            ${{ inputs.since_days }}
           ENRICH_BUDGET:         ${{ inputs.enrich_budget }}
           REENRICH:              ${{ inputs.reenrich }}
+          # Concurrency for the Gemini/OpenAI enrichment lookups (paid tier).
+          # Tune via a repo variable without editing this file; empty -> 12.
+          ENRICH_WORKERS:        ${{ vars.ENRICH_WORKERS }}
         run: |
-          args=("--upload" "--enrich-budget" "${ENRICH_BUDGET:-900}")
+          # Enrichment lookups run --enrich-workers-wide in parallel (paid Gemini
+          # tier), so a full nightly drain fits easily -> budget 0 (unlimited) so
+          # the whole backlog refreshes every night. --time-budget-s stays a
+          # backstop: it stops enrichment with time to score/emit/commit, and
+          # progress is committed per lead, so a bad night still makes headway.
+          args=(
+            "--enrich-budget"  "${ENRICH_BUDGET:-0}"
+            "--enrich-workers" "${ENRICH_WORKERS:-12}"
+            "--time-budget-s"  "4500"
+          )
           if [[ -n "$SINCE_DAYS" ]]; then
             args+=("--since-days" "$SINCE_DAYS")
           fi
@@ -78,8 +89,43 @@ jobs:
           fi
           python -m leadgen.run "${args[@]}"
 
-      - name: Commit updated DB
+      - name: Publish inventory to Vercel Blob
+        # Only when the run finished and emitted fresh JSON. Uses the official
+        # `vercel blob put` CLI with a short cache so the outreach engine reads
+        # same-day data. Public store -> outreach reads with NO token.
         if: success()
+        working-directory: leadgen
+        env:
+          BLOB_RW_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+        run: |
+          if [[ -z "$BLOB_RW_TOKEN" ]]; then
+            echo "BLOB_READ_WRITE_TOKEN unset — skipping publish"; exit 0
+          fi
+          npm i -g vercel@latest >/dev/null 2>&1
+          base=""
+          for f in data/*-leads.json data/taxonomy.json; do
+            [[ -f "$f" ]] || continue
+            name="$(basename "$f")"
+            out="$(vercel blob put "$f" \
+              --pathname "$name" \
+              --access public \
+              --allow-overwrite \
+              --content-type application/json \
+              --cache-control-max-age 300 \
+              --rw-token "$BLOB_RW_TOKEN")"
+            echo "$out"
+            url="$(echo "$out" | grep -oE 'https://[a-z0-9]+\.public\.blob\.vercel-storage\.com[^ ]*' | head -1)"
+            if [[ -n "$url" && -z "$base" ]]; then base="${url%/*}"; fi
+          done
+          if [[ -n "$base" ]]; then
+            echo "::notice title=Inventory published::OUTREACH: set LEADGEN_BLOB_BASE_URL=$base"
+          fi
+
+      - name: Commit updated DB
+        # `always()`, not `success()`: enrichment commits each lead to leads.db
+        # as it goes, so even a partial/failed run made real progress worth
+        # persisting (the backlog shrinks next run). Data-only, normal push.
+        if: always()
         run: |
           git config user.name  "leadgen-cron[bot]"
           git config user.email "leadgen-cron[bot]@users.noreply.github.com"
@@ -90,4 +136,21 @@ jobs:
             git push
           else
             echo "No changes to commit"
+          fi
+
+      - name: Alert on failure
+        # The cron rotted silently for days once. Never again: ping on any
+        # failed OR cancelled (timeout) run.
+        if: failure() || cancelled()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          if [[ -n "$NTFY_TOPIC" ]]; then
+            curl -s \
+              -H "Title: leadgen cron failed" \
+              -H "Priority: high" \
+              -d "run ${{ github.run_id }} failed/cancelled — see ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              "https://ntfy.sh/$NTFY_TOPIC" || true
+          else
+            echo "NTFY_TOPIC unset — no alert sent"
           fi
