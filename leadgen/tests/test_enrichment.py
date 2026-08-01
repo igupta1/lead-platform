@@ -95,3 +95,61 @@ _CLEAN_SMBS = [
 def test_real_smbs_are_not_disqualified(lead):
     reason = _disqualification_reason(lead)
     assert reason is None, f"{lead.name!r} wrongly disqualified: {reason!r}"
+
+
+# --- Size bands -------------------------------------------------------------
+#
+# An exact employee count is undiscoverable for most small private companies
+# (~60% came back NULL), and a NULL size silently bypassed every size cap.
+# The band is the fallback the caps actually test.
+
+
+@pytest.mark.parametrize("raw,expected", [
+    ("11-50", "11-50"),
+    ("11-50 employees", "11-50"),
+    (" 51-200 ", "51-200"),
+    ("51 - 200", "51-200"),
+    ("1000+", "1000+"),
+    ("1,000+", "1000+"),
+    ("201–1000", "201-1000"),      # en dash from a grounded answer
+    ('"1-10"', "1-10"),
+    # unmappable answers are unknown, never a guess -- a wrong band would
+    # silently widen the cap
+    ("about 40 people", None),
+    ("medium sized", None),
+    ("unknown", None),
+    (None, None),
+])
+def test_parse_band(raw, expected):
+    from leadgen.enrichment import _parse_band
+    assert _parse_band(raw) == expected
+
+
+@pytest.mark.parametrize("headcount,expected", [
+    (1, "1-10"), (10, "1-10"), (11, "11-50"), (50, "11-50"),
+    (200, "51-200"), (999, "201-1000"), (50_000, "1000+"), (None, None),
+])
+def test_band_for_exact_headcount(headcount, expected):
+    from leadgen.models import band_for
+    assert band_for(headcount) == expected
+
+
+def test_effective_size_prefers_exact_then_band():
+    from leadgen.models import effective_size
+    exact = Lead(name="A", name_key="a", headcount=37, headcount_band="1000+")
+    assert effective_size(exact) == 37          # exact wins
+    banded = Lead(name="B", name_key="b", headcount_band="51-200")
+    assert effective_size(banded) == 200        # band's UPPER bound (conservative)
+    unknown = Lead(name="C", name_key="c")
+    assert effective_size(unknown) is None      # genuinely unsized
+
+
+def test_band_alone_trips_the_oversized_purge():
+    """The whole point: no exact headcount, but a band that clears the SMB cap
+    now disqualifies. Previously a NULL headcount sailed straight through."""
+    big = Lead(name="Big Co", name_key="bigco", headcount_band="1000+")
+    reason = _disqualification_reason(big)
+    assert reason is not None and reason.startswith("oversized")
+
+    small = Lead(name="Small Co", name_key="smallco", headcount_band="11-50")
+    assert _disqualification_reason(small) is None

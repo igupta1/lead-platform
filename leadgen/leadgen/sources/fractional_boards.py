@@ -77,8 +77,20 @@ def _signal_type_for(role: str, *, assume_fractional: bool) -> SignalType | None
     is_fractional = bool(_PART_TIME_QUALIFIER_RE.search(role))
     if not assume_fractional and not is_fractional:
         return None
-    title = role if is_fractional else f"fractional {role}"
-    return classify(title)
+    return classify(_evidence_title(role, assume_fractional=assume_fractional))
+
+
+def _evidence_title(role: str, *, assume_fractional: bool) -> str:
+    """The title to STORE as ``evidence_text``.
+
+    On a fractional-only board the listing reads "Controller" but the role is
+    a *fractional* controller; the board itself is the missing word. Storing
+    the bare slug threw that away, so downstream copy said "is looking for a
+    controller" under a subject promising fractional work. Put the word back
+    exactly when the board implies it and the role doesn't already say it."""
+    if _PART_TIME_QUALIFIER_RE.search(role):
+        return role
+    return f"Fractional {role}" if assume_fractional else role
 
 
 # --- We Work Remotely -------------------------------------------------------
@@ -266,7 +278,7 @@ def _fetch_fractionaljobs(since: datetime, max_age_days: int) -> list[LeadCandid
             continue
         cand = _make_candidate(
             company=company,
-            title=role,
+            title=_evidence_title(role, assume_fractional=True),
             sig_type=sig_type,
             url=url,
             date_posted=posted.date().isoformat(),

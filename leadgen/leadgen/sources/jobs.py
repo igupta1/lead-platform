@@ -414,21 +414,35 @@ def _is_finance_lead_title(title: str) -> bool:
     )
 
 
-def _is_fractional_cfo_title(title: str) -> bool:
-    """True when the company is in-market for fractional finance leadership:
-    a CFO title or a finance-LEADERSHIP title, either carrying a part-time /
-    interim / fractional / outsourced / contract qualifier. IC-level finance
-    titles are NOT promoted here.
-
-    A full-time CFO title (no qualifier) fails the qualifier gate and is
-    dropped by ``classify``; it is checked before ``_is_finance_lead_title``."""
+def _is_finance_leadership_role(title: str) -> bool:
+    """True when the TITLE names finance leadership (a CFO or a finance-lead
+    rung), ignoring whether it reads part-time. The qualifier is applied
+    separately so it can come from the posting body."""
     if not title:
-        return False
-    if not _PART_TIME_QUALIFIER_RE.search(title):
         return False
     if _CFO_TITLE_RE.search(title):
         return True
     return any(r.search(title) for r in _FINANCE_LEADERSHIP_RES)
+
+
+def _is_fractional_cfo_title(title: str, description: str = "") -> bool:
+    """True when the company is in-market for fractional finance leadership:
+    a CFO title or a finance-LEADERSHIP title carrying a part-time / interim /
+    fractional / outsourced / contract qualifier. IC-level finance titles are
+    NOT promoted here.
+
+    The qualifier may come from the TITLE or from the posting BODY. Plenty of
+    genuinely fractional roles are titled plainly ("CFO", "Head of Finance")
+    and only say "fractional" / "part-time" in the description; requiring it
+    in the title dropped all of them, which is most of why this bucket is
+    thin. A full-time posting still fails (no qualifier anywhere) and is
+    dropped by ``classify``."""
+    if not _is_finance_leadership_role(title):
+        return False
+    return bool(
+        _PART_TIME_QUALIFIER_RE.search(title)
+        or _PART_TIME_QUALIFIER_RE.search(description or "")
+    )
 
 
 def _is_junior_finance_title(title: str) -> bool:
@@ -446,18 +460,21 @@ def _is_junior_finance_title(title: str) -> bool:
     return False
 
 
-def classify(title: str) -> SignalType | None:
-    """Route a posting title into exactly one of the seven signal buckets,
-    or None to drop it.
+def classify(title: str, description: str = "") -> SignalType | None:
+    """Route a posting into exactly one of the seven signal buckets, or None
+    to drop it. ``description`` is optional and only consulted for the
+    fractional tier, where the qualifier is often in the body rather than the
+    title.
 
     Finance tiers take precedence over the IT / security / cloud buckets, and
     are ordered most-specific first (fractional CFO -> finance lead -> junior
     IC). A full-time CFO posting matches no bucket (it needs a part-time
-    qualifier to reach JOB_FRACTIONAL_CFO), so it returns None and is dropped."""
+    qualifier in the title OR the body to reach JOB_FRACTIONAL_CFO), so it
+    returns None and is dropped."""
     if not title:
         return None
     # Finance ladder.
-    if _is_fractional_cfo_title(title):
+    if _is_fractional_cfo_title(title, description):
         return SignalType.JOB_FRACTIONAL_CFO
     if _is_finance_lead_title(title):
         return SignalType.JOB_FINANCE_LEAD
@@ -635,7 +652,8 @@ def _fetch_from_jobspy(
 
             if _is_too_old(date_posted, captured_at, max_age_days):
                 continue
-            sig_type = classify(title)
+            description = str(row.get("description") or "")
+            sig_type = classify(title, description)
             if sig_type is None:
                 continue
             if not url:
@@ -650,7 +668,7 @@ def _fetch_from_jobspy(
                     url=url,
                     date_posted=date_posted,
                     site=site,
-                    description=str(row.get("description") or ""),
+                    description=description,
                     location=location,
                     city=city,
                     state=state,
@@ -729,7 +747,8 @@ def _fetch_from_adzuna(
 
                 if _is_too_old(date_posted, captured_at, max_age_days):
                     continue
-                sig_type = classify(title)
+                description = str(item.get("description") or "")
+                sig_type = classify(title, description)
                 if sig_type is None:
                     continue
                 if not url:
@@ -744,7 +763,7 @@ def _fetch_from_adzuna(
                         url=url,
                         date_posted=date_posted,
                         site="adzuna",
-                        description=str(item.get("description") or ""),
+                        description=description,
                         location=location,
                         city=city,
                         state=state,

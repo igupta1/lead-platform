@@ -130,6 +130,22 @@ def _is_generic_stub_name(name: str) -> bool:
     return len(tokens) == 1 and tokens[0] in _GENERIC_STUB_TERMS
 
 
+# A missing company field that got stringified on the way in. pandas turns an
+# empty cell into the float NaN, and ``str(nan)`` is the literal "nan" — which
+# is how a lead named `nan` reached a customer-facing email. Matched on the
+# WHOLE name only, so a real company that merely starts with one of these
+# (e.g. "NAN, Inc.", a Hawaii contractor) is untouched.
+_NULL_PLACEHOLDER_NAMES = frozenset({
+    "nan", "none", "null", "n/a", "na", "nil", "unknown", "undefined",
+    "-", "--", "?",
+})
+
+
+def _is_null_placeholder_name(name: str) -> bool:
+    """True when the company name is just a stringified null."""
+    return name.strip().lower() in _NULL_PLACEHOLDER_NAMES
+
+
 def _is_public_sector(name: str, domain: str | None = None) -> bool:
     """Government / public-sector entity — not a fractional-CFO buyer.
     Private nonprofits that merely name a locality are exempted."""
@@ -146,11 +162,13 @@ def _is_public_sector(name: str, domain: str | None = None) -> bool:
 
 def is_untargetable_name(name: str, domain: str | None = None) -> bool:
     """One gate for 'a company we'd never target': recruiters, auto dealers,
-    hotels, public-sector/education, and lone generic-stub names."""
+    hotels, public-sector/education, lone generic-stub names, and stringified
+    nulls."""
     return (
         _is_recruiter_name(name)
         or _is_auto_dealer_name(name)
         or _is_hotel_name(name)
         or _is_public_sector(name, domain)
         or _is_generic_stub_name(name)
+        or _is_null_placeholder_name(name)
     )

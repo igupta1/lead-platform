@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from leadgen import db, enrichment, llm, monitoring, scoring, taxonomy
-from leadgen.models import Disqualifier, Lead, LeadCandidate
+from leadgen.models import Disqualifier, Lead, LeadCandidate, effective_size
 from leadgen.niches import NICHES, ORDER
 from leadgen.niches.base import NicheConfig
 from leadgen.sources import (
@@ -260,14 +260,35 @@ def _lead_record(lead: Lead, niche: NicheConfig, score: float) -> dict[str, Any]
 
 
 def project_niche(conn: Any, niche: NicheConfig, *, state: str | None, limit: int | None) -> dict[str, Any]:
+    """Project one niche's inventory. Fails CLOSED on size and enrichment:
+    a lead that has never been enriched, or that we cannot size at all, is
+    held back rather than published.
+
+    Both guards exist because the alternative is worse than a short list. An
+    unenriched lead has no domain / vertical / insight, and an unsized one has
+    never been tested against the size cap (that is how enterprises reached a
+    gift built for small companies). They stay in the store and ship the night
+    they can be sized."""
     rows: list[tuple[float, Lead]] = []
+    unenriched = unsized = 0
     for lead in db.iter_leads(conn):
         score = lead.scores.get(niche.key)
         if score is None:
             continue
         if state and (lead.state or "").upper() != state.upper():
             continue
+        if lead.enriched_at is None:
+            unenriched += 1
+            continue
+        if effective_size(lead) is None:
+            unsized += 1
+            continue
         rows.append((score, lead))
+    if unenriched or unsized:
+        log.info(
+            "project %s: held back %d unenriched + %d unsized lead(s)",
+            niche.key, unenriched, unsized,
+        )
     # Strongest first, then freshest; never pad below the count.
     rows.sort(key=lambda r: r[0], reverse=True)
     if limit is not None:
@@ -391,6 +412,11 @@ def main(argv: list[str] | None = None) -> int:
     # Only on a real fetch — an emit-only run has no source counts to compare.
     if not args.skip_fetch:
         stats = {"sources": source_counts, "niches": niche_counts}
+        # A latched Gemini quota is invisible to the count-diff guard: the
+        # run exits 0, and unenriched leads used to INFLATE niche counts
+        # rather than drop them. Report it explicitly.
+        if llm.gemini_quota_exhausted():
+            stats["gemini_quota_exhausted"] = True
         monitoring.check(db.last_run_stats(conn), stats)
         db.record_run_stats(conn, stats)
 

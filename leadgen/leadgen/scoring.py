@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from leadgen.models import Lead
+from leadgen.models import Lead, effective_size
 from leadgen.niches import NICHES
 from leadgen.niches.base import (
     EXTRA_TYPE_BONUS,
@@ -59,7 +59,8 @@ def score_lead_for_niche(
     # Size cap is signal-aware: a breach lead is uncapped, a security-role lead
     # caps at the niche's size_cap. Use the loosest cap among qualifying signals.
     cap = niche.cap_for(s.type for s in qualifying)
-    if lead.headcount is not None and lead.headcount >= cap:
+    size = effective_size(lead)
+    if size is not None and size >= cap:
         return None
 
     # Band from the strongest tier the company has any signal in.

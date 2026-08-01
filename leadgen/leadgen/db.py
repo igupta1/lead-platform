@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS leads (
     industry        TEXT,
     niche           TEXT,
     headcount       INTEGER,
+    headcount_band  TEXT,
     city            TEXT,
     state           TEXT,
     country         TEXT,
@@ -84,6 +85,7 @@ _MIGRATIONS: tuple[tuple[str, str], ...] = (
     ("state", "TEXT"),
     ("scores", "TEXT NOT NULL DEFAULT '{}'"),
     ("enriched_at", "TIMESTAMP"),
+    ("headcount_band", "TEXT"),
 )
 
 _INDEXES = (
@@ -97,6 +99,7 @@ _UPDATABLE_FIELDS = frozenset({
     "industry",
     "niche",
     "headcount",
+    "headcount_band",
     "city",
     "state",
     "country",
@@ -315,7 +318,8 @@ def _backfill_from_lead(conn: sqlite3.Connection, target_id: int, src: Lead) -> 
     if tgt is None:
         return
     updates: dict[str, Any] = {}
-    for f in ("domain", "headcount", "city", "state", "country", "industry", "niche", "insight"):
+    for f in ("domain", "headcount", "headcount_band", "city", "state", "country",
+              "industry", "niche", "insight"):
         if getattr(tgt, f) is None and getattr(src, f) is not None:
             updates[f] = getattr(src, f)
     if updates:

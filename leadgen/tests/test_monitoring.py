@@ -36,3 +36,30 @@ def test_growth_is_never_flagged():
     prev = {"sources": {"jobs": 100}, "niches": {"cfo": 100}}
     curr = {"sources": {"jobs": 120}, "niches": {"cfo": 130}}
     assert detect_anomalies(prev, curr) == []
+
+
+# --- Enrichment health ------------------------------------------------------
+#
+# A latched Gemini quota exits 0 and used to INFLATE niche counts (unenriched
+# leads still projected), so neither the workflow's failure alert nor the
+# count diff could see it. It gets its own check.
+
+
+def test_quota_exhaustion_is_flagged():
+    msgs = detect_anomalies(
+        {"sources": {"jobs": 10}, "niches": {"cfo": 5}},
+        {"sources": {"jobs": 10}, "niches": {"cfo": 5}, "gemini_quota_exhausted": True},
+    )
+    assert any("quota exhausted" in m for m in msgs)
+
+
+def test_quota_exhaustion_is_flagged_on_the_first_ever_run():
+    # no previous run to diff against, but this still has to alert
+    msgs = detect_anomalies(None, {"gemini_quota_exhausted": True})
+    assert any("quota exhausted" in m for m in msgs)
+
+
+def test_healthy_run_is_silent():
+    stats = {"sources": {"jobs": 10}, "niches": {"cfo": 5}}
+    assert detect_anomalies(stats, stats) == []
+    assert detect_anomalies(None, stats) == []

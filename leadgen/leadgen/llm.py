@@ -37,11 +37,20 @@ _BACKOFF_BASE_S = 1.5
 # gives headroom while turning a hung connection into a retryable error (a
 # missing timeout once stalled a whole nightly run for hours).
 _REQUEST_TIMEOUT_S = 90
-# 429s get a bounded number of short retries; if they won't clear we
-# treat the daily free-tier quota as spent (see _gemini_quota_exhausted)
-# rather than sleeping ~1 min on every remaining lead.
-_MAX_429_RETRIES = 3
-_MAX_429_WAIT_S = 20.0
+# 429s get a bounded number of retries; if they won't clear we treat the
+# quota as spent (see _gemini_quota_exhausted) rather than sleeping ~1 min
+# on every remaining lead.
+#
+# These waits must be able to outlast a PER-MINUTE rate limit, which is the
+# common case when N workers burst at once. The old 1.5s/3.0s backoff capped
+# at 20s gave up ~5s in — the whole enrichment phase died in 10 seconds while
+# the limit it hit would have cleared on its own. The floor is now a real
+# fraction of a minute and the cap sits above 60s, so a burst recovers and
+# only a genuinely exhausted quota latches.
+_MAX_429_RETRIES = 4
+_MAX_429_WAIT_S = 75.0
+# Backoff when the server sends no retry hint: 15s, 30s, 60s.
+_BACKOFF_429_BASE_S = 15.0
 
 # Free-tier gemini-2.5-flash-lite caps generate_content at ~20 req/min.
 # Enrichment fires one grounded Gemini call per lead, so a scaled fetch
@@ -96,6 +105,15 @@ class GeminiQuotaExhausted(LLMError):
 # quota wall stops the enrichment phase in seconds, not hours. Reset
 # per-process (a fresh nightly run starts clean).
 _gemini_quota_exhausted = False
+
+
+def gemini_quota_exhausted() -> bool:
+    """True when the quota latched at some point during this run.
+
+    The run keeps going and still commits, so nothing else marks the night as
+    degraded — the caller uses this to raise an alert. Silent degradation here
+    is exactly what let a drained balance publish junk for two days."""
+    return _gemini_quota_exhausted
 
 
 def _reset_gemini_quota_latch() -> None:
@@ -199,8 +217,15 @@ def _with_retries(fn: Callable[[], Any], *, what: str) -> Any:
                 # as spent and stop — don't sleep ~1 min per remaining
                 # lead trying to drain an exhausted daily budget.
                 if attempt < _MAX_429_RETRIES - 1:
+                    # Honor the server's own hint when it sends one — it knows
+                    # when the window reopens. The cap sits ABOVE a 60s window
+                    # so honoring it is not silently truncated (the old 20s cap
+                    # turned a "retry in 44s" hint into a guaranteed failure).
                     hinted = _genai_retry_delay(exc)
-                    wait = hinted if hinted is not None else _BACKOFF_BASE_S * (2**attempt)
+                    wait = (
+                        hinted if hinted is not None
+                        else _BACKOFF_429_BASE_S * (2**attempt)
+                    )
                     wait = min(wait + 0.5, _MAX_429_WAIT_S)
                     log.warning(
                         "%s: gemini 429 (attempt %d/%d), sleeping %.1fs",

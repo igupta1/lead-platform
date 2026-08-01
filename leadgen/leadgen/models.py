@@ -92,6 +92,57 @@ class Signal(BaseModel):
         return str(v).strip()
 
 
+# --- Company size ---------------------------------------------------------
+#
+# An exact employee count is not reliably discoverable for a small private
+# company: the grounded lookup resolves the website but not the size roughly
+# half the time, which used to leave ``headcount`` NULL and silently bypass
+# every size gate. A coarse BAND is both what a model can answer reliably and
+# all the size caps actually need, so it is the fallback whenever the exact
+# number is unknown. Ordered smallest-first; the value is the band's inclusive
+# upper bound.
+HEADCOUNT_BANDS: dict[str, int] = {
+    "1-10": 10,
+    "11-50": 50,
+    "51-200": 200,
+    "201-1000": 1000,
+    # Open-ended top band. Any real SMB cap sits far below this, so it always
+    # reads as "too big" without pretending to know the real number.
+    "1000+": 1_000_000,
+}
+
+
+def band_max(band: str | None) -> int | None:
+    """The inclusive upper bound of a headcount band, or None when the band is
+    missing / unrecognized (treated as unknown, never as small)."""
+    if not band:
+        return None
+    return HEADCOUNT_BANDS.get(band.strip())
+
+
+def band_for(headcount: int | None) -> str | None:
+    """The band an exact employee count falls into. Used to backfill a band for
+    the leads that already carry a real number."""
+    if headcount is None:
+        return None
+    for name, upper in HEADCOUNT_BANDS.items():
+        if headcount <= upper:
+            return name
+    return "1000+"
+
+
+def effective_size(lead: "Lead") -> int | None:
+    """The company size the caps should test: the exact count when known,
+    otherwise the band's upper bound, otherwise None (genuinely unknown).
+
+    Using the band's UPPER bound is the conservative direction — an unsized
+    "51-200" company is treated as 200, so it fails a 100-person cap rather
+    than sneaking under it."""
+    if lead.headcount is not None:
+        return lead.headcount
+    return band_max(lead.headcount_band)
+
+
 class Lead(BaseModel):
     """One company record, deduped across every source.
 
@@ -107,6 +158,10 @@ class Lead(BaseModel):
     industry: str | None = None       # coarse parent (see taxonomy.py)
     niche: str | None = None          # granular taxonomy child (outreach fit)
     headcount: int | None = None
+    # Coarse size band (see HEADCOUNT_BANDS). Set whenever the lookup can size
+    # the company at all; the exact ``headcount`` above is a bonus, not a
+    # requirement. Read both through ``effective_size``.
+    headcount_band: str | None = None
     city: str | None = None
     state: str | None = None
     country: str | None = None

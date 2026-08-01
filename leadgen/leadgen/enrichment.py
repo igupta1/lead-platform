@@ -29,7 +29,15 @@ from datetime import datetime, timezone
 from pydantic import BaseModel
 
 from leadgen import db, llm, taxonomy
-from leadgen.models import Lead, SignalType, SourceName
+from leadgen.models import (
+    HEADCOUNT_BANDS,
+    Lead,
+    SignalType,
+    SourceName,
+    band_for,
+    band_max,
+    effective_size,
+)
 from leadgen.sources.edgar_form_d import (
     _INVESTMENT_VEHICLE_KEYWORDS_RE,
     _REAL_ESTATE_KEYWORDS_RE,
@@ -519,8 +527,9 @@ def _disqualification_reason(lead: Lead) -> str | None:
         return "finance_vertical"
     if _is_form_d_noise(lead):
         return "form_d_noise_pattern"
-    if lead.headcount is not None and lead.headcount > _headcount_cap(lead):
-        return f"oversized={lead.headcount}"
+    size = effective_size(lead)
+    if size is not None and size > _headcount_cap(lead):
+        return f"oversized={lead.headcount or lead.headcount_band}"
     if lead.headcount == 0:
         return "zero_headcount"
     # Headcount proxy: an unsized "[Name] USA / America / North America"
@@ -615,7 +624,13 @@ _LOOKUP_PROMPT = """\
 Look up the company "{name}" on the web. Reply with EXACTLY these lines and
 nothing else (use "unknown" when you cannot determine a value):
 
-HEADCOUNT: <integer employee count or "unknown">
+HEADCOUNT_BAND: <total employees, as ONE of exactly these ranges: "1-10", \
+"11-50", "51-200", "201-1000", "1000+". Estimate from whatever you can see \
+(team page, office count, how the company describes itself). Answer \
+"unknown" ONLY when you have no basis for even a rough range.>
+HEADCOUNT: <exact integer employee count, but ONLY if you are confident of \
+the number; otherwise "unknown". A band above with "unknown" here is fine \
+and expected.>
 CITY: <city name or "unknown">
 STATE: <2-letter US state code (CA, NY, ...) or "unknown">
 COUNTRY: <2-letter ISO country code (US, GB, CA, ...) or "unknown">
@@ -648,6 +663,9 @@ fluff. Use "unknown" only as a last resort.>
 
 _FIELD_RE = {
     "headcount": re.compile(r"^HEADCOUNT:\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE),
+    "headcount_band": re.compile(
+        r"^HEADCOUNT_BAND:\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE
+    ),
     "city": re.compile(r"^CITY:\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE),
     "state": re.compile(r"^STATE:\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE),
     "country": re.compile(r"^COUNTRY:\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE),
@@ -677,6 +695,7 @@ def _round_to_10(n: int) -> int:
 
 class _Lookup(BaseModel):
     headcount: int | None = None
+    headcount_band: str | None = None
     city: str | None = None
     state: str | None = None
     country: str | None = None
@@ -707,6 +726,28 @@ def _parse_headcount(raw_value: str | None) -> int | None:
     return _round_to_10(int(m.group(1).replace(",", "")))
 
 
+_BAND_CLEAN_RE = re.compile(r"[\s,]|employees?|people|staff", re.IGNORECASE)
+
+
+def _parse_band(raw_value: str | None) -> str | None:
+    """Normalize the model's band answer onto one of HEADCOUNT_BANDS.
+
+    Tolerates the shapes a grounded answer actually comes back in ("11-50
+    employees", "51 - 200", "1,000+") but refuses anything it can't map
+    exactly — a mis-parsed band would silently widen the size cap, so an
+    unrecognized value is treated as unknown."""
+    if raw_value is None:
+        return None
+    cleaned = _BAND_CLEAN_RE.sub("", raw_value).strip().strip('"').strip("'")
+    cleaned = cleaned.replace("–", "-").replace("—", "-")
+    if not cleaned:
+        return None
+    for band in HEADCOUNT_BANDS:
+        if cleaned == band:
+            return band
+    return None
+
+
 def _parse_domain(raw_value: str | None) -> str | None:
     if raw_value is None:
         return None
@@ -724,8 +765,13 @@ def _parse_yesno(raw_value: str | None) -> bool:
 
 def lookup_company(lead: Lead) -> _Lookup:
     raw = llm.call_gemini(_LOOKUP_PROMPT.format(name=lead.name))
+    headcount = _parse_headcount(_parse_field(raw, "headcount"))
+    # An exact count implies its own band, so a model that answers HEADCOUNT
+    # but fluffs HEADCOUNT_BAND still ends up sized.
+    band = _parse_band(_parse_field(raw, "headcount_band")) or band_for(headcount)
     return _Lookup(
-        headcount=_parse_headcount(_parse_field(raw, "headcount")),
+        headcount=headcount,
+        headcount_band=band,
         city=_parse_field(raw, "city"),
         state=(_parse_field(raw, "state") or "").upper() or None,
         country=(_parse_field(raw, "country") or "").upper() or None,
@@ -903,11 +949,25 @@ def plan_enrichment(lead: Lead, *, force: bool = False) -> EnrichPlan:
             updates["city"] = city
         if state and not lead.state:
             updates["state"] = state
+        # The filing carries a real headcount; derive its band so the light
+        # path is size-gated on the same footing as the Gemini path.
+        if lead.headcount_band is None and lead.headcount is not None:
+            updates["headcount_band"] = band_for(lead.headcount)
         return EnrichPlan("update", updates=updates, reason="form_c_light")
 
     lookup = lookup_company(lead)
 
-    effective_headcount = lookup.headcount or lead.headcount
+    # Size: prefer a freshly-looked-up exact count, fall back to what the lead
+    # already carried, and fall back again to the band's upper bound. The band
+    # is what makes this fire at all for the ~60% of small private companies
+    # whose exact headcount isn't discoverable.
+    merged_headcount = lookup.headcount if lookup.headcount is not None else lead.headcount
+    merged_band = (
+        lookup.headcount_band or lead.headcount_band or band_for(merged_headcount)
+    )
+    effective_headcount = (
+        merged_headcount if merged_headcount is not None else band_max(merged_band)
+    )
     oversized = (
         effective_headcount is not None and effective_headcount > _headcount_cap(lead)
     )
@@ -949,7 +1009,8 @@ def plan_enrichment(lead: Lead, *, force: bool = False) -> EnrichPlan:
         "niche": niche,
         "country": "US" if lookup.country == "US" else lead.country,
         "insight": lookup.insight,
-        "headcount": lookup.headcount if lookup.headcount is not None else lead.headcount,
+        "headcount": merged_headcount,
+        "headcount_band": merged_band,
         "domain": lookup.domain or lead.domain,
         "city": lookup.city or lead.city,
         "state": lookup.state or lead.state,

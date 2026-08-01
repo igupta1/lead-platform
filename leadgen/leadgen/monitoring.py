@@ -29,10 +29,10 @@ def detect_anomalies(
     prev: dict[str, Any] | None, curr: dict[str, Any]
 ) -> list[str]:
     """Return human-readable anomaly messages comparing ``curr`` to ``prev``.
-    Empty list when there's nothing to flag (including the first ever run,
-    where ``prev`` is None)."""
+    Empty list when there's nothing to flag. The count diffs need a previous
+    run; the enrichment-health checks do not, so they run either way."""
     if not prev:
-        return []
+        return _enrichment_anomalies(curr)
     messages: list[str] = []
 
     prev_sources: dict[str, int] = prev.get("sources", {})
@@ -50,7 +50,22 @@ def detect_anomalies(
             pct = round((1 - count / was) * 100)
             messages.append(f"niche '{niche}': {count} leads (was {was}, -{pct}%)")
 
-    return messages
+    return messages + _enrichment_anomalies(curr)
+
+
+def _enrichment_anomalies(curr: dict[str, Any]) -> list[str]:
+    """Anomalies that need no previous run to spot.
+
+    A latched Gemini quota is the one that hurt: the run still exits 0, so the
+    workflow's failure alert never fires, and the count diff above cannot see
+    it either (unenriched leads used to push niche counts UP, not down). It
+    has to be reported on its own terms."""
+    if not curr.get("gemini_quota_exhausted"):
+        return []
+    return [
+        "gemini quota exhausted mid-run — enrichment stopped early, leads are "
+        "unenriched and held back from publish. Check the AI Studio balance."
+    ]
 
 
 def alert(messages: list[str]) -> None:
