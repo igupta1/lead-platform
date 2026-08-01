@@ -23,8 +23,10 @@ def test_fractional_only_board_routes_every_niche():
     assert _signal_type_for("Head of Sales", assume_fractional=True) is None
 
 
-# We Work Remotely: a GENERAL board, so a title must read fractional/interim
-# itself, or it's a full-time hire and not this signal (assume_fractional=False).
+# No general board is wired up any more (We Work Remotely was dropped — it
+# yielded zero signals), but the assume_fractional=False contract is kept for
+# the next one: the title must read fractional/interim itself, or the role is
+# a full-time hire and not this signal.
 def test_general_board_requires_explicit_fractional_qualifier():
     st = SignalType
     assert _signal_type_for("Fractional CISO", assume_fractional=False) == st.JOB_SECURITY

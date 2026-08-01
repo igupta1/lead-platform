@@ -121,14 +121,19 @@ def ingest(conn: Any, candidates: list[LeadCandidate], disqualifiers: list[Disqu
 # --- Enrich ---------------------------------------------------------------
 
 
-def _plan_chunk(leads: list[Lead], workers: int) -> dict[Any, Any]:
+def _plan_chunk(leads: list[Lead], workers: int, *, force: bool = False) -> dict[Any, Any]:
     """Compute an `EnrichPlan` for each lead CONCURRENTLY (all the Gemini/OpenAI
     network work; no DB). Returns {lead.id: plan|None}; None means the lookup
-    errored and the lead is skipped this run (retried next run)."""
+    errored and the lead is skipped this run (retried next run).
+
+    ``force`` must be threaded through: ``plan_enrichment`` re-checks
+    ``needs_enrichment`` itself, so hardcoding False here made ``--reenrich``
+    a silent no-op on this path (every already-enriched lead planned as
+    "skip"). Only the serial path honored it."""
     plans: dict[Any, Any] = {}
     quota_skipped = 0
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(enrichment.plan_enrichment, lead, force=False): lead
+        futures = {pool.submit(enrichment.plan_enrichment, lead, force=force): lead
                    for lead in leads}
         for fut in as_completed(futures):
             lead = futures[fut]
@@ -188,7 +193,7 @@ def enrich_all(
             log.info("enrich: reached time budget after %d leads — resumes next run", enriched)
             break
         chunk = candidates[start:start + chunk_size]
-        plans = _plan_chunk(chunk, workers)
+        plans = _plan_chunk(chunk, workers, force=force)
         for lead in chunk:                     # serial DB writes, original order
             plan = plans.get(lead.id)
             if plan is None:

@@ -13,18 +13,24 @@ board is niche-blind: each posting is routed through the shared jobs
 A posting that doesn't map to any niche (a fractional CMO, head of sales, …)
 is dropped.
 
-Both backends are **date-filtered**. We refuse to ingest an undated posting
-into the in-market tier: with no event date it would score as "fresh" and
-float a possibly-filled role to the very top of the page.
+The backend is **date-filtered**. We refuse to ingest an undated posting into
+the in-market tier: with no event date it would score as "fresh" and float a
+possibly-filled role to the very top of the page.
 
-1. We Work Remotely (``remote-jobs.rss``): a GENERAL remote board, so we keep
-   only titles that are explicitly fractional / interim / part-time (a plain
-   remote "Security Engineer" is a full-time hire, not this signal).
-2. FractionalJobs.io: a fractional-only board. The sitemap lists
-   ``/jobs/<role>-at-<company>`` URLs but carries no dates, so we fetch each
-   in-scope role page for its ``Published:`` date and keep only recent ones.
-   Company name is read from the slug; anonymized listings
-   ("...-at-a-saas-tool") are skipped.
+FractionalJobs.io: a fractional-only board. The sitemap lists
+``/jobs/<role>-at-<company>`` URLs but carries no dates, so we fetch each
+in-scope role page for its ``Published:`` date and keep only recent ones.
+Company name is read from the slug; anonymized listings
+("...-at-a-saas-tool") are skipped. Because the board is fractional-only, a
+listing titled "Controller" IS a fractional controller — ``_evidence_title``
+puts that word back so downstream copy doesn't read as a full-time req.
+
+We Work Remotely was dropped (2026-08-01): it is a GENERAL remote board, and
+a live check found 100 entries carrying 2 fractional titles and exactly 1
+finance-leadership role. It contributed zero signals to the store. Extending
+the body gate to it would not help either — 30 of those 100 entries mention
+"contract"/"consulting"/"advisory" somewhere in ordinary full-time copy, so
+it is a false-positive surface, not a supply source.
 
 Every network call fails closed — a broken board is logged and skipped, never
 breaks a run.
@@ -36,10 +42,7 @@ import logging
 import re
 import time
 from datetime import datetime, timezone
-from email.utils import parsedate_to_datetime
-from typing import Any
 
-import feedparser
 import requests
 
 from leadgen.models import (
@@ -68,12 +71,12 @@ def _signal_type_for(role: str, *, assume_fractional: bool) -> SignalType | None
     """Map a board posting's role title to its signal type via the shared
     ``jobs.classify``, so one board feeds every niche.
 
-    ``classify``'s CFO bucket requires a part-time qualifier in the title. On
-    a fractional-only board (``assume_fractional=True``) a bare exec title
-    ("Chief Financial Officer") IS fractional, so we prepend the qualifier to
-    stop it dropping. On a general board (``assume_fractional=False`` — We
-    Work Remotely) we require the title to read fractional/interim itself, or
-    the role is a full-time hire and not this signal."""
+    ``classify``'s CFO bucket requires a part-time qualifier. On a
+    fractional-only board (``assume_fractional=True``) a bare exec title
+    ("Chief Financial Officer") IS fractional, so we supply the qualifier to
+    stop it dropping. The flag is kept for a future GENERAL board, where the
+    title must read fractional/interim on its own or the role is a full-time
+    hire and not this signal."""
     is_fractional = bool(_PART_TIME_QUALIFIER_RE.search(role))
     if not assume_fractional and not is_fractional:
         return None
@@ -93,27 +96,8 @@ def _evidence_title(role: str, *, assume_fractional: bool) -> str:
     return f"Fractional {role}" if assume_fractional else role
 
 
-# --- We Work Remotely -------------------------------------------------------
-
-_WWR_RSS = "https://weworkremotely.com/remote-jobs.rss"
-
-
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
-def _parse_rss_date(value: Any) -> datetime | None:
-    if not value:
-        return None
-    try:
-        dt = parsedate_to_datetime(str(value))
-    except (TypeError, ValueError):
-        return None
-    if dt is None:
-        return None
-    if dt.tzinfo is not None:
-        dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
-    return dt
 
 
 def _parse_posted_date(value: str) -> datetime | None:
@@ -124,50 +108,6 @@ def _parse_posted_date(value: str) -> datetime | None:
         return datetime.strptime(value[:10], "%Y-%m-%d")
     except (TypeError, ValueError):
         return None
-
-
-def _fetch_wwr(since: datetime, max_age_days: int) -> list[LeadCandidate]:
-    captured_at = _utcnow()
-    try:
-        feed = feedparser.parse(_WWR_RSS, request_headers={"User-Agent": _USER_AGENT})
-    except Exception:
-        _log.exception("wwr rss fetch failed")
-        return []
-    candidates: list[LeadCandidate] = []
-    for entry in feed.entries:
-        raw_title = str(entry.get("title") or "").strip()
-        if ":" not in raw_title:
-            continue
-        company, _, role = raw_title.partition(":")
-        company = company.strip()
-        role = role.strip()
-        if not company or not role:
-            continue
-        # General board: only explicitly fractional/interim titles count, then
-        # route to whichever niche the role maps to.
-        sig_type = _signal_type_for(role, assume_fractional=False)
-        if sig_type is None:
-            continue
-        if _is_recruiter_name(company) or _is_auto_dealer_name(company):
-            continue
-        published = _parse_rss_date(entry.get("published") or entry.get("updated"))
-        if published is not None:
-            age = (captured_at - published).days
-            if age > max_age_days or published < since:
-                continue
-        date_posted = published.date().isoformat() if published else ""
-        cand = _make_candidate(
-            company=company,
-            title=role,
-            sig_type=sig_type,
-            url=str(entry.get("link") or ""),
-            date_posted=date_posted,
-            site="weworkremotely",
-            captured_at=captured_at,
-        )
-        if cand is not None:
-            candidates.append(cand)
-    return candidates
 
 
 # --- FractionalJobs.io ------------------------------------------------------
@@ -337,7 +277,7 @@ def fetch(
     treat it like the jobs / edgar sources."""
     max_age_days = max(1, min((_utcnow() - since).days, _MAX_AGE_DAYS))
     candidates: list[LeadCandidate] = []
-    for name, fn in (("weworkremotely", _fetch_wwr), ("fractionaljobs", _fetch_fractionaljobs)):
+    for name, fn in (("fractionaljobs", _fetch_fractionaljobs),):
         try:
             candidates.extend(fn(since, max_age_days))
         except Exception:

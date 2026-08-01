@@ -132,3 +132,33 @@ def test_enrich_all_real_plan_apply_under_threads(conn, monkeypatch):
     for lead_id in ids:
         got = _get(conn, lead_id)
         assert got.niche == "manufacturing" and got.enriched_at is not None
+
+
+def test_reenrich_forces_already_enriched_leads_on_the_parallel_path(conn, monkeypatch):
+    """--reenrich was a silent no-op with workers > 1: _plan_chunk hardcoded
+    force=False, so plan_enrichment re-checked needs_enrichment and returned
+    "skip" for every already-enriched lead. Only the serial path honored it."""
+    from datetime import datetime, timezone
+
+    from leadgen import db, run
+    from leadgen.models import LeadCandidate
+
+    from tests.conftest import make_signal
+
+    lead = db.upsert_lead(conn, LeadCandidate(
+        name="Already Enriched Co", domain="already.com",
+        initial_signal=make_signal(SignalType.JOB_FINANCE_LEAD, url="https://j/ae")))
+    db.update_lead(conn, lead.id,
+                   enriched_at=datetime.now(timezone.utc).replace(tzinfo=None))
+
+    planned: list[bool] = []
+
+    def _fake_plan(lead, *, force=False):
+        planned.append(force)
+        return enrichment.EnrichPlan("skip")
+
+    monkeypatch.setattr(enrichment, "plan_enrichment", _fake_plan)
+    run.enrich_all(conn, budget=None, force=True, workers=4)
+
+    assert planned, "an already-enriched lead must still be planned under --reenrich"
+    assert all(planned), "force=True must reach plan_enrichment"
