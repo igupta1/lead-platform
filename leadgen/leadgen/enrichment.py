@@ -529,7 +529,9 @@ def _disqualification_reason(lead: Lead) -> str | None:
         return "form_d_noise_pattern"
     size = effective_size(lead)
     if size is not None and size > _headcount_cap(lead):
-        return f"oversized={lead.headcount or lead.headcount_band}"
+        # Report the size that actually drove the decision, not the raw
+        # headcount — a band-sized lead used to log a misleading "oversized=50".
+        return f"oversized={size}"
     if lead.headcount == 0:
         return "zero_headcount"
     # Headcount proxy: an unsized "[Name] USA / America / North America"
@@ -766,9 +768,21 @@ def _parse_yesno(raw_value: str | None) -> bool:
 def lookup_company(lead: Lead) -> _Lookup:
     raw = llm.call_gemini(_LOOKUP_PROMPT.format(name=lead.name))
     headcount = _parse_headcount(_parse_field(raw, "headcount"))
+    band = _parse_band(_parse_field(raw, "headcount_band"))
+    # The two size answers are independent, and the model does contradict
+    # itself (headcount 10 with band "1000+"). The band is the answer it can
+    # give reliably for a small private company (see HEADCOUNT_BANDS), so when
+    # they disagree the exact count is the one we drop — storing both would
+    # push the conflict downstream onto effective_size().
+    if headcount is not None and band is not None and band_for(headcount) != band:
+        log.info(
+            "%s: headcount %d contradicts band %s — keeping the band",
+            lead.name, headcount, band,
+        )
+        headcount = None
     # An exact count implies its own band, so a model that answers HEADCOUNT
     # but fluffs HEADCOUNT_BAND still ends up sized.
-    band = _parse_band(_parse_field(raw, "headcount_band")) or band_for(headcount)
+    band = band or band_for(headcount)
     return _Lookup(
         headcount=headcount,
         headcount_band=band,
@@ -867,6 +881,13 @@ def needs_enrichment(lead: Lead, force: bool = False) -> bool:
     if force:
         return True
     if lead.enriched_at is None:
+        return True
+    # Enriched but still unsized. `project_niche` fails closed on size, so this
+    # lead is held back from every publish, and no new signal is coming for
+    # most of them — without this retry it is stranded in the store forever,
+    # invisible and uncountable. Retrying is the only path back into the
+    # inventory, so it is worth the repeat lookup on the ones that never size.
+    if effective_size(lead) is None:
         return True
     return any(s.captured_at > lead.enriched_at for s in lead.signals)
 

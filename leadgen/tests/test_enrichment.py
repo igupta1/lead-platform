@@ -8,11 +8,13 @@ from datetime import datetime, timezone
 
 import pytest
 
-from leadgen import db
+from leadgen import db, llm
 from leadgen.enrichment import (
     _disqualification_reason,
     _insight_is_service_provider,
     _is_cfo_competitor,
+    lookup_company,
+    needs_enrichment,
 )
 from leadgen.models import Lead, Signal, SignalType, SourceName
 
@@ -136,12 +138,84 @@ def test_band_for_exact_headcount(headcount, expected):
 
 def test_effective_size_prefers_exact_then_band():
     from leadgen.models import effective_size
-    exact = Lead(name="A", name_key="a", headcount=37, headcount_band="1000+")
-    assert effective_size(exact) == 37          # exact wins
+    exact = Lead(name="A", name_key="a", headcount=37, headcount_band="11-50")
+    assert effective_size(exact) == 37          # exact wins when it fits the band
     banded = Lead(name="B", name_key="b", headcount_band="51-200")
     assert effective_size(banded) == 200        # band's UPPER bound (conservative)
     unknown = Lead(name="C", name_key="c")
     assert effective_size(unknown) is None      # genuinely unsized
+    unmappable = Lead(name="D", name_key="d", headcount=37, headcount_band="dozens")
+    assert effective_size(unmappable) == 37     # no usable band -> the count stands
+
+
+@pytest.mark.parametrize("name, headcount, band", [
+    # Real offenders found in the published inventory on 2026-08-02: the
+    # lookup returned a small exact count next to a band that says enterprise.
+    ("Texas Oncology", 10, "1000+"),
+    ("Springhill Medical Health Systems", 50, "1000+"),
+    ("Shipium", 90, "201-1000"),
+    # The mirror case: a count far ABOVE its band.
+    ("Inverted Co", 800, "1-10"),
+])
+def test_contradicting_headcount_and_band_reads_as_unknown(name, headcount, band):
+    from leadgen.models import effective_size
+    lead = Lead(name=name, name_key=name.lower(), headcount=headcount, headcount_band=band)
+    assert effective_size(lead) is None
+
+
+def test_contradicting_size_is_held_back_but_not_deleted():
+    """The bug this closes: headcount 10 / band "1000+" used to size as 10 and
+    publish an enterprise into a gift built for small companies. It must now
+    read as unsized — held out of the inventory by the fail-closed projection,
+    but NOT purged, since phase 2 deletes with no audit trail and the evidence
+    that would justify deleting is the evidence we just called unreliable."""
+    leaked = Lead(name="Texas Oncology", name_key="texasoncology",
+                  headcount=10, headcount_band="1000+")
+    from leadgen.models import effective_size
+    assert effective_size(leaked) is None        # never published
+    assert _disqualification_reason(leaked) is None   # never destroyed
+    assert needs_enrichment(leaked) is True      # re-asked until it resolves
+
+
+def test_oversized_reason_reports_the_deciding_size():
+    """A band-sized lead used to log a misleading "oversized=50" (the raw
+    headcount) while the band was what tripped the cap."""
+    big = Lead(name="Big Co", name_key="bigco", headcount_band="201-1000")
+    assert _disqualification_reason(big) == "oversized=1000"
+
+
+def test_lookup_drops_a_headcount_that_contradicts_its_band(monkeypatch):
+    """Stop generating the contradiction at the source: keep the band (the
+    answer the model gives reliably), drop the exact count."""
+    raw = (
+        "DOMAIN: example.com\nHEADCOUNT: 10\nHEADCOUNT_BAND: 1000+\n"
+        "CITY: Dallas\nSTATE: TX\nCOUNTRY: US\nINSIGHT: x\n"
+    )
+    monkeypatch.setattr(llm, "call_gemini", lambda *a, **k: raw)
+    got = lookup_company(Lead(name="Texas Oncology", name_key="texasoncology"))
+    assert got.headcount is None
+    assert got.headcount_band == "1000+"
+
+
+def test_lookup_keeps_a_headcount_that_agrees_with_its_band(monkeypatch):
+    raw = (
+        "DOMAIN: example.com\nHEADCOUNT: 40\nHEADCOUNT_BAND: 11-50\n"
+        "CITY: Dallas\nSTATE: TX\nCOUNTRY: US\nINSIGHT: x\n"
+    )
+    monkeypatch.setattr(llm, "call_gemini", lambda *a, **k: raw)
+    got = lookup_company(Lead(name="Small Co", name_key="smallco"))
+    assert got.headcount == 40
+    assert got.headcount_band == "11-50"
+
+
+def test_enriched_but_unsized_lead_is_retried():
+    """Fail-closed publishing holds unsized leads back, so an enriched lead
+    that never got a size would be stranded forever without this retry."""
+    stamped = _now()
+    unsized = Lead(name="A", name_key="a", enriched_at=stamped)
+    assert needs_enrichment(unsized) is True
+    sized = Lead(name="B", name_key="b", enriched_at=stamped, headcount_band="11-50")
+    assert needs_enrichment(sized) is False
 
 
 def test_band_alone_trips_the_oversized_purge():

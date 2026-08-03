@@ -132,15 +132,40 @@ def band_for(headcount: int | None) -> str | None:
 
 
 def effective_size(lead: "Lead") -> int | None:
-    """The company size the caps should test: the exact count when known,
-    otherwise the band's upper bound, otherwise None (genuinely unknown).
+    """The company size the caps should test: the exact count when known and
+    self-consistent, otherwise the band's upper bound, otherwise None
+    (genuinely unknown).
 
     Using the band's UPPER bound is the conservative direction — an unsized
     "51-200" company is treated as 200, so it fails a 100-person cap rather
-    than sneaking under it."""
-    if lead.headcount is not None:
+    than sneaking under it.
+
+    The two numbers are separate lookup answers, so they can contradict each
+    other (observed: headcount 10 alongside band "1000+"). A contradiction is
+    reported as UNKNOWN rather than resolved to either number, because we
+    genuinely do not know which one is wrong — and "unknown" is the one answer
+    that is both safe and recoverable:
+
+    * `project_niche` fails closed on an unsized lead, so a contradictory
+      enterprise is held out of the inventory immediately.
+    * `_disqualification_reason` only purges on a size it can trust, so the
+      lead is NOT deleted on evidence we have just called unreliable. Phase 2
+      of `purge_disqualified` deletes outright and writes no `disqualified`
+      row, so resolving a contradiction to "too big" would destroy the lead
+      with no audit trail and no way back.
+    * `needs_enrichment` retries anything unsized, so the next run re-asks and
+      the contradiction resolves itself into a real size.
+
+    Picking the larger number instead only looks more decisive: it trades a
+    recoverable hold for an irreversible delete, on the one input we have
+    already decided we cannot trust."""
+    upper = band_max(lead.headcount_band)
+    if lead.headcount is None:
+        return upper
+    if upper is None or band_for(lead.headcount) == lead.headcount_band:
+        # Agreement (or no usable band): the exact count is the precise answer.
         return lead.headcount
-    return band_max(lead.headcount_band)
+    return None
 
 
 class Lead(BaseModel):
