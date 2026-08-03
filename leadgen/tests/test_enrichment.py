@@ -15,6 +15,7 @@ from leadgen.enrichment import (
     _is_cfo_competitor,
     lookup_company,
     needs_enrichment,
+    plan_enrichment,
 )
 from leadgen.models import Lead, Signal, SignalType, SourceName
 
@@ -227,3 +228,39 @@ def test_band_alone_trips_the_oversized_purge():
 
     small = Lead(name="Small Co", name_key="smallco", headcount_band="11-50")
     assert _disqualification_reason(small) is None
+
+
+def test_merge_does_not_rebuild_a_contradiction_from_a_stale_headcount(monkeypatch):
+    """`lookup_company` keeps the fresh pair consistent, but `plan_enrichment`
+    merges it with what the lead already carried. A stale headcount next to a
+    fresh band rebuilt the exact contradiction the guard had just removed —
+    observed as the store's contradiction count RISING after that fix shipped."""
+    def _plan_with_band(fresh_band: str, stored_headcount: int):
+        raw = (
+            f"DOMAIN: aht.example\nHEADCOUNT: unknown\nHEADCOUNT_BAND: {fresh_band}\n"
+            "CITY: Austin\nSTATE: TX\nCOUNTRY: US\nINSIGHT: hvac maker\n"
+        )
+        monkeypatch.setattr(llm, "call_gemini", lambda *a, **k: raw)
+        monkeypatch.setattr("leadgen.enrichment.classify_niche", lambda *a, **k: "hvac")
+        sig = Signal(
+            type=SignalType.JOB_IT_SUPPORT, source=SourceName.JOBS,
+            captured_at=_now(), event_date=_now(),
+            evidence_text="hiring IT support", source_url="https://jobs/1",
+        )
+        lead = Lead(id=1, name="AHT Cooling", name_key="ahtcooling",
+                    headcount=stored_headcount, signals=[sig])
+        return plan_enrichment(lead, force=True)
+
+    # Stored 70 does not fit a fresh "1-10": the stale count is dropped rather
+    # than stored next to a band it contradicts.
+    plan = _plan_with_band("1-10", 70)
+    assert plan.action == "update"
+    assert plan.updates["headcount"] is None
+    assert plan.updates["headcount_band"] == "1-10"
+
+    # The real AHT Cooling shape: stored 70 next to a fresh "1000+". Dropping
+    # the stale count leaves the band to size it, which is what finally trips
+    # the cap — it survived the first fix by being sized on the stale 70.
+    plan = _plan_with_band("1000+", 70)
+    assert plan.action == "delete"
+    assert "oversized" in plan.reason

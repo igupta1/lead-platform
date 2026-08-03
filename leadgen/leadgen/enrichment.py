@@ -986,6 +986,23 @@ def plan_enrichment(lead: Lead, *, force: bool = False) -> EnrichPlan:
     merged_band = (
         lookup.headcount_band or lead.headcount_band or band_for(merged_headcount)
     )
+    # `lookup_company` guarantees the FRESH pair agrees, but merging can rebuild
+    # a contradiction out of a stale stored headcount and a fresh band — which
+    # is how the count/band disagreements kept coming back after that guard
+    # landed. Between a stale number and a fresh one, the fresh answer wins and
+    # the stale count is dropped instead of carried forward. Keeping the stored
+    # pair self-consistent here is what stops `effective_size` from ever having
+    # to arbitrate a contradiction on this path.
+    if (
+        merged_headcount is not None
+        and merged_band is not None
+        and band_for(merged_headcount) != merged_band
+    ):
+        log.info(
+            "%s: stored headcount %d contradicts fresh band %s — dropping the count",
+            lead.name, merged_headcount, merged_band,
+        )
+        merged_headcount = None
     effective_headcount = (
         merged_headcount if merged_headcount is not None else band_max(merged_band)
     )
