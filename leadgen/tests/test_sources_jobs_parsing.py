@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+import pytest
+
 from leadgen import filters
 from leadgen.sources import jobs
 
@@ -130,3 +132,27 @@ def test_generic_stub_name_keeps_real_companies():
     assert filters._is_generic_stub_name("Palantir") is False
     assert filters._is_generic_stub_name("Stripe") is False
     assert filters._is_generic_stub_name("Redwood Holdings") is False
+
+
+@pytest.mark.parametrize("name", [
+    "A great organization!",              # rank ~9 of published accounting
+    "Confidential Startup SaaS Company",
+    "Smart Apply Test Company",           # reached rank 1 of published cloud
+    "Undisclosed Employer",
+    "Our Client",
+    "Company Name",
+])
+def test_descriptions_and_test_records_are_untargetable(name):
+    from leadgen.filters import is_untargetable_name
+    assert is_untargetable_name(name) is True
+
+
+@pytest.mark.parametrize("name", [
+    "Heven AeroTech", "Portland Pet Food Company", "Integrity Realty Group, LLC",
+    "Test Equipment Depot",        # 'test' not followed by company/org
+    "Confidence Interval Labs",    # 'confiden...' but not the word
+    "Outtake", "Akina, Inc.",
+])
+def test_real_companies_survive_the_placeholder_gate(name):
+    from leadgen.filters import is_untargetable_name
+    assert is_untargetable_name(name) is False

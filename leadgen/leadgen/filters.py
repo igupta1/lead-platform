@@ -146,6 +146,32 @@ def _is_null_placeholder_name(name: str) -> bool:
     return name.strip().lower() in _NULL_PLACEHOLDER_NAMES
 
 
+# A job board's employer field that describes the employer instead of naming it
+# ("A great organization!", "Confidential Startup SaaS Company"), or a test
+# record that escaped the poster's sandbox ("Smart Apply Test Company" — which
+# reached rank 1 of the published cloud inventory). `_is_generic_stub_name`
+# cannot catch these: they are multi-token and every token is ordinary.
+_PLACEHOLDER_PHRASE_RE = re.compile(
+    r"\b(?:"
+    r"confidential|undisclosed|unnamed|anonymous|stealth\s*mode"
+    r"|(?:test|demo|sample|dummy|example|placeholder|fake)\s+(?:company|account|org\w*|employer)"
+    r"|our\s+client|a\s+client\b|client\s+of\s+ours"
+    r"|company\s+name|your\s+company|employer\s+name"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+def _is_placeholder_phrase_name(name: str) -> bool:
+    """True when the 'name' is a description or a test record rather than a
+    company. Also catches sentence punctuation: a real company name does not
+    end in an exclamation or question mark, and that alone is what unmasks
+    "A great organization!"."""
+    if _PLACEHOLDER_PHRASE_RE.search(name):
+        return True
+    return bool(re.search(r"[!?]", name))
+
+
 def _is_public_sector(name: str, domain: str | None = None) -> bool:
     """Government / public-sector entity — not a fractional-CFO buyer.
     Private nonprofits that merely name a locality are exempted."""
@@ -162,8 +188,8 @@ def _is_public_sector(name: str, domain: str | None = None) -> bool:
 
 def is_untargetable_name(name: str, domain: str | None = None) -> bool:
     """One gate for 'a company we'd never target': recruiters, auto dealers,
-    hotels, public-sector/education, lone generic-stub names, and stringified
-    nulls."""
+    hotels, public-sector/education, lone generic-stub names, stringified
+    nulls, and descriptions/test records posing as a name."""
     return (
         _is_recruiter_name(name)
         or _is_auto_dealer_name(name)
@@ -171,4 +197,5 @@ def is_untargetable_name(name: str, domain: str | None = None) -> bool:
         or _is_public_sector(name, domain)
         or _is_generic_stub_name(name)
         or _is_null_placeholder_name(name)
+        or _is_placeholder_phrase_name(name)
     )

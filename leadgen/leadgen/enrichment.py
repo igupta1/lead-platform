@@ -57,6 +57,13 @@ from leadgen.filters import (
 
 log = logging.getLogger(__name__)
 
+# How many enrichment passes may fail to size one company before it stops being
+# re-asked. An unsized lead is held back from every publish, so it is worth
+# retrying — but the ones that never resolve would otherwise bill a lookup a
+# night in perpetuity. The counter resets to 0 as soon as a size lands, so this
+# only ever bounds the genuinely un-sizable.
+MAX_SIZE_ATTEMPTS = 3
+
 
 # --- Pure-code disqualification filter ------------------------------------
 #
@@ -886,8 +893,11 @@ def needs_enrichment(lead: Lead, force: bool = False) -> bool:
     # lead is held back from every publish, and no new signal is coming for
     # most of them — without this retry it is stranded in the store forever,
     # invisible and uncountable. Retrying is the only path back into the
-    # inventory, so it is worth the repeat lookup on the ones that never size.
-    if effective_size(lead) is None:
+    # inventory, so it is worth a repeat lookup — but only a bounded number of
+    # them: a company the lookup cannot size on three separate nights is not
+    # going to become sizable on the thirtieth, and an uncapped retry bills a
+    # Gemini call per stranded lead per night forever.
+    if effective_size(lead) is None and lead.size_attempts < MAX_SIZE_ATTEMPTS:
         return True
     return any(s.captured_at > lead.enriched_at for s in lead.signals)
 
@@ -1053,6 +1063,11 @@ def plan_enrichment(lead: Lead, *, force: bool = False) -> EnrichPlan:
         "city": lookup.city or lead.city,
         "state": lookup.state or lead.state,
         "enriched_at": _utcnow(),
+        # Bound the unsized retry (see needs_enrichment): count the passes that
+        # left this company unsized, and forget them all the moment one lands.
+        "size_attempts": (
+            0 if effective_headcount is not None else lead.size_attempts + 1
+        ),
     }
     return EnrichPlan("update", updates=updates, reason="enriched")
 

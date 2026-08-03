@@ -171,6 +171,10 @@ def enrich_all(
         candidates = candidates[:budget]
     if not candidates:
         return 0
+    # State the size of the backlog going in. Without it the phase summary
+    # reports only how many leads were enriched, so a run that planned 520 and
+    # managed 49 on a spent quota reads exactly like a quiet night.
+    log.info("enrich: %d lead(s) need enrichment", len(candidates))
 
     enriched = 0
     if workers <= 1:
@@ -203,6 +207,10 @@ def enrich_all(
                     enriched += 1
             except Exception:
                 log.exception("apply_enrichment failed for lead id=%s (%s)", lead.id, lead.name)
+    if enriched < len(candidates):
+        log.warning("enrich: %d of %d lead(s) left un-enriched this run "
+                    "(quota, error, or time budget) — they retry next run",
+                    len(candidates) - enriched, len(candidates))
     return enriched
 
 
@@ -247,6 +255,11 @@ def _lead_record(lead: Lead, niche: NicheConfig, score: float) -> dict[str, Any]
         "industry": lead.industry,
         "niche": lead.niche,
         "headcount": lead.headcount,
+        # The coarse band is how most of these companies are sized at all — an
+        # exact count is undiscoverable for a small private company, so
+        # publishing only `headcount` makes a band-sized lead read as unsized
+        # to anything downstream that filters on size.
+        "headcount_band": lead.headcount_band,
         "city": lead.city,
         "state": lead.state,
         "score": score,

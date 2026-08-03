@@ -187,6 +187,11 @@ class Lead(BaseModel):
     # the company at all; the exact ``headcount`` above is a bonus, not a
     # requirement. Read both through ``effective_size``.
     headcount_band: str | None = None
+    # How many enrichment passes have tried and failed to size this company.
+    # An unsized lead is held back from every publish and re-asked, so without
+    # a counter the un-sizable ones bill a lookup a night forever. Reset to 0
+    # the moment a size lands. See MAX_SIZE_ATTEMPTS in enrichment.py.
+    size_attempts: int = 0
     city: str | None = None
     state: str | None = None
     country: str | None = None

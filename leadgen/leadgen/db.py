@@ -86,6 +86,7 @@ _MIGRATIONS: tuple[tuple[str, str], ...] = (
     ("scores", "TEXT NOT NULL DEFAULT '{}'"),
     ("enriched_at", "TIMESTAMP"),
     ("headcount_band", "TEXT"),
+    ("size_attempts", "INTEGER NOT NULL DEFAULT 0"),
 )
 
 _INDEXES = (
@@ -105,6 +106,7 @@ _UPDATABLE_FIELDS = frozenset({
     "country",
     "insight",
     "enriched_at",
+    "size_attempts",
 })
 
 _LEGAL_SUFFIXES = (

@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from leadgen import db, llm
+from leadgen import db, enrichment, llm
 from leadgen.enrichment import (
     _disqualification_reason,
     _insight_is_service_provider,
@@ -264,3 +264,36 @@ def test_merge_does_not_rebuild_a_contradiction_from_a_stale_headcount(monkeypat
     plan = _plan_with_band("1000+", 70)
     assert plan.action == "delete"
     assert "oversized" in plan.reason
+
+
+def test_unsized_retry_is_capped():
+    """An unsized lead is re-asked, but not forever: the ones that never resolve
+    would otherwise bill a Gemini lookup a night in perpetuity."""
+    stamped = _now()
+    for attempts in range(enrichment.MAX_SIZE_ATTEMPTS):
+        lead = Lead(name="A", name_key="a", enriched_at=stamped, size_attempts=attempts)
+        assert needs_enrichment(lead) is True, f"should still retry at {attempts}"
+    spent = Lead(name="A", name_key="a", enriched_at=stamped,
+                 size_attempts=enrichment.MAX_SIZE_ATTEMPTS)
+    assert needs_enrichment(spent) is False
+    # A lead that IS sized never consumes an attempt in the first place.
+    sized = Lead(name="B", name_key="b", enriched_at=stamped, headcount_band="11-50",
+                 size_attempts=enrichment.MAX_SIZE_ATTEMPTS)
+    assert needs_enrichment(sized) is False
+
+
+def test_size_attempts_resets_once_a_size_lands(monkeypatch):
+    raw = (
+        "DOMAIN: x.com\nHEADCOUNT: 40\nHEADCOUNT_BAND: 11-50\n"
+        "CITY: A\nSTATE: TX\nCOUNTRY: US\nINSIGHT: widgets\n"
+    )
+    monkeypatch.setattr(llm, "call_gemini", lambda *a, **k: raw)
+    monkeypatch.setattr("leadgen.enrichment.classify_niche", lambda *a, **k: "widgets")
+    sig = Signal(
+        type=SignalType.JOB_FINANCE_LEAD, source=SourceName.JOBS,
+        captured_at=_now(), event_date=_now(),
+        evidence_text="e", source_url="https://x/1",
+    )
+    lead = Lead(id=1, name="T", name_key="t", size_attempts=2, signals=[sig])
+    plan = plan_enrichment(lead, force=True)
+    assert plan.updates["size_attempts"] == 0
