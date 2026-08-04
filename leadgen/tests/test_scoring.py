@@ -80,3 +80,32 @@ def test_richer_stack_gets_a_small_bonus():
     )
     acc = NICHES["accounting"]
     assert score_lead_for_niche(two, acc, now=NOW) > score_lead_for_niche(one, acc, now=NOW)
+
+
+def test_undated_signal_earns_no_recency():
+    # event_date=None falls back to captured_at (scrape time) in the model, so
+    # counting it as recency scored missing data as maximally fresh.
+    dated = _lead(make_signal(SignalType.JOB_IT_SUPPORT, days_ago=0))
+    undated = _lead(make_signal(SignalType.JOB_IT_SUPPORT, days_ago=0))
+    undated.signals[0].event_date = None
+    msp = NICHES["msp"]
+    assert score_lead_for_niche(undated, msp, now=NOW) < score_lead_for_niche(dated, msp, now=NOW)
+
+
+def test_undated_does_not_beat_a_genuinely_old_dated_signal():
+    undated = _lead(make_signal(SignalType.JOB_IT_SUPPORT, days_ago=0))
+    undated.signals[0].event_date = None
+    old = _lead(make_signal(SignalType.JOB_IT_SUPPORT, days_ago=59))
+    msp = NICHES["msp"]
+    assert score_lead_for_niche(undated, msp, now=NOW) <= score_lead_for_niche(old, msp, now=NOW)
+
+
+def test_hotels_excluded_from_cfo_and_accounting_but_not_msp():
+    hotel = Lead(name="Surf & Sand Laguna Beach", name_key="surf",
+                 niche="hotel_lodging",
+                 signals=[make_signal(SignalType.JOB_FINANCE_LEAD),
+                          make_signal(SignalType.JOB_IT_SUPPORT)])
+    assert score_lead_for_niche(hotel, NICHES["cfo"], now=NOW) is None
+    assert score_lead_for_niche(hotel, NICHES["accounting"], now=NOW) is None
+    # ...but a hotel is a perfectly good MSP buyer.
+    assert score_lead_for_niche(hotel, NICHES["msp"], now=NOW) is not None

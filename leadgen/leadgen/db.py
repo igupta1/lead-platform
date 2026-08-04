@@ -272,6 +272,42 @@ def _signal_dedup_key(sig_dict: dict[str, Any]) -> str:
     return f"{sig_type_str}|{sig_dict.get('source_url') or ''}"
 
 
+def _signal_url_key(sig_dict: dict[str, Any]) -> str | None:
+    """Second dedup key for job posts: ``type | source_url``. The SAME posting
+    re-read with a differently derived title is one event, not two — which the
+    title key alone cannot see (it changed the moment `_evidence_title` began
+    prefixing "Fractional", splitting 73 live CFO postings in two).
+
+    Two keys, not one replacement: title-only misses a re-derived title, and
+    url-only reopens the multi-board duplication the title key exists to close
+    (one role on Indeed + LinkedIn + Google is three URLs, one event). A signal
+    is a duplicate when EITHER key matches. Non-job types already key on URL."""
+    if sig_dict["type"] not in _JOB_TYPE_VALUES:
+        return None
+    url = sig_dict.get("source_url") or ""
+    return f"{sig_dict['type']}|{url}" if url else None
+
+
+def _event_sort_value(sig_dict: dict[str, Any]) -> str:
+    """Sortable event_date; undated sorts last so a dated signal always wins."""
+    return str(sig_dict.get("event_date") or "9999")
+
+
+def _merge_duplicate_signal(kept: dict[str, Any], incoming: dict[str, Any]) -> bool:
+    """Fold `incoming` into the already-stored `kept` duplicate. Returns True
+    when `kept` changed.
+
+    Keeps the EARLIEST event_date: a re-scrape reading a bumped date on the
+    same posting is not a new event, and every consumer takes the most recent
+    signal (`run.py::_primary_signal`, `scoring.py` recency), so keeping the
+    later date silently inflates the lead's rank and tells the prospect a
+    three-week-old posting is days old."""
+    if _event_sort_value(incoming) < _event_sort_value(kept):
+        kept["event_date"] = incoming.get("event_date")
+        return True
+    return False
+
+
 def _append_signal_row(conn: sqlite3.Connection, lead_id: int, signal: Signal) -> None:
     cur = conn.execute("SELECT signals FROM leads WHERE id = ?", (lead_id,))
     row = cur.fetchone()
@@ -280,8 +316,18 @@ def _append_signal_row(conn: sqlite3.Connection, lead_id: int, signal: Signal) -
     existing = json.loads(row["signals"])
     new_dict = signal.model_dump(mode="json")
     new_key = _signal_dedup_key(new_dict)
+    new_url_key = _signal_url_key(new_dict)
     for s in existing:
-        if _signal_dedup_key(s) == new_key:
+        same_title = _signal_dedup_key(s) == new_key
+        same_url = new_url_key is not None and _signal_url_key(s) == new_url_key
+        if same_title or same_url:
+            # Already stored. Not a new event — but it may carry the older date.
+            if not _merge_duplicate_signal(s, new_dict):
+                return
+            conn.execute(
+                "UPDATE leads SET signals = ?, updated_at = ? WHERE id = ?",
+                (json.dumps(existing), _utcnow(), lead_id),
+            )
             return
     existing.append(new_dict)
     conn.execute(
@@ -291,21 +337,36 @@ def _append_signal_row(conn: sqlite3.Connection, lead_id: int, signal: Signal) -
 
 
 def dedup_signals_pass(conn: sqlite3.Connection) -> int:
+    """Collapse duplicate signals in the store, keeping the earliest date.
+
+    Runs nightly, so it also BACKFILLS history: postings split in two by a
+    title-format change collapse back to one signal carrying the original
+    posting date."""
     modified = 0
     cur = conn.execute("SELECT id, signals FROM leads")
     rows = cur.fetchall()
     with conn:
         for row in rows:
             existing = json.loads(row["signals"])
-            seen: set[str] = set()
+            by_title: dict[str, dict[str, Any]] = {}
+            by_url: dict[str, dict[str, Any]] = {}
             deduped: list[dict[str, Any]] = []
+            changed = False
             for sig in existing:
                 key = _signal_dedup_key(sig)
-                if key in seen:
+                url_key = _signal_url_key(sig)
+                kept = by_title.get(key)
+                if kept is None and url_key is not None:
+                    kept = by_url.get(url_key)
+                if kept is not None:
+                    # Duplicate by either relation: fold in the earlier date.
+                    changed = _merge_duplicate_signal(kept, sig) or changed
                     continue
-                seen.add(key)
+                by_title[key] = sig
+                if url_key is not None:
+                    by_url[url_key] = sig
                 deduped.append(sig)
-            if len(deduped) != len(existing):
+            if len(deduped) != len(existing) or changed:
                 conn.execute(
                     "UPDATE leads SET signals = ?, updated_at = ? WHERE id = ?",
                     (json.dumps(deduped), _utcnow(), row["id"]),

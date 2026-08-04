@@ -156,3 +156,37 @@ def test_descriptions_and_test_records_are_untargetable(name):
 def test_real_companies_survive_the_placeholder_gate(name):
     from leadgen.filters import is_untargetable_name
     assert is_untargetable_name(name) is False
+
+
+# --------------------------------------------------------------------------
+# strip_ats_artifact — repair a job board's trailing label, never reject
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("raw,clean", [
+    ("Canopy Careers", "Canopy"),
+    ("Carisk Partners Careers", "Carisk Partners"),
+    ("GT Independence Careers", "GT Independence"),
+    ("Salamander Palm Beach Employer", "Salamander Palm Beach"),
+    ("Acme Hiring", "Acme"),
+    ("Acme Jobs  ", "Acme"),
+])
+def test_strip_ats_artifact_repairs_trailing_board_label(raw, clean):
+    assert filters.strip_ats_artifact(raw) == clean
+
+
+@pytest.mark.parametrize("name", [
+    "Employer Solutions Group",   # the same word mid-name is ordinary
+    "Careers Inc",                # only the label -> left for the stub gate
+    "Jobs",
+    "Canopy",
+    "Steve Madden",
+])
+def test_strip_ats_artifact_leaves_real_names_alone(name):
+    assert filters.strip_ats_artifact(name) == name
+
+
+def test_repaired_name_still_faces_the_untargetable_gates():
+    # Repair first, then judge: the label is not a licence to publish junk.
+    from leadgen.filters import is_untargetable_name, strip_ats_artifact
+    assert is_untargetable_name(strip_ats_artifact("Undisclosed Employer")) is True

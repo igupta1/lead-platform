@@ -172,6 +172,33 @@ def _is_placeholder_phrase_name(name: str) -> bool:
     return bool(re.search(r"[!?]", name))
 
 
+# An applicant-tracking system's employer field with its own label welded onto
+# the end ("Salamander Palm Beach Employer") — the board's word, not part of
+# the company's name. `_is_placeholder_phrase_name` cannot catch these: the
+# trailing word only reads as an artifact because it is LAST, and the same word
+# mid-name is ordinary ("Employer Solutions Group" is a real company).
+_ATS_TRAILING_TERMS = frozenset({
+    "employer", "careers", "career", "hiring", "jobs", "job", "opportunities",
+})
+
+
+_ATS_TRAILING_RE = re.compile(
+    r"\s+(?:" + "|".join(sorted(_ATS_TRAILING_TERMS)) + r")\s*$", re.IGNORECASE
+)
+
+
+def strip_ats_artifact(name: str) -> str:
+    """Drop a job board's own trailing label from a company name
+    ("Canopy Careers" -> "Canopy"). A REPAIR, not a rejection: the remainder is
+    the real company, so stripping keeps a good lead that dropping would lose.
+
+    Conservative on both ends — only the final token is considered (the same
+    word mid-name is ordinary, as in "Employer Solutions Group"), and a name
+    that is ONLY the label is left alone for the stub gate to reject."""
+    stripped = _ATS_TRAILING_RE.sub("", name).strip()
+    return stripped or name
+
+
 def _is_public_sector(name: str, domain: str | None = None) -> bool:
     """Government / public-sector entity — not a fractional-CFO buyer.
     Private nonprofits that merely name a locality are exempted."""
@@ -189,7 +216,11 @@ def _is_public_sector(name: str, domain: str | None = None) -> bool:
 def is_untargetable_name(name: str, domain: str | None = None) -> bool:
     """One gate for 'a company we'd never target': recruiters, auto dealers,
     hotels, public-sector/education, lone generic-stub names, stringified
-    nulls, and descriptions/test records posing as a name."""
+    nulls, and descriptions/test records posing as a name.
+
+    Call `strip_ats_artifact` on the name FIRST: a job-board label welded onto
+    the end is repaired, not rejected, and the gates below then judge the real
+    name underneath."""
     return (
         _is_recruiter_name(name)
         or _is_auto_dealer_name(name)

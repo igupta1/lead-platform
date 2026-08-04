@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from leadgen import db, enrichment, llm, monitoring, scoring, taxonomy
+from leadgen.filters import is_untargetable_name
 from leadgen.models import Disqualifier, Lead, LeadCandidate, effective_size
 from leadgen.niches import NICHES, ORDER
 from leadgen.niches.base import NicheConfig
@@ -237,7 +238,11 @@ def _primary_signal(lead: Lead, niche: NicheConfig):
         qualifying,
         key=lambda s: (
             niche.tier_index(s.type) or 0,
-            -( (s.event_date or s.captured_at).timestamp() ),
+            # Undated sorts LAST within a tier: captured_at is scrape time, so
+            # falling back to it made an undated signal look like today's news
+            # and headline the lead. A dated signal always wins the headline.
+            0 if s.event_date is not None else 1,
+            -(s.event_date.timestamp() if s.event_date is not None else 0.0),
         ),
     )
 
@@ -277,6 +282,12 @@ def _lead_record(lead: Lead, niche: NicheConfig, score: float) -> dict[str, Any]
     }
 
 
+def _is_complete(lead: Lead) -> bool:
+    """A lead the gift copy can actually use: the recipient can verify it
+    (domain) and there is something to say about it (insight)."""
+    return bool((lead.domain or "").strip() and (lead.insight or "").strip())
+
+
 def project_niche(conn: Any, niche: NicheConfig, *, state: str | None, limit: int | None) -> dict[str, Any]:
     """Project one niche's inventory. Fails CLOSED on size and enrichment:
     a lead that has never been enriched, or that we cannot size at all, is
@@ -288,7 +299,7 @@ def project_niche(conn: Any, niche: NicheConfig, *, state: str | None, limit: in
     gift built for small companies). They stay in the store and ship the night
     they can be sized."""
     rows: list[tuple[float, Lead]] = []
-    unenriched = unsized = 0
+    unenriched = unsized = untargetable = 0
     for lead in db.iter_leads(conn):
         score = lead.scores.get(niche.key)
         if score is None:
@@ -301,14 +312,21 @@ def project_niche(conn: Any, niche: NicheConfig, *, state: str | None, limit: in
         if effective_size(lead) is None:
             unsized += 1
             continue
+        if is_untargetable_name(lead.name, lead.domain):
+            untargetable += 1
+            continue
         rows.append((score, lead))
-    if unenriched or unsized:
+    if unenriched or unsized or untargetable:
         log.info(
-            "project %s: held back %d unenriched + %d unsized lead(s)",
-            niche.key, unenriched, unsized,
+            "project %s: held back %d unenriched + %d unsized + %d untargetable lead(s)",
+            niche.key, unenriched, unsized, untargetable,
         )
-    # Strongest first, then freshest; never pad below the count.
-    rows.sort(key=lambda r: r[0], reverse=True)
+    # Complete leads first, then strongest. A gift lead with no domain cannot
+    # be checked by the recipient, and one with no insight gives the copy
+    # nothing to say — so an incomplete lead ranks below every complete one
+    # rather than being dropped (the store has the depth to spare, and the
+    # lead is still real). Within each group it is strongest-first as before.
+    rows.sort(key=lambda r: (0 if _is_complete(r[1]) else 1, -r[0]))
     if limit is not None:
         rows = rows[:limit]
     return {

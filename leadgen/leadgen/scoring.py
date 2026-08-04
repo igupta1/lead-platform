@@ -56,6 +56,9 @@ def score_lead_for_niche(
     if not qualifying:
         return None
 
+    if niche.excludes_company(lead.niche):
+        return None
+
     # Size cap is signal-aware: a breach lead is uncapped, a security-role lead
     # caps at the niche's size_cap. Use the loosest cap among qualifying signals.
     cap = niche.cap_for(s.type for s in qualifying)
@@ -71,11 +74,15 @@ def score_lead_for_niche(
     assert best_tier is not None
     base = niche.tier_base(best_tier)
 
-    # Recency from the most-recent qualifying signal (any tier).
-    freshest_age = min(
-        _age_days(s.event_date or s.captured_at, now=now) for s in qualifying
-    )
-    recency = RECENCY_SPAN * _recency_factor(freshest_age)
+    # Recency from the most-recent qualifying signal (any tier). DATED signals
+    # only: an undated one falls back to captured_at, which is scrape time, so
+    # counting it here scored "we don't know when this happened" as maximally
+    # fresh — the strongest recency in the store, awarded for missing data. A
+    # lead with nothing dated earns no recency instead.
+    dated_ages = [
+        _age_days(s.event_date, now=now) for s in qualifying if s.event_date is not None
+    ]
+    recency = RECENCY_SPAN * _recency_factor(min(dated_ages)) if dated_ages else 0.0
 
     # Richer stack bonus (kept small so it can't jump a band).
     distinct_types = len({s.type for s in qualifying})

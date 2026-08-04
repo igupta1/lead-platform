@@ -43,7 +43,7 @@ from typing import Any
 import jobspy
 import requests
 
-from leadgen.filters import is_untargetable_name
+from leadgen.filters import is_untargetable_name, strip_ats_artifact
 from leadgen.models import (
     Disqualifier,
     LeadCandidate,
@@ -638,7 +638,7 @@ def _fetch_from_jobspy(
     for df in frames:
         for _, row in df.iterrows():
             title = str(row.get("title") or "").strip()
-            company = str(row.get("company") or "").strip()
+            company = strip_ats_artifact(str(row.get("company") or "").strip())
             if not title or not company:
                 continue
             if is_untargetable_name(company):
@@ -734,7 +734,9 @@ def _fetch_from_adzuna(
             results = data.get("results", [])
             for item in results:
                 title = str(item.get("title") or "").strip()
-                company = str((item.get("company") or {}).get("display_name") or "").strip()
+                company = strip_ats_artifact(
+                    str((item.get("company") or {}).get("display_name") or "").strip()
+                )
                 if not title or not company:
                     continue
                 if is_untargetable_name(company):

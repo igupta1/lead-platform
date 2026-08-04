@@ -45,10 +45,21 @@ class NicheConfig:
     # mssp uncaps breach_disclosed). A lead's applicable cap is the LOOSEST cap
     # among its qualifying signal types.
     signal_size_caps: Mapping[SignalType, int] = field(default_factory=dict)
+    # Company verticals (the enriched `lead.niche`) this niche never wants.
+    # Name matching cannot do this job: `filters._is_hotel_name` catches
+    # "Marriott" but not "Surf & Sand Laguna Beach" or "Hunters Run Country
+    # Club", and enrichment has already labelled both `hotel_lodging`. Scoped
+    # per niche because the exclusion is a BUYER judgement, not a quality one —
+    # a hotel's finance lead reports to a REIT (no fractional-CFO buyer), but
+    # that same hotel is a perfectly good MSP or cloud buyer.
+    excluded_company_niches: frozenset[str] = frozenset()
 
     @property
     def all_types(self) -> frozenset[SignalType]:
         return frozenset(t for tier in self.tiers for t in tier)
+
+    def excludes_company(self, company_niche: str | None) -> bool:
+        return bool(company_niche) and company_niche in self.excluded_company_niches
 
     def cap_for(self, sig_types: Iterable[SignalType]) -> int:
         return max(

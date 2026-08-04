@@ -1,8 +1,11 @@
 """The shared company store: global dedup, identity backfill, disqualifier
 gate, signal-level dedup."""
 
+from datetime import timedelta
+
 from leadgen import db
 from leadgen.models import Disqualifier, LeadCandidate, SignalType, SourceName
+from tests.conftest import _now as _now_ref
 
 
 def test_cross_source_dedup_one_company_all_signals(conn, make_sig):
@@ -68,6 +71,76 @@ def test_funding_signal_dedup_by_url(conn, make_sig):
         name="Epsilon Inc",
         initial_signal=make_sig(SignalType.FUNDING_FORM_D, url="https://sec.gov/same")))
     assert len(lead.signals) == 1
+
+
+def test_same_url_dedups_when_derived_title_changed(conn, make_sig):
+    # The live regression: a title-format change ("Controller" ->
+    # "Fractional Controller") re-split 73 CFO postings, because the title key
+    # alone cannot see that it is the same posting. Same URL -> one signal.
+    db.upsert_lead(conn, LeadCandidate(
+        name="Zeta Co",
+        initial_signal=make_sig(SignalType.JOB_FRACTIONAL_CFO, url="https://fj/same",
+                                evidence="Controller", days_ago=13)))
+    lead = db.upsert_lead(conn, LeadCandidate(
+        name="Zeta Co",
+        initial_signal=make_sig(SignalType.JOB_FRACTIONAL_CFO, url="https://fj/same",
+                                evidence="Fractional Controller", days_ago=4)))
+    assert len(lead.signals) == 1
+
+
+def test_duplicate_keeps_the_earliest_event_date(conn, make_sig):
+    # A re-scrape reading a bumped date on the same posting is not a new
+    # event: keep the original date, or the lead's recency score and the
+    # gift copy both claim a three-week-old posting is days old.
+    db.upsert_lead(conn, LeadCandidate(
+        name="Eta Co",
+        initial_signal=make_sig(SignalType.JOB_FINANCE_LEAD, url="https://fj/e",
+                                evidence="Controller", days_ago=13)))
+    lead = db.upsert_lead(conn, LeadCandidate(
+        name="Eta Co",
+        initial_signal=make_sig(SignalType.JOB_FINANCE_LEAD, url="https://fj/e",
+                                evidence="Fractional Controller", days_ago=4)))
+    assert len(lead.signals) == 1
+    assert (_now_ref() - lead.signals[0].event_date).days == 13
+
+
+def test_multi_board_repost_still_collapses_by_title(conn, make_sig):
+    # The URL key must not reopen what the title key exists to close: one role
+    # on two boards is two URLs and one event.
+    db.upsert_lead(conn, LeadCandidate(
+        name="Theta Co",
+        initial_signal=make_sig(SignalType.JOB_FINANCE_LEAD, url="https://indeed/a",
+                                evidence="Controller")))
+    lead = db.upsert_lead(conn, LeadCandidate(
+        name="Theta Co",
+        initial_signal=make_sig(SignalType.JOB_FINANCE_LEAD, url="https://linkedin/b",
+                                evidence="Controller")))
+    assert len(lead.signals) == 1
+
+
+def test_dedup_pass_backfills_split_signals_to_earliest_date(conn, make_sig):
+    # The nightly pass is what cleans history: two rows already in the store
+    # collapse to one carrying the ORIGINAL posting date.
+    db.upsert_lead(conn, LeadCandidate(
+        name="Iota Co",
+        initial_signal=make_sig(SignalType.JOB_FRACTIONAL_CFO, url="https://fj/i",
+                                evidence="Chief Financial Officer", days_ago=13)))
+    # Force the split the old key produced, bypassing the (now fixed) gate.
+    import json as _json
+    row = conn.execute("SELECT id, signals FROM leads").fetchone()
+    sigs = _json.loads(row["signals"])
+    later = dict(sigs[0])
+    later["evidence_text"] = "Fractional Chief Financial Officer"
+    later["payload"] = {"title": "Fractional Chief Financial Officer"}
+    later["event_date"] = (_now_ref() - timedelta(days=4)).isoformat()
+    conn.execute("UPDATE leads SET signals = ? WHERE id = ?",
+                 (_json.dumps([sigs[0], later]), row["id"]))
+    conn.commit()
+
+    assert db.dedup_signals_pass(conn) == 1
+    lead = list(db.iter_leads(conn))[0]
+    assert len(lead.signals) == 1
+    assert (_now_ref() - lead.signals[0].event_date).days == 13
 
 
 def test_merge_by_domain_collapses_spv_name_variants(conn, make_sig):

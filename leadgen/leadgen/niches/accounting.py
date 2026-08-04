@@ -17,4 +17,7 @@ CONFIG = NicheConfig(
         (SignalType.FUNDING_FORM_D, SignalType.FUNDING_FORM_C),
     ),
     output_filename="accounting-leads.json",
+    # A hotel/club's finance lead reports to a management company or
+    # REIT, not to a fractional-CFO or bookkeeping buyer.
+    excluded_company_niches=frozenset({"hotel_lodging"}),
 )
