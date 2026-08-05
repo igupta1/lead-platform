@@ -22,9 +22,11 @@ from __future__ import annotations
 
 import logging
 import re
+import socket
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import lru_cache
 
 from pydantic import BaseModel
 
@@ -37,16 +39,6 @@ from leadgen.models import (
     band_for,
     band_max,
     effective_size,
-)
-from leadgen.sources.edgar_form_d import (
-    _INVESTMENT_VEHICLE_KEYWORDS_RE,
-    _REAL_ESTATE_KEYWORDS_RE,
-    _ROMAN_NUMERAL_TAIL_RE,
-    _STREET_SPV_RE,
-    _TICKER_LLC_RE,
-    _TRAILING_DIGIT_SPV_RE,
-    _TRANCHE_SUFFIX_RE,
-    _VINTAGE_YEAR_RE,
 )
 from leadgen.filters import (
     _is_auto_dealer_name,
@@ -370,46 +362,6 @@ def _is_large_ngo(name: str) -> bool:
     return name.strip().lower() in _LARGE_NGO_NAMES
 
 
-# Both SEC funding signal types. Treated interchangeably for "has a
-# funding signal" gating (Form D private placement + Form C crowdfunding).
-_FUNDING_SIGNAL_TYPES: frozenset[SignalType] = frozenset({
-    SignalType.FUNDING_FORM_D,
-    SignalType.FUNDING_FORM_C,
-})
-
-
-def _has_funding_signal(lead: Lead) -> bool:
-    return any(s.type in _FUNDING_SIGNAL_TYPES for s in lead.signals)
-
-
-def _is_form_d_noise(lead: Lead) -> bool:
-    """Vintage-year / street-SPV / tranche / real-estate / vehicle
-    regexes from the EDGAR source applied retroactively. Gated to
-    leads that actually have a funding signal so we don't accidentally
-    drop a real operating company that happens to have a year or
-    'series' word in its name.
-
-    The 3rd-review pass exposed that source-only filters left dozens
-    of pre-existing rows untouched (Lightstone Direct I, Alpha Wave CI
-    V, Cupressus Apartments, Reno City Center Owner, BWM Private
-    Equity II, HG SPV1, Level 5 Multifamily, MCR Macon Investco, ZRP
-    Avalon Crossing, Vadnais Heights, etc.). This function now
-    mirrors the full EDGAR-source filter at purge time."""
-    if not _has_funding_signal(lead):
-        return False
-    name = lead.name
-    return bool(
-        _VINTAGE_YEAR_RE.search(name)
-        or _STREET_SPV_RE.search(name)
-        or _TRANCHE_SUFFIX_RE.search(name)
-        or _ROMAN_NUMERAL_TAIL_RE.search(name)
-        or _TRAILING_DIGIT_SPV_RE.search(name)
-        or _TICKER_LLC_RE.search(name)
-        or _REAL_ESTATE_KEYWORDS_RE.search(name)
-        or _INVESTMENT_VEHICLE_KEYWORDS_RE.search(name)
-    )
-
-
 # Hiring-signal leads — any of the seven job-post signal types — are the
 # money leads. A small, obscure company the web lookup can't size or
 # geolocate is a PRIME target, not a reject, so an unknown headcount /
@@ -532,8 +484,6 @@ def _disqualification_reason(lead: Lead) -> str | None:
         return "public_company_ticker"
     if _is_finance_vertical(lead.name):
         return "finance_vertical"
-    if _is_form_d_noise(lead):
-        return "form_d_noise_pattern"
     size = effective_size(lead)
     if size is not None and size > _headcount_cap(lead):
         # Report the size that actually drove the decision, not the raw
@@ -763,7 +713,30 @@ def _parse_domain(raw_value: str | None) -> str | None:
     cleaned = _DOMAIN_CLEAN_RE.sub("", raw_value).strip().lower()
     if not cleaned or "." not in cleaned or " " in cleaned:
         return None
+    if not _domain_resolves(cleaned):
+        # The domain is a grounded-search ANSWER, not an observation, so it can
+        # come back as a plausible-looking typo ("pargonsol.com" for Paragon
+        # Cyber Solutions). Storing None is strictly better than storing a
+        # wrong string: the lead survives on its name, and nothing downstream
+        # treats a broken domain as a verified one.
+        log.info("domain %s did not resolve — storing None", cleaned)
+        return None
     return cleaned
+
+
+# A resolved domain is checked once per run and memoized: enrichment plans
+# concurrently, and the same domain can arrive from several leads.
+@lru_cache(maxsize=8192)
+def _domain_resolves(domain: str) -> bool:
+    """True when the domain has a DNS record. DNS, not HTTP: it is fast, has no
+    bot-blocking, and answers the only question that matters here — whether
+    this string is a real internet host at all. A site that is merely down
+    still resolves, so a live company is never punished for an outage."""
+    try:
+        socket.getaddrinfo(domain, None)
+        return True
+    except (socket.gaierror, UnicodeError, OSError):
+        return False
 
 
 def _parse_yesno(raw_value: str | None) -> bool:
@@ -902,37 +875,6 @@ def needs_enrichment(lead: Lead, force: bool = False) -> bool:
     return any(s.captured_at > lead.enriched_at for s in lead.signals)
 
 
-def _is_form_c_funding_only(lead: Lead) -> bool:
-    """A Form C (Reg Crowdfunding) lead that arrived pre-filled from the
-    filing (domain + headcount) and has no hiring signal. Its domain,
-    size, and location are already known, and a tiny Reg-CF issuer won't
-    be a CFO-services competitor — so it can be enriched WITHOUT a Gemini
-    grounded-search call (the light path)."""
-    if _has_hiring_signal(lead):
-        return False  # bullseye — worth the full lookup
-    if lead.domain is None:
-        return False  # need Gemini to resolve a domain, or it can't ship
-    return any(s.type == SignalType.FUNDING_FORM_C for s in lead.signals)
-
-
-def needs_gemini_lookup(lead: Lead, force: bool = False) -> bool:
-    """True when enriching this lead will spend a Gemini grounded-search
-    call. Already-enriched leads and Form C funding-only leads (light
-    path) cost no Gemini, so they must not count against the daily
-    budget."""
-    if not needs_enrichment(lead, force):
-        return False
-    return not _is_form_c_funding_only(lead)
-
-
-def _form_c_location(lead: Lead) -> tuple[str | None, str | None]:
-    for s in lead.signals:
-        if s.type == SignalType.FUNDING_FORM_C:
-            p = s.payload or {}
-            return p.get("biz_location"), p.get("biz_state")
-    return None, None
-
-
 @dataclass
 class EnrichPlan:
     """The outcome of the network + decision work for one lead, WITHOUT any DB
@@ -941,7 +883,7 @@ class EnrichPlan:
       action == "skip"    — nothing needed (already enriched)
       action == "delete"  — drop the lead; `sticky` also records a disqualifier
       action == "update"  — write `updates` onto the lead
-    `reason` carries the delete reason / "form_c_light" / "enriched" for logs.
+    `reason` carries the delete reason / "enriched" for logs.
     """
     action: str
     updates: dict[str, object] | None = None
@@ -964,27 +906,6 @@ def plan_enrichment(lead: Lead, *, force: bool = False) -> EnrichPlan:
     reason = _disqualification_reason(lead)
     if reason is not None:
         return EnrichPlan("delete", reason=reason)
-
-    # Form C funding-only leads take the light path — the filing already carries
-    # domain / headcount / location, so no Gemini call is spent (OpenAI niche only).
-    if _is_form_c_funding_only(lead):
-        niche = classify_niche(lead, insight=None)
-        updates: dict[str, object] = {
-            "industry": taxonomy.parent_of(niche),
-            "niche": niche,
-            "country": "US",
-            "enriched_at": _utcnow(),
-        }
-        city, state = _form_c_location(lead)
-        if city and not lead.city:
-            updates["city"] = city
-        if state and not lead.state:
-            updates["state"] = state
-        # The filing carries a real headcount; derive its band so the light
-        # path is size-gated on the same footing as the Gemini path.
-        if lead.headcount_band is None and lead.headcount is not None:
-            updates["headcount_band"] = band_for(lead.headcount)
-        return EnrichPlan("update", updates=updates, reason="form_c_light")
 
     lookup = lookup_company(lead)
 
@@ -1102,9 +1023,6 @@ def apply_enrichment(conn: sqlite3.Connection, lead: Lead, plan: EnrichPlan) -> 
 
     updates = plan.updates or {}
     db.update_lead(conn, lead.id, **updates)
-    if plan.reason == "form_c_light":
-        log.info("enrich (light/Form C): %d (%s) niche=%s — no Gemini call",
-                 lead.id, lead.name, updates.get("niche"))
     return True
 
 

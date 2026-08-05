@@ -8,15 +8,21 @@ them or vice-versa.
 
 ## Shape (`leadgen/leadgen/`)
 
-- `sources/` — fetched once per run, each returns `LeadCandidate`s:
-  `edgar_form_d` (Form D funding), `edgar_form_c` (Form C funding), `jobs`
+- `sources/` — fetched once per run, each returns `LeadCandidate`s: `jobs`
   (the seven job-post signal types), `fractional_boards` (fractional-CFO
-  posts), `breaches` (HHS OCR + state AGs).
+  posts), `breaches` (HHS OCR + state AGs). The two EDGAR sources were
+  DELETED (2026-08-04): funding is the bottom tier in every niche that used
+  it, so its first lead ranked 474th (cfo) / 1032nd (accounting) and never
+  reached a gift. ~960 lines for zero gifts. Do not re-add without a tier
+  change that would actually surface them.
 - `db.py` — the single company store: one row per company (fuzzy-deduped
   across every source), all signals attached, one score per niche.
 - `enrichment.py` — LLM (Gemini/OpenAI) enrichment: domain, headcount,
   industry/niche, insight; purges junk and companies ≥100 employees. **No
-  Apollo, no decision-maker lookup** (magnets need no contact).
+  Apollo, no decision-maker lookup** (magnets need no contact). `insight` is
+  NOT published — every outreach line is code-templated — but it is still
+  computed: the niche classifier and the CFO-competitor gate both key off it.
+  A looked-up domain must resolve in DNS or it is stored as None.
 - `scoring.py` + `niches/` — niche config + the recency-weighted tiered scorer.
   Five niches: `accounting`, `cfo`, `mssp`, `msp`, `cloud`.
 - `run.py` — the one orchestrator: fetch → upsert → enrich → score → project
@@ -47,7 +53,9 @@ proxies). No `exec_hired` / title-absence guessing.
 ## Forbidden without explicit instruction
 
 - Committing `.env` or `**/data/*-leads.json`.
-- Re-adding Apollo, RSS funding, an insurance/trucking/recruiter niche, or an
-  `exec_hired`/fresh-vs-aged/still-open concept (all deliberately removed).
+- Re-adding Apollo, RSS funding, the EDGAR Form D/C sources, an
+  insurance/trucking/recruiter niche, or an `exec_hired`/fresh-vs-aged/
+  still-open concept (all deliberately removed).
+- Publishing `insight`, or letting any model write a lead's copy line.
 - Wholesale-destructive ops (`rm -rf` of dirs, `git reset --hard`, force push,
   dropping/truncating tables, mass file deletes). Single-file deletes are fine.

@@ -1,12 +1,12 @@
 """leadgen daily run — the single orchestrator for the whole platform.
 
     fetch(all shared sources) -> upsert into the deduped company store
-    -> LLM-enrich (domain, headcount, industry, insight; purge junk / >=100)
+    -> LLM-enrich (domain, headcount, industry, niche; purge junk / >=100)
     -> score every company for every niche -> project one inventory per niche
     -> (optionally) upload.
 
-A niche is a query over the store, not a pipeline: a company that filed a
-Form D and is hiring a Controller is one deduped record scored for several
+A niche is a query over the store, not a pipeline: a company hiring both a
+Controller and a DevOps engineer is one deduped record scored for several
 niches, and appears in each niche inventory it qualifies for. Output never
 pads below the requested count — it returns fewer.
 """
@@ -23,27 +23,22 @@ from pathlib import Path
 from typing import Any
 
 from leadgen import db, enrichment, llm, monitoring, scoring, taxonomy
+from leadgen import filters
 from leadgen.filters import is_untargetable_name
 from leadgen.models import Disqualifier, Lead, LeadCandidate, effective_size
 from leadgen.niches import NICHES, ORDER
 from leadgen.niches.base import NicheConfig
-from leadgen.sources import (
-    breaches,
-    edgar_form_c,
-    edgar_form_d,
-    fractional_boards,
-    jobs,
-)
+from leadgen.sources import breaches, fractional_boards, jobs
 
 log = logging.getLogger("leadgen.run")
 
 # Shared sources, fetched once per run. Order is cosmetic (dedup is global).
-_SOURCES = (edgar_form_d, edgar_form_c, jobs, fractional_boards, breaches)
+_SOURCES = (jobs, fractional_boards, breaches)
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "leads.db"
 DEFAULT_OUT_DIR = Path(__file__).resolve().parent.parent / "data"
 DEFAULT_SINCE_DAYS = 45
-# Seconds reserved AFTER enrichment for purge/merge/prune/score/emit/upload so a
+# Seconds reserved AFTER enrichment for purge/prune/score/emit/upload so a
 # time-budgeted run always reaches the commit (never gets SIGKILLed mid-write).
 POST_ENRICH_RESERVE_S = 300
 # Concurrent Gemini/OpenAI lookups during enrichment. The per-lead network work
@@ -91,6 +86,8 @@ def fetch_all(
         except Exception:  # one flaky source must not kill the run
             log.exception("source %s failed", name)
             source_counts[name] = 0  # a source that raised reads as 0 -> alertable
+    if filters.REJECT_COUNTS:
+        log.info("name gate rejected: %s", dict(filters.REJECT_COUNTS.most_common()))
     return candidates, disqualifiers, source_counts
 
 
@@ -268,7 +265,6 @@ def _lead_record(lead: Lead, niche: NicheConfig, score: float) -> dict[str, Any]
         "city": lead.city,
         "state": lead.state,
         "score": score,
-        "insight": lead.insight,
         "signals": [
             {
                 "type": s.type.value,
@@ -283,9 +279,14 @@ def _lead_record(lead: Lead, niche: NicheConfig, score: float) -> dict[str, Any]
 
 
 def _is_complete(lead: Lead) -> bool:
-    """A lead the gift copy can actually use: the recipient can verify it
-    (domain) and there is something to say about it (insight)."""
-    return bool((lead.domain or "").strip() and (lead.insight or "").strip())
+    """A lead the gift copy can actually use.
+
+    Domain ONLY. `insight` was in this test until the copy layer was measured:
+    every lead line is code-templated from the signal itself, so the insight
+    never reaches an email and requiring it demoted good leads over a field
+    nobody reads. It stays a stored field — the niche classifier and the
+    competitor gate both key off it — but it is no longer published."""
+    return bool((lead.domain or "").strip())
 
 
 def project_niche(conn: Any, niche: NicheConfig, *, state: str | None, limit: int | None) -> dict[str, Any]:
@@ -321,11 +322,10 @@ def project_niche(conn: Any, niche: NicheConfig, *, state: str | None, limit: in
             "project %s: held back %d unenriched + %d unsized + %d untargetable lead(s)",
             niche.key, unenriched, unsized, untargetable,
         )
-    # Complete leads first, then strongest. A gift lead with no domain cannot
-    # be checked by the recipient, and one with no insight gives the copy
-    # nothing to say — so an incomplete lead ranks below every complete one
-    # rather than being dropped (the store has the depth to spare, and the
-    # lead is still real). Within each group it is strongest-first as before.
+    # Complete leads first, then strongest. A gift lead with no domain is one
+    # the recipient cannot check, so it ranks below every complete one rather
+    # than being dropped (the store has the depth to spare, and the lead is
+    # still real). Within each group it is strongest-first as before.
     rows.sort(key=lambda r: (0 if _is_complete(r[1]) else 1, -r[0]))
     if limit is not None:
         rows = rows[:limit]
@@ -429,9 +429,6 @@ def main(argv: list[str] | None = None) -> int:
 
     purged = enrichment.purge_disqualified(conn)
     log.info("purged %d disqualified leads", purged)
-
-    merged = db.merge_by_domain(conn)
-    log.info("merged %d domain-duplicate leads", merged)
 
     pruned = db.prune_stale(conn, max_age_days=STALE_MAX_DAYS)
     log.info("pruned %d stale leads (no signal in %d days)", pruned, STALE_MAX_DAYS)

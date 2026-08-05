@@ -73,7 +73,6 @@ _DISQUALIFY_CASES = [
     (_lead("Springfield Police Department"), "public_sector_pattern"),
     (_lead("Widgetworks (WDGT)"), "public_company_ticker"),
     (_lead("First National Bank"), "finance_vertical"),
-    (_lead("Riverside 278 LLC", funding=True), "form_d_noise_pattern"),
     (_lead("Bigco Widgets", headcount=500), "oversized"),
     (_lead("Ghost Co", headcount=0), "zero_headcount"),
     (_lead("Widgetco North America"), "likely_oversized_subsidiary"),

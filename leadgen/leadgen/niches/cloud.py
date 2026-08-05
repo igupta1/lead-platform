@@ -13,7 +13,6 @@ CONFIG = NicheConfig(
     label="Cloud / DevOps",
     tiers=(
         (SignalType.JOB_CLOUD_DEVOPS,),
-        (SignalType.FUNDING_FORM_D,),
     ),
     output_filename="cloud-leads.json",
     size_cap=250,

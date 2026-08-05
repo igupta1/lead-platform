@@ -15,6 +15,8 @@ These are NAME filters. TITLE filters (e.g. ``_is_automotive_title``) stay in
 from __future__ import annotations
 
 import re
+from collections import Counter
+from typing import Any
 
 # --- Company-name exclusions -----------------------------------------------
 # Recruiter / staffing firms: a "Robert Half" posting is on BEHALF of an
@@ -199,6 +201,30 @@ def strip_ats_artifact(name: str) -> str:
     return stripped or name
 
 
+# A name the RECIPIENT cannot google. The gift lists a company name and a city
+# and nothing else — no link, by design — so a name that searches to the wrong
+# thing reads as a fabricated lead no matter how real the company is.
+#
+# ONLY the personal-name shape qualifies: "STAN E. POTOCKI" searches to a
+# person, while the business is a Lubbock sinus clinic. The middle initial is
+# what makes it unambiguous, so it is required.
+#
+# Bare acronyms were tried here and REJECTED on the evidence: the rule flagged
+# 34 names, and they are overwhelmingly real, searchable brands (CENSYS,
+# VIETRI, LAFCU, MATSYS). Google resolves an acronym fine. Do not re-add it.
+_PERSONAL_NAME_RE = re.compile(
+    r"^(?:(?:dr|mr|ms|mrs)\.?\s+)?[A-Za-z]{2,}\s+[A-Za-z]\.\s+[A-Za-z]{2,}$",
+    re.IGNORECASE,
+)
+
+
+def is_unsearchable_name(name: str) -> bool:
+    """True when a prospect googling this name would land on a person rather
+    than the company. Deliberately narrow — never a judgement about how
+    well-known a real company is."""
+    return bool(_PERSONAL_NAME_RE.match((name or "").strip()))
+
+
 def _is_public_sector(name: str, domain: str | None = None) -> bool:
     """Government / public-sector entity — not a fractional-CFO buyer.
     Private nonprofits that merely name a locality are exempted."""
@@ -216,17 +242,39 @@ def _is_public_sector(name: str, domain: str | None = None) -> bool:
 def is_untargetable_name(name: str, domain: str | None = None) -> bool:
     """One gate for 'a company we'd never target': recruiters, auto dealers,
     hotels, public-sector/education, lone generic-stub names, stringified
-    nulls, and descriptions/test records posing as a name.
+    nulls, descriptions/test records posing as a name, and names the recipient
+    could not google.
 
     Call `strip_ats_artifact` on the name FIRST: a job-board label welded onto
     the end is repaired, not rejected, and the gates below then judge the real
-    name underneath."""
-    return (
-        _is_recruiter_name(name)
-        or _is_auto_dealer_name(name)
-        or _is_hotel_name(name)
-        or _is_public_sector(name, domain)
-        or _is_generic_stub_name(name)
-        or _is_null_placeholder_name(name)
-        or _is_placeholder_phrase_name(name)
-    )
+    name underneath.
+
+    Each rule's hit is counted in `REJECT_COUNTS`. These rules reject silently
+    at ingest and write no `disqualified` row, so without the counter there is
+    no way to tell which ones still earn their keep — the last cleanup had to
+    guess. `leadgen.run` logs the tally at the end of a fetch."""
+    for rule, predicate in _RULES:
+        if predicate(name, domain):
+            REJECT_COUNTS[rule] += 1
+            return True
+    return False
+
+
+# rule name -> predicate. Ordered cheapest-first; the tally makes each rule's
+# value measurable, so a future cleanup can cut on evidence rather than taste.
+_RULES: tuple[tuple[str, Any], ...] = (
+    ("recruiter", lambda n, d: _is_recruiter_name(n)),
+    ("auto_dealer", lambda n, d: _is_auto_dealer_name(n)),
+    ("hotel", lambda n, d: _is_hotel_name(n)),
+    ("public_sector", lambda n, d: _is_public_sector(n, d)),
+    ("generic_stub", lambda n, d: _is_generic_stub_name(n)),
+    ("null_placeholder", lambda n, d: _is_null_placeholder_name(n)),
+    ("placeholder_phrase", lambda n, d: _is_placeholder_phrase_name(n)),
+    ("unsearchable", lambda n, d: is_unsearchable_name(n)),
+)
+
+REJECT_COUNTS: Counter[str] = Counter()
+
+
+def reset_reject_counts() -> None:
+    REJECT_COUNTS.clear()

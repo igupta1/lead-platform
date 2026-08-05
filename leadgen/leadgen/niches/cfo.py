@@ -14,7 +14,6 @@ CONFIG = NicheConfig(
     tiers=(
         (SignalType.JOB_FRACTIONAL_CFO,),
         (SignalType.JOB_FINANCE_LEAD,),
-        (SignalType.FUNDING_FORM_D,),
     ),
     output_filename="cfo-leads.json",
     # A hotel/club's finance lead reports to a management company or

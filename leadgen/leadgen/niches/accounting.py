@@ -14,7 +14,6 @@ CONFIG = NicheConfig(
     label="Accounting / Bookkeeping",
     tiers=(
         (SignalType.JOB_FINANCE_LEAD, SignalType.JOB_JUNIOR_FINANCE),
-        (SignalType.FUNDING_FORM_D, SignalType.FUNDING_FORM_C),
     ),
     output_filename="accounting-leads.json",
     # A hotel/club's finance lead reports to a management company or

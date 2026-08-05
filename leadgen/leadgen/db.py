@@ -3,16 +3,16 @@
 One committed ``data/leads.db`` for the whole platform (replaces the old
 per-package DBs). Two tables:
   * ``leads`` — one row per company, deduped across every source. Its
-    ``signals`` column holds *all* signals the company has emitted (funding,
-    job posts, breach), and ``scores`` holds one score per niche.
+    ``signals`` column holds *all* signals the company has emitted (job
+    posts, breach), and ``scores`` holds one score per niche.
   * ``disqualified`` — one row per name_key that must never surface in any
     niche. Today only fed by the jobs source (an open full-time CFO
-    posting). Persistent: a CFO posting seen on day 1 still blocks a Form D
-    filing seen on day 10.
+    posting). Persistent: a CFO posting seen on day 1 still blocks a later
+    posting from the same company.
 
-Dedup is global now: a company that filed a Form D *and* is hiring a
-Controller is one row with two signals, so it can qualify for several niches
-at once. Fuzzy-name dedup on upsert; signal-level dedup on append.
+Dedup is global: a company hiring a Controller *and* a DevOps engineer is one
+row with two signals, so it can qualify for several niches at once. Fuzzy-name
+dedup on upsert; signal-level dedup on append.
 """
 
 import json
@@ -188,27 +188,6 @@ _OPERATIONAL_SUFFIXES = (
 )
 
 
-def brand_key(name: str) -> str:
-    """Aggressive normalization for cross-source matching. Starts from
-    name_key and strips the operational suffixes above. Returns "" when the
-    entire name is operational suffixes (caller should discard)."""
-    s = _name_key(name)
-    while True:
-        stripped = False
-        for suffix in _OPERATIONAL_SUFFIXES:
-            if s.endswith(" " + suffix):
-                s = s[: -len(suffix) - 1].strip()
-                stripped = True
-                break
-            if s == suffix:
-                s = ""
-                stripped = True
-                break
-        if not stripped:
-            break
-    return s
-
-
 def _row_to_lead(row: sqlite3.Row) -> Lead:
     data = dict(row)
     data["signals"] = [Signal.model_validate(s) for s in json.loads(data.get("signals") or "[]")]
@@ -375,59 +354,6 @@ def dedup_signals_pass(conn: sqlite3.Connection) -> int:
     return modified
 
 
-def _backfill_from_lead(conn: sqlite3.Connection, target_id: int, src: Lead) -> None:
-    """Fill any identity/geo field the target is missing from ``src``."""
-    tgt = _get_lead_by_id(conn, target_id)
-    if tgt is None:
-        return
-    updates: dict[str, Any] = {}
-    for f in ("domain", "headcount", "headcount_band", "city", "state", "country",
-              "industry", "niche", "insight"):
-        if getattr(tgt, f) is None and getattr(src, f) is not None:
-            updates[f] = getattr(src, f)
-    if updates:
-        set_parts = ", ".join(f"{k} = ?" for k in updates) + ", updated_at = ?"
-        conn.execute(
-            f"UPDATE leads SET {set_parts} WHERE id = ?",
-            [*updates.values(), _utcnow(), target_id],
-        )
-
-
-def merge_by_domain(conn: sqlite3.Connection) -> int:
-    """Collapse leads that resolved to the SAME domain into one record.
-
-    Name-key dedup misses cross-source dupes and SEC SPV/tranche name variants
-    ("Acme", "Acme 07Cfc", "Acme Bef8C") — but once enriched they share a
-    domain. The canonical keeper is the one with the most signals (then lowest
-    id); every other row's signals are merged in and the row deleted. Returns
-    how many rows were merged away. Run AFTER enrichment (domains resolved)."""
-    merged = 0
-    with conn:
-        rows = conn.execute(
-            "SELECT id, domain FROM leads WHERE domain IS NOT NULL AND TRIM(domain) != ''"
-        ).fetchall()
-        groups: dict[str, list[int]] = {}
-        for row in rows:
-            groups.setdefault(row["domain"].strip().lower(), []).append(row["id"])
-        for _domain, ids in groups.items():
-            if len(ids) < 2:
-                continue
-            leads = [ld for ld in (_get_lead_by_id(conn, i) for i in ids) if ld is not None]
-            if len(leads) < 2:
-                continue
-            canonical = max(leads, key=lambda ld: (len(ld.signals), -(ld.id or 0)))
-            assert canonical.id is not None
-            for ld in leads:
-                if ld.id == canonical.id:
-                    continue
-                for sig in ld.signals:
-                    _append_signal_row(conn, canonical.id, sig)
-                _backfill_from_lead(conn, canonical.id, ld)
-                conn.execute("DELETE FROM leads WHERE id = ?", (ld.id,))
-                merged += 1
-    return merged
-
-
 def init_db(path: Path) -> sqlite3.Connection:
     conn = sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES)
     conn.row_factory = sqlite3.Row
@@ -466,26 +392,12 @@ def mark_disqualified(conn: sqlite3.Connection, dq: Disqualifier) -> str:
     return key
 
 
-def is_disqualified(conn: sqlite3.Connection, name: str) -> bool:
-    try:
-        key = _name_key(name)
-    except ValueError:
-        return False
-    cur = conn.execute("SELECT 1 FROM disqualified WHERE name_key = ? LIMIT 1", (key,))
-    return cur.fetchone() is not None
-
-
 def iter_disqualified(conn: sqlite3.Connection) -> Iterator[tuple[str, str, str]]:
     """Yields (name_key, name, reason) for every disqualified entry. Used by
     run.py to sweep matching leads out of the leads table."""
     cur = conn.execute("SELECT name_key, name, reason FROM disqualified")
     for row in cur:
         yield (row["name_key"], row["name"], row["reason"])
-
-
-def disqualified_count(conn: sqlite3.Connection) -> int:
-    cur = conn.execute("SELECT COUNT(*) FROM disqualified")
-    return int(cur.fetchone()[0])
 
 
 # --- Leads table ----------------------------------------------------------

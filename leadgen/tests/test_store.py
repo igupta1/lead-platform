@@ -143,35 +143,6 @@ def test_dedup_pass_backfills_split_signals_to_earliest_date(conn, make_sig):
     assert (_now_ref() - lead.signals[0].event_date).days == 13
 
 
-def test_merge_by_domain_collapses_spv_name_variants(conn, make_sig):
-    # SEC SPV/tranche name variants that name-key dedup misses, but share a
-    # domain once enriched.
-    db.upsert_lead(conn, LeadCandidate(
-        name="Lifesitenews 07Cfc", domain="lifesitenews.com",
-        initial_signal=make_sig(SignalType.FUNDING_FORM_D, url="https://sec.gov/a")))
-    db.upsert_lead(conn, LeadCandidate(
-        name="Lifesitenews Bef8C", domain="lifesitenews.com", state="VA",
-        initial_signal=make_sig(SignalType.JOB_FINANCE_LEAD, url="https://jobs/b")))
-    assert len(list(db.iter_leads(conn))) == 2
-
-    merged = db.merge_by_domain(conn)
-    assert merged == 1
-    leads = list(db.iter_leads(conn))
-    assert len(leads) == 1
-    # both signals survived on the single record, and state backfilled
-    assert {s.type for s in leads[0].signals} == {SignalType.FUNDING_FORM_D, SignalType.JOB_FINANCE_LEAD}
-    assert leads[0].state == "VA"
-
-
-def test_merge_by_domain_leaves_distinct_domains(conn, make_sig):
-    db.upsert_lead(conn, LeadCandidate(name="Alpha", domain="alpha.com",
-        initial_signal=make_sig(SignalType.JOB_SECURITY, url="https://j/1")))
-    db.upsert_lead(conn, LeadCandidate(name="Beta", domain="beta.com",
-        initial_signal=make_sig(SignalType.JOB_SECURITY, url="https://j/2")))
-    assert db.merge_by_domain(conn) == 0
-    assert len(list(db.iter_leads(conn))) == 2
-
-
 def test_set_scores_roundtrip(conn, make_sig):
     lead = db.upsert_lead(conn, LeadCandidate(
         name="Zeta Inc",

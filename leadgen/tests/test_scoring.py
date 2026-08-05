@@ -56,13 +56,12 @@ def test_non_qualifying_signal_returns_none():
 
 def test_one_company_scores_multiple_niches():
     lead = _lead(
-        make_signal(SignalType.FUNDING_FORM_D),
+        make_signal(SignalType.JOB_CLOUD_DEVOPS),
         make_signal(SignalType.JOB_FINANCE_LEAD),
     )
     scores = score_all(lead, now=NOW)
-    # finance-lead + form_d -> accounting (tier0) and cfo (tier1); form_d -> cloud
+    # finance-lead -> accounting (tier0) + cfo (tier0); devops -> cloud (tier0)
     assert set(scores) == {"accounting", "cfo", "cloud"}
-    assert scores["accounting"] > scores["cfo"] > scores["cloud"]
 
 
 def test_breach_outranks_security_in_mssp():
