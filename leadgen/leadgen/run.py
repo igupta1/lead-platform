@@ -256,6 +256,16 @@ def _lead_record(lead: Lead, niche: NicheConfig, score: float) -> dict[str, Any]
         "source_url": primary.source_url if primary else None,
         "industry": lead.industry,
         "niche": lead.niche,
+        # Published for ONE consumer: the outreach engine's Gate B fit check
+        # (system_b/gift/fit.py), which asks an LLM whether each gift lead's
+        # description genuinely reads as the claimed vertical before the copy
+        # claims it. It is the only field that says what the company DOES, so
+        # without it Gate B judges empty strings, answers false for every lead
+        # (it is instructed to), and silently drops every niche claim to a
+        # generalist geo email. That is exactly what happened between
+        # 2026-08-04 and 2026-08-05: the cfo niche rate went 11/23 -> 0/23.
+        # It must never reach a rendered email — see `_is_complete`.
+        "insight": lead.insight,
         "headcount": lead.headcount,
         # The coarse band is how most of these companies are sized at all — an
         # exact count is undiscoverable for a small private company, so
@@ -281,11 +291,13 @@ def _lead_record(lead: Lead, niche: NicheConfig, score: float) -> dict[str, Any]
 def _is_complete(lead: Lead) -> bool:
     """A lead the gift copy can actually use.
 
-    Domain ONLY. `insight` was in this test until the copy layer was measured:
-    every lead line is code-templated from the signal itself, so the insight
-    never reaches an email and requiring it demoted good leads over a field
-    nobody reads. It stays a stored field — the niche classifier and the
-    competitor gate both key off it — but it is no longer published."""
+    Domain ONLY. `insight` is deliberately NOT part of this test: every lead
+    line is code-templated from the signal itself, so a missing insight never
+    blocks usable copy, and requiring it here demoted good leads. It is a
+    different thing from whether the field is PUBLISHED — it is (see
+    `_lead_record`), because the outreach engine's Gate B reads it to verify a
+    vertical claim. Published for judging, never for rendering: no email text
+    is ever derived from it."""
     return bool((lead.domain or "").strip())
 
 

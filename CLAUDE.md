@@ -19,9 +19,13 @@ them or vice-versa.
   across every source), all signals attached, one score per niche.
 - `enrichment.py` — LLM (Gemini/OpenAI) enrichment: domain, headcount,
   industry/niche, insight; purges junk and companies ≥100 employees. **No
-  Apollo, no decision-maker lookup** (magnets need no contact). `insight` is
-  NOT published — every outreach line is code-templated — but it is still
-  computed: the niche classifier and the CFO-competitor gate both key off it.
+  Apollo, no decision-maker lookup** (magnets need no contact). `insight` IS
+  published, for exactly one consumer: the outreach engine's Gate B fit check.
+  It is the only field describing what a company does, so unpublishing it makes
+  Gate B judge empty strings and silently drop every vertical claim (measured:
+  cfo went 11/23 niched to 0/23 over 2026-08-04..05). It is also used locally by
+  the niche classifier and the CFO-competitor gate. It must never be rendered
+  into copy — every outreach line stays code-templated.
   A looked-up domain must resolve in DNS or it is stored as None.
 - `scoring.py` + `niches/` — niche config + the recency-weighted tiered scorer.
   Five niches: `accounting`, `cfo`, `mssp`, `msp`, `cloud`.
@@ -56,6 +60,7 @@ proxies). No `exec_hired` / title-absence guessing.
 - Re-adding Apollo, RSS funding, the EDGAR Form D/C sources, an
   insurance/trucking/recruiter niche, or an `exec_hired`/fresh-vs-aged/
   still-open concept (all deliberately removed).
-- Publishing `insight`, or letting any model write a lead's copy line.
+- UNpublishing `insight` (it feeds outreach Gate B — see `enrichment.py` above),
+  or letting any model write a lead's copy line.
 - Wholesale-destructive ops (`rm -rf` of dirs, `git reset --hard`, force push,
   dropping/truncating tables, mass file deletes). Single-file deletes are fine.
