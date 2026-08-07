@@ -63,3 +63,87 @@ def test_healthy_run_is_silent():
     stats = {"sources": {"jobs": 10}, "niches": {"cfo": 5}}
     assert detect_anomalies(stats, stats) == []
     assert detect_anomalies(None, stats) == []
+
+
+# --- insight floor (Layer 3: catastrophic-only) -----------------------------
+#
+# The floor exists for a systematic failure (dead/rotated API key, drained
+# balance, provider outage, the field dropped from the record) — NOT for
+# quality. These tests pin both halves: it fires at ~zero, and it stays silent
+# across the whole range of normal-to-mediocre fill.
+
+
+def test_empty_insight_is_flagged():
+    msgs = detect_anomalies(
+        None, {"insight_fill": {"cfo": {"total": 500, "filled": 0}}}
+    )
+    assert len(msgs) == 1
+    assert "cfo" in msgs[0] and "0/500" in msgs[0]
+
+
+def test_healthy_insight_fill_is_silent():
+    # Observed production fill is 97-100%.
+    assert detect_anomalies(
+        None, {"insight_fill": {"cfo": {"total": 500, "filled": 490}}}
+    ) == []
+
+
+def test_model_variance_never_trips_the_floor():
+    # Well below normal but nowhere near a systematic failure — must stay quiet,
+    # or the alert gets muted and a real outage is missed.
+    for filled in (500, 480, 400, 300, 200, 105):
+        assert detect_anomalies(
+            None, {"insight_fill": {"cfo": {"total": 500, "filled": filled}}}
+        ) == [], f"floor tripped at {filled}/500"
+
+
+def test_floor_fires_only_below_twenty_percent():
+    assert detect_anomalies(
+        None, {"insight_fill": {"cfo": {"total": 100, "filled": 20}}}
+    ) == []
+    msgs = detect_anomalies(
+        None, {"insight_fill": {"cfo": {"total": 100, "filled": 19}}}
+    )
+    assert len(msgs) == 1
+
+
+def test_empty_niche_is_not_a_fill_failure():
+    # 0/0 is the count guard's business, not the floor's — no division by zero,
+    # and no alert for a niche that simply published nothing.
+    assert detect_anomalies(
+        None, {"insight_fill": {"cfo": {"total": 0, "filled": 0}}}
+    ) == []
+
+
+def test_each_broken_niche_is_reported_separately():
+    # A single broken niche must be distinguishable from a whole-feed failure.
+    msgs = detect_anomalies(
+        None,
+        {
+            "insight_fill": {
+                "cfo": {"total": 500, "filled": 0},
+                "accounting": {"total": 1200, "filled": 1180},
+                "msp": {"total": 200, "filled": 2},
+            }
+        },
+    )
+    assert len(msgs) == 2
+    assert any("cfo" in m for m in msgs) and any("msp" in m for m in msgs)
+    assert not any("accounting" in m for m in msgs)
+
+
+def test_missing_insight_fill_key_is_silent():
+    # An older run_stats row (or a caller that doesn't pass it) must not alert.
+    assert detect_anomalies(None, {"niches": {"cfo": 5}}) == []
+
+
+def test_insight_floor_composes_with_the_count_diff():
+    prev = {"sources": {"jobs": 6000}, "niches": {"cfo": 500}}
+    curr = {
+        "sources": {"jobs": 0},
+        "niches": {"cfo": 500},
+        "insight_fill": {"cfo": {"total": 500, "filled": 0}},
+    }
+    msgs = detect_anomalies(prev, curr)
+    assert any("jobs" in m for m in msgs)
+    assert any("insight" in m for m in msgs)

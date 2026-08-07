@@ -54,6 +54,19 @@ proxies). No `exec_hired` / title-absence guessing.
   `vercel blob put` step (stable pathnames, short cache). The outreach engine
   reads them straight from that blob (no website in the path).
 
+## Monitoring (`monitoring.py`, nightly — alerts via `NTFY_TOPIC`)
+
+Three checks, all on a run that exits 0: a source that fell to zero, a niche
+that lost >50% of its leads, and the two that need no previous run — a latched
+Gemini quota, and the **insight floor**.
+
+The floor alerts when a published niche has <20% of leads carrying `insight`.
+It is a catastrophe detector, NOT a quality bar: observed fill is 97-100%, so
+only a dead/rotated key, a drained balance, a provider outage, or the field
+being dropped from the record can reach 20%. Keep the threshold LOW — a tight
+one pages on ordinary model variance, gets muted, and then the real outage is
+missed. It runs on `--skip-fetch` too, since that is the publish path.
+
 ## Forbidden without explicit instruction
 
 - Committing `.env` or `**/data/*-leads.json`.

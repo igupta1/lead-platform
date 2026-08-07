@@ -349,12 +349,23 @@ def project_niche(conn: Any, niche: NicheConfig, *, state: str | None, limit: in
     }
 
 
+def _insight_fill(payload: dict[str, Any]) -> dict[str, int]:
+    """{total, filled} for `insight` across one niche's published leads. Fed to
+    the monitoring floor: `insight` is the only published field whose consumer
+    (outreach Gate B) fails silently when it goes missing, so it is counted at
+    the point it is actually written rather than inferred later."""
+    leads = payload.get("leads") or []
+    filled = sum(1 for lead in leads if str(lead.get("insight") or "").strip())
+    return {"total": len(leads), "filled": filled}
+
+
 def emit(
     conn: Any, out_dir: Path, *, only: str | None, state: str | None, limit: int | None
-) -> tuple[dict[str, Path], dict[str, int]]:
+) -> tuple[dict[str, Path], dict[str, int], dict[str, dict[str, int]]]:
     out_dir.mkdir(parents=True, exist_ok=True)
     written: dict[str, Path] = {}
     niche_counts: dict[str, int] = {}
+    insight_fill: dict[str, dict[str, int]] = {}
     for niche in ORDER:
         if only and niche.key != only:
             continue
@@ -364,12 +375,13 @@ def emit(
         log.info("wrote %s (%d leads)", path.name, payload["count"])
         written[niche.key] = path
         niche_counts[niche.key] = payload["count"]
+        insight_fill[niche.key] = _insight_fill(payload)
     # Shared vertical taxonomy (parent -> children), consumed by the outreach
     # engine's research/Gate-B matching.
     (out_dir / "taxonomy.json").write_text(
         json.dumps({"taxonomy": taxonomy.PARENT_CHILDREN}, indent=2)
     )
-    return written, niche_counts
+    return written, niche_counts, insight_fill
 
 
 # --- Publish --------------------------------------------------------------
@@ -447,22 +459,29 @@ def main(argv: list[str] | None = None) -> int:
 
     t0 = time.monotonic()
     score_all(conn)
-    written, niche_counts = emit(
+    written, niche_counts, insight_fill = emit(
         conn, args.out_dir, only=args.niche, state=args.state, limit=args.limit
     )
     log.info("phase score+emit: %d niche file(s) in %.0fs", len(written), time.monotonic() - t0)
 
-    # Anomaly guard: diff this run vs. the previous one (alert on a silent
-    # source failure or a sharp niche drop), then record this run's counts.
-    # Only on a real fetch — an emit-only run has no source counts to compare.
+    # Anomaly guard. The count diff needs a previous run to compare against, and
+    # an emit-only run has no source counts — so on --skip-fetch we pass prev=None,
+    # which runs ONLY the checks that stand alone (quota latch, insight floor).
+    # Those still matter there: --skip-fetch is the publish path, so it can ship a
+    # broken inventory just as easily as a full run.
+    stats: dict[str, Any] = {"niches": niche_counts, "insight_fill": insight_fill}
     if not args.skip_fetch:
-        stats = {"sources": source_counts, "niches": niche_counts}
-        # A latched Gemini quota is invisible to the count-diff guard: the
-        # run exits 0, and unenriched leads used to INFLATE niche counts
-        # rather than drop them. Report it explicitly.
-        if llm.gemini_quota_exhausted():
-            stats["gemini_quota_exhausted"] = True
-        monitoring.check(db.last_run_stats(conn), stats)
+        stats["sources"] = source_counts
+    # A latched Gemini quota is invisible to the count-diff guard: the
+    # run exits 0, and unenriched leads used to INFLATE niche counts
+    # rather than drop them. Report it explicitly.
+    if llm.gemini_quota_exhausted():
+        stats["gemini_quota_exhausted"] = True
+    monitoring.check(db.last_run_stats(conn) if not args.skip_fetch else None, stats)
+    # Only a real fetch records a baseline: storing an emit-only run's empty
+    # source counts would make the NEXT run diff against zeros and alert on
+    # every source "recovering".
+    if not args.skip_fetch:
         db.record_run_stats(conn, stats)
 
     log.info("run complete in %.0fs", time.monotonic() - run_start)

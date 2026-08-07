@@ -60,12 +60,53 @@ def _enrichment_anomalies(curr: dict[str, Any]) -> list[str]:
     workflow's failure alert never fires, and the count diff above cannot see
     it either (unenriched leads used to push niche counts UP, not down). It
     has to be reported on its own terms."""
-    if not curr.get("gemini_quota_exhausted"):
-        return []
-    return [
-        "gemini quota exhausted mid-run — enrichment stopped early, leads are "
-        "unenriched and held back from publish. Check the AI Studio balance."
-    ]
+    messages: list[str] = []
+    if curr.get("gemini_quota_exhausted"):
+        messages.append(
+            "gemini quota exhausted mid-run — enrichment stopped early, leads are "
+            "unenriched and held back from publish. Check the AI Studio balance."
+        )
+    messages.extend(_insight_anomalies(curr))
+    return messages
+
+
+# `insight` is the ONE field with a consumer that cannot degrade gracefully:
+# the outreach engine's Gate B judges each gift lead's description to verify a
+# vertical claim, so an empty description fails every lead and silently drops
+# every gift to a generalist email. Nothing else notices — niche counts are
+# unchanged, the run exits 0.
+#
+# This floor is deliberately FAR below normal (observed fill: 97-100% on every
+# niche) and far above zero. It is not a quality bar: model variance moves fill
+# a few points, never to 20%. Only a systematic failure gets here — a dead or
+# rotated API key, a drained balance, a provider outage, or the field being
+# dropped from the published record. Keep it low; a tight threshold would page
+# on ordinary variance and get muted, which is how a real alert gets missed.
+_INSIGHT_FLOOR = 0.20
+
+
+def _insight_anomalies(curr: dict[str, Any]) -> list[str]:
+    """Alert when published leads have essentially no `insight`. Reported per
+    niche so a single broken niche is distinguishable from a whole-feed
+    failure. Niches with no published leads are skipped — an empty inventory is
+    the count guard's business, and 0/0 is not a fill-rate failure."""
+    fill: dict[str, Any] = curr.get("insight_fill") or {}
+    messages: list[str] = []
+    for niche, stats in sorted(fill.items()):
+        total = (stats or {}).get("total") or 0
+        filled = (stats or {}).get("filled") or 0
+        if total <= 0:
+            continue
+        ratio = filled / total
+        if ratio < _INSIGHT_FLOOR:
+            messages.append(
+                f"niche '{niche}': only {filled}/{total} published leads "
+                f"({ratio:.0%}) have an insight — below the {_INSIGHT_FLOOR:.0%} "
+                "floor. Gate B judges gift leads on that field, so outreach will "
+                "drop every vertical claim to a generalist email. Check the "
+                "Gemini/OpenAI API key and balance."
+            )
+    return messages
 
 
 def alert(messages: list[str]) -> None:
