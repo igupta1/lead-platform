@@ -34,3 +34,51 @@ def test_general_board_requires_explicit_fractional_qualifier():
     # A plain full-time title on a general board is NOT a fractional signal.
     assert _signal_type_for("Security Engineer", assume_fractional=False) is None
     assert _signal_type_for("Chief Financial Officer", assume_fractional=False) is None
+
+
+# --- company name from the page title, not the slug -------------------------
+
+from leadgen.sources.fractional_boards import _fj_page_company  # noqa: E402
+
+
+def _page(title: str) -> str:
+    return f"<html><head><title>{title}</title></head><body>x</body></html>"
+
+
+def test_page_title_recovers_the_real_casing():
+    # Every one of these is a live listing the slug mangled.
+    cases = {
+        "New Job | Fractional Chief Financial Officer at 3DT Holdings": "3DT Holdings",
+        "New Job | Fractional Chief Financial Officer at EmpowerHCP": "EmpowerHCP",
+        "New Job | Fractional Chief Financial Officer at co:census": "co:census",
+        "New Job | Fractional Chief Financial Officer at LifeSiteNews": "LifeSiteNews",
+    }
+    for title, expected in cases.items():
+        assert _fj_page_company(_page(title)) == expected
+
+
+def test_hashed_slugs_collapse_to_one_name():
+    """The three lifesitenews slugs differ only by a content hash; their pages
+    all title to the same company, so they dedup to ONE lead in the store."""
+    t = "New Job | Fractional Chief Financial Officer at LifeSiteNews"
+    assert len({_fj_page_company(_page(t)) for _ in range(3)}) == 1
+
+
+def test_html_entities_are_decoded():
+    assert _fj_page_company(
+        _page("New Job | Fractional CFO at Smith &amp; Sons")
+    ) == "Smith & Sons"
+
+
+def test_missing_or_unparseable_title_falls_back_to_none():
+    assert _fj_page_company("<html><body>no title</body></html>") is None
+    assert _fj_page_company(_page("New Job | Fractional CFO")) is None   # no " at "
+    assert _fj_page_company(_page("Fractional CFO at ")) is None          # empty tail
+    assert _fj_page_company("") is None
+
+
+def test_company_containing_at_keeps_the_last_segment():
+    # "at" inside the role must not win over the real separator.
+    assert _fj_page_company(
+        _page("New Job | Fractional Head of Data at Acme")
+    ) == "Acme"

@@ -42,6 +42,7 @@ import logging
 import re
 import time
 from datetime import datetime, timezone
+from html import unescape as html_unescape
 
 import requests
 
@@ -137,7 +138,13 @@ _FJ_FETCH_SPACING_S = 0.3
 def _fj_split_slug(slug: str) -> tuple[str, str] | None:
     """``controller-at-anderson-lock-safe`` -> ("Controller",
     "Anderson Lock Safe"). Skips anonymized listings
-    ("...-at-a-saas-tool")."""
+    ("...-at-a-saas-tool").
+
+    The company here is a PROVISIONAL name: a URL slug is lowercase, so
+    title-casing it is a guess that mangles anything not Capitalized Words
+    ("3dt-holdings" -> "3Dt Holdings"). It is good enough for the cheap
+    pre-filters, and `_fj_page_company` replaces it with the real name once the
+    page is fetched."""
     if "-at-" not in slug:
         return None
     role_slug, company_slug = slug.rsplit("-at-", 1)
@@ -149,6 +156,40 @@ def _fj_split_slug(slug: str) -> tuple[str, str] | None:
     role = role_slug.replace("-", " ").strip().title()
     company = company_slug.replace("-", " ").strip().title()
     return role, company
+
+
+# The page title carries the company's REAL name, cased the way the company
+# writes it: "New Job | Fractional Chief Financial Officer at 3DT Holdings".
+# The slug cannot: it is lowercase and hyphenated, so the name is only
+# recoverable from the page. Measured against live listings, this is the
+# difference between "3Dt Holdings" / "Empowerhcp" / "Co Census" /
+# "Lifesitenews" and "3DT Holdings" / "EmpowerHCP" / "co:census" /
+# "LifeSiteNews".
+#
+# It also removes the slug's content-hash suffix at the source: the three
+# slugs `...-at-lifesitenews`, `...-at-lifesitenews-07cfc` and
+# `...-at-lifesitenews-bef8c` all title to "LifeSiteNews", so they collapse to
+# ONE lead in the store instead of three near-duplicates the name-keyed dedup
+# cannot see.
+#
+# The page is already fetched for its Published date, so this costs no request.
+_FJ_TITLE_RE = re.compile(r"<title[^>]*>(.*?)</title>", re.S | re.IGNORECASE)
+
+
+def _fj_page_company(html: str) -> str | None:
+    """The company name from the listing's page title, or None when the title
+    is missing or not in the expected `<role> at <company>` shape (in which
+    case the caller keeps the slug-derived name rather than losing the lead)."""
+    m = _FJ_TITLE_RE.search(html or "")
+    if m is None:
+        return None
+    title = html_unescape(re.sub(r"\s+", " ", m.group(1))).strip()
+    if " at " not in title:
+        return None
+    company = title.rsplit(" at ", 1)[1].strip()
+    # A title that ends on the separator, or degenerates to punctuation, is not
+    # a name — fall back rather than store an empty or junk company.
+    return company or None
 
 
 def _fj_page_date(html: str) -> datetime | None:
@@ -215,6 +256,12 @@ def _fetch_fractionaljobs(since: datetime, max_age_days: int) -> list[LeadCandid
         if posted is None:
             continue  # undated -> refuse to ingest into the in-market tier
         if (captured_at - posted).days > max_age_days or posted < since:
+            continue
+        # Prefer the page's real name over the slug guess, then re-run the name
+        # gates on it: the corrected name is what gets STORED and printed, and
+        # it can reveal an exclusion the mangled slug hid.
+        company = _fj_page_company(r.text) or company
+        if _is_recruiter_name(company) or _is_auto_dealer_name(company):
             continue
         cand = _make_candidate(
             company=company,
