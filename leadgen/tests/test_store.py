@@ -1,10 +1,10 @@
 """The shared company store: global dedup, identity backfill, disqualifier
 gate, signal-level dedup."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from leadgen import db
-from leadgen.models import Disqualifier, LeadCandidate, SignalType, SourceName
+from leadgen.models import Disqualifier, LeadCandidate, Signal, SignalType, SourceName
 from tests.conftest import _now as _now_ref
 
 
@@ -180,3 +180,42 @@ def test_run_stats_roundtrip_returns_most_recent(conn):
     db.record_run_stats(conn, {"sources": {"jobs": 100}, "niches": {"cfo": 40}})
     db.record_run_stats(conn, {"sources": {"jobs": 90}, "niches": {"cfo": 38}})
     assert db.last_run_stats(conn) == {"sources": {"jobs": 90}, "niches": {"cfo": 38}}
+
+
+def _candidate(company: str, title: str, url: str) -> LeadCandidate:
+    """A job-post candidate keyed to one posting URL, so a second upsert with a
+    different title is a DUPLICATE of the same event, not a new one."""
+    return LeadCandidate(
+        name=company,
+        initial_signal=Signal(
+            type=SignalType.JOB_FRACTIONAL_CFO, source=SourceName.FRACTIONAL_BOARD,
+            captured_at=datetime(2026, 8, 9), event_date=datetime(2026, 8, 1),
+            evidence_text=title, source_url=url,
+            payload={"title": title, "url": url, "site": "fractionaljobs"},
+        ),
+    )
+
+
+# --- a duplicate re-scrape may upgrade the title, never downgrade it --------
+
+def test_duplicate_upgrades_a_bare_title_to_the_fractional_one(conn):
+    """`fractional_boards._evidence_title` puts "Fractional" back onto a bare
+    board listing, but the first-stored version used to win outright — freezing
+    78 of 103 fractional-CFO postings holding a plain "Chief Financial Officer"
+    under a subject line promising a fractional role."""
+    url = "https://www.fractionaljobs.io/jobs/cfo-at-acme"
+    bare = _candidate("Acme", "Chief Financial Officer", url)
+    rich = _candidate("Acme", "Fractional Chief Financial Officer", url)
+    db.upsert_lead(conn, bare)
+    db.upsert_lead(conn, rich)
+    lead = next(iter(db.iter_leads(conn)))
+    assert len(lead.signals) == 1                       # still one event
+    assert lead.signals[0].evidence_text == "Fractional Chief Financial Officer"
+
+
+def test_a_bare_rescrape_never_strips_an_existing_qualifier(conn):
+    url = "https://www.fractionaljobs.io/jobs/cfo-at-beta"
+    db.upsert_lead(conn, _candidate("Beta", "Interim Chief Financial Officer", url))
+    db.upsert_lead(conn, _candidate("Beta", "Chief Financial Officer", url))
+    lead = next(iter(db.iter_leads(conn)))
+    assert lead.signals[0].evidence_text == "Interim Chief Financial Officer"

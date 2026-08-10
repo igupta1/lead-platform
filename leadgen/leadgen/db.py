@@ -272,6 +272,18 @@ def _event_sort_value(sig_dict: dict[str, Any]) -> str:
     return str(sig_dict.get("event_date") or "9999")
 
 
+# The part-time words a fractional posting's title may carry. A title holding
+# one of these describes the SAME posting more completely than one that doesn't.
+_QUALIFIER_RE = re.compile(
+    r"\b(?:fractional|interim|part[\s-]?time|outsourced|virtual)\b", re.IGNORECASE
+)
+
+
+def _is_richer_title(incoming: str, kept: str) -> bool:
+    """True when `incoming` names the role's part-time nature and `kept` does not."""
+    return bool(_QUALIFIER_RE.search(incoming or "")) and not _QUALIFIER_RE.search(kept or "")
+
+
 def _merge_duplicate_signal(kept: dict[str, Any], incoming: dict[str, Any]) -> bool:
     """Fold `incoming` into the already-stored `kept` duplicate. Returns True
     when `kept` changed.
@@ -280,11 +292,28 @@ def _merge_duplicate_signal(kept: dict[str, Any], incoming: dict[str, Any]) -> b
     same posting is not a new event, and every consumer takes the most recent
     signal (`run.py::_primary_signal`, `scoring.py` recency), so keeping the
     later date silently inflates the lead's rank and tells the prospect a
-    three-week-old posting is days old."""
+    three-week-old posting is days old.
+
+    Takes the RICHER evidence_text. Dates and titles need opposite rules here:
+    a re-scrape's date is suspect (boards bump them), but a re-scrape's title
+    can be strictly better. `fractional_boards._evidence_title` puts the word
+    "Fractional" back onto a bare board listing, and because the first-stored
+    version used to win outright, 78 of 103 fractional-CFO postings were frozen
+    holding a plain "Chief Financial Officer" — under a subject line promising a
+    fractional role. Upgrading on merge fixes them on the next re-scrape rather
+    than needing a backfill, and it can only ever ADD the qualifier: a title
+    that already names it is never overwritten."""
+    changed = False
     if _event_sort_value(incoming) < _event_sort_value(kept):
         kept["event_date"] = incoming.get("event_date")
-        return True
-    return False
+        changed = True
+    if _is_richer_title(incoming.get("evidence_text", ""), kept.get("evidence_text", "")):
+        kept["evidence_text"] = incoming["evidence_text"]
+        payload = kept.get("payload")
+        if isinstance(payload, dict) and payload.get("title"):
+            payload["title"] = incoming["evidence_text"]
+        changed = True
+    return changed
 
 
 def _append_signal_row(conn: sqlite3.Connection, lead_id: int, signal: Signal) -> None:
