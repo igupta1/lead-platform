@@ -5,13 +5,14 @@ A niche is a query over the shared company store (see ``base.NicheConfig``).
 """
 
 from leadgen.niches.accounting import CONFIG as ACCOUNTING
+from leadgen.niches.bookkeeping import CONFIG as BOOKKEEPING
 from leadgen.niches.base import NicheConfig
 from leadgen.niches.cfo import CONFIG as CFO
 from leadgen.niches.cloud import CONFIG as CLOUD
 from leadgen.niches.mssp import CONFIG as MSSP
 from leadgen.niches.msp import CONFIG as MSP
 
-ORDER: tuple[NicheConfig, ...] = (ACCOUNTING, CFO, MSSP, MSP, CLOUD)
+ORDER: tuple[NicheConfig, ...] = (BOOKKEEPING, ACCOUNTING, CFO, MSSP, MSP, CLOUD)
 NICHES: dict[str, NicheConfig] = {c.key: c for c in ORDER}
 
 __all__ = ["NICHES", "ORDER", "NicheConfig"]

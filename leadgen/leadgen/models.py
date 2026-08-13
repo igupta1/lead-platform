@@ -31,6 +31,13 @@ class SignalType(str, Enum):
     # Hottest CFO signal — the company posted a Fractional / Interim /
     # Part-time CFO role. Literally in-market for the service being sold.
     JOB_FRACTIONAL_CFO = "job_fractional_cfo"
+    # Same explicit intent one rung DOWN: a fractional / interim controller
+    # (or accounting manager, head of accounting). Split out of
+    # JOB_FRACTIONAL_CFO because the buyer is different — an outsourced
+    # ACCOUNTING firm sells a fractional controller, a fractional-CFO firm
+    # sells strategy — and a niche can only select on the signal type. Feeds
+    # accounting as its lead-first signal.
+    JOB_FRACTIONAL_CONTROLLER = "job_fractional_controller"
     # Finance leadership one rung below CFO (Controller, VP / Head /
     # Director of Finance, Accounting / Finance Manager, FP&A, Sr
     # Accountant). Feeds cfo AND accounting.

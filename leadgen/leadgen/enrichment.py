@@ -370,6 +370,7 @@ def _is_large_ngo(name: str) -> bool:
 # apply to every lead regardless of signal.
 _HIRING_SIGNAL_TYPES: frozenset[SignalType] = frozenset({
     SignalType.JOB_FRACTIONAL_CFO,
+    SignalType.JOB_FRACTIONAL_CONTROLLER,
     SignalType.JOB_FINANCE_LEAD,
     SignalType.JOB_JUNIOR_FINANCE,
     SignalType.JOB_IT_SUPPORT,

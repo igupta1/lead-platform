@@ -75,7 +75,7 @@ def test_richer_stack_gets_a_small_bonus():
     one = _lead(make_signal(SignalType.JOB_FINANCE_LEAD, days_ago=0))
     two = _lead(
         make_signal(SignalType.JOB_FINANCE_LEAD, days_ago=0),
-        make_signal(SignalType.JOB_JUNIOR_FINANCE, days_ago=0),
+        make_signal(SignalType.JOB_FRACTIONAL_CONTROLLER, days_ago=0),
     )
     acc = NICHES["accounting"]
     assert score_lead_for_niche(two, acc, now=NOW) > score_lead_for_niche(one, acc, now=NOW)
@@ -108,3 +108,33 @@ def test_hotels_excluded_from_cfo_and_accounting_but_not_msp():
     assert score_lead_for_niche(hotel, NICHES["accounting"], now=NOW) is None
     # ...but a hotel is a perfectly good MSP buyer.
     assert score_lead_for_niche(hotel, NICHES["msp"], now=NOW) is not None
+
+
+# --- the finance ladder: three niches, three rungs -------------------------
+
+def test_the_three_finance_niches_select_different_rungs():
+    """A bookkeeper posting, a controller posting and a fractional-CFO posting
+    are three different sales to three different buyers, so each one qualifies
+    its own niche and not the others."""
+    cases = {
+        SignalType.JOB_JUNIOR_FINANCE: {"bookkeeping"},
+        SignalType.JOB_FRACTIONAL_CONTROLLER: {"accounting"},
+        SignalType.JOB_FRACTIONAL_CFO: {"cfo"},
+        # the one rung both finance niches share, because a
+        # fractional-controller-only inventory is too thin to gift from
+        SignalType.JOB_FINANCE_LEAD: {"accounting", "cfo"},
+    }
+    for sig, expected in cases.items():
+        lead = _lead(make_signal(sig, days_ago=0))
+        got = {k for k, n in NICHES.items()
+               if score_lead_for_niche(lead, n, now=NOW) is not None}
+        assert got == expected, f"{sig.value} -> {got}, expected {expected}"
+
+
+def test_accounting_leads_with_the_fractional_controller():
+    """Its lead-first signal, the way a fractional-CFO posting is cfo's: a
+    company shopping for a fractional controller outranks one merely hiring."""
+    frac = _lead(make_signal(SignalType.JOB_FRACTIONAL_CONTROLLER, days_ago=30))
+    hire = _lead(make_signal(SignalType.JOB_FINANCE_LEAD, days_ago=0))
+    acc = NICHES["accounting"]
+    assert score_lead_for_niche(frac, acc, now=NOW) > score_lead_for_niche(hire, acc, now=NOW)

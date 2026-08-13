@@ -12,7 +12,7 @@ from leadgen.sources.fractional_boards import _signal_type_for
 def test_fractional_only_board_routes_every_niche():
     st = SignalType
     assert _signal_type_for("Chief Financial Officer", assume_fractional=True) == st.JOB_FRACTIONAL_CFO
-    assert _signal_type_for("Controller", assume_fractional=True) == st.JOB_FRACTIONAL_CFO
+    assert _signal_type_for("Controller", assume_fractional=True) == st.JOB_FRACTIONAL_CONTROLLER
     assert _signal_type_for("Chief Information Security Officer", assume_fractional=True) == st.JOB_SECURITY
     assert _signal_type_for("CISO", assume_fractional=True) == st.JOB_SECURITY
     assert _signal_type_for("IT Director", assume_fractional=True) == st.JOB_IT_LEADERSHIP

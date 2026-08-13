@@ -28,7 +28,16 @@ them or vice-versa.
   into copy — every outreach line stays code-templated.
   A looked-up domain must resolve in DNS or it is stored as None.
 - `scoring.py` + `niches/` — niche config + the recency-weighted tiered scorer.
-  Five niches: `accounting`, `cfo`, `mssp`, `msp`, `cloud`.
+  Six niches: `bookkeeping`, `accounting`, `cfo`, `mssp`, `msp`, `cloud`.
+
+  The three FINANCE niches are one ladder, split by the rung a company is
+  hiring at, because each rung is a different sale to a different buyer:
+  `bookkeeping` (junior: bookkeeper, AP/AR, payroll) · `accounting`
+  (controller) · `cfo` (fractional CFO). Measured on live inventory, only 1.7%
+  of companies carry both a junior and a controller-level signal, so the first
+  two barely overlap. `accounting` and `cfo` DO share `job_finance_lead` — a
+  fractional-controller-only pool is far too thin to gift from — but each leads
+  with its own explicit-intent signal, so the gifts still differ.
 - `run.py` — the one orchestrator: fetch → upsert → enrich → score → project
   one inventory per niche → write local JSON. Enrichment runs the per-lead
   Gemini/OpenAI lookups **concurrently** (`--enrich-workers`, default 12; needs a

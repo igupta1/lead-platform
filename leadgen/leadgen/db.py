@@ -216,6 +216,7 @@ _WS_RE = re.compile(r"\s+")
 # source_url (one filing / one disclosure == one URL).
 _JOB_TYPES: frozenset[SignalType] = frozenset({
     SignalType.JOB_FRACTIONAL_CFO,
+    SignalType.JOB_FRACTIONAL_CONTROLLER,
     SignalType.JOB_FINANCE_LEAD,
     SignalType.JOB_JUNIOR_FINANCE,
     SignalType.JOB_IT_SUPPORT,

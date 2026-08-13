@@ -103,13 +103,17 @@ _FRACTIONAL_CFO_QUERIES: tuple[str, ...] = (
 # to an in-house finance department — the outsourced-accounting window.
 _JUNIOR_FINANCE_QUERIES: tuple[str, ...] = (
     "Bookkeeper",
+    "Full Charge Bookkeeper",
+    "Bookkeeping Specialist",
     "Staff Accountant",
     "Junior Accountant",
+    "Accounting Specialist",
     "Accounting Clerk",
     "Accounts Payable Specialist",
     "Accounts Receivable Specialist",
     "Accounts Payable Clerk",
     "Payroll Specialist",
+    "Payroll Administrator",
     "Billing Specialist",
     "Accounting Assistant",
 )
@@ -308,8 +312,13 @@ _FRACTIONAL_MAX_POSTING_AGE_DAYS = 60
 # nationwide "United States" location) fail closed on every call in both CI and
 # local runs, returning zero leads while adding latency + error-log noise, so
 # they're dropped. Re-add if the upstream blocks lift.
+# Raised from 100 to 200 on the high-volume boards. Downstream, outreach drops
+# any job lead older than 21 days, so usable inventory is a FLOW — how many
+# fresh postings arrive per week — not a stock. Widening the age window adds
+# archive nobody can send; widening the catch per query is what actually deepens
+# a niche. LinkedIn stays gentle to avoid anti-bot blocks.
 _JOBSPY_PLANS: tuple[tuple[tuple[str, ...], int], ...] = (
-    (("indeed", "google"), 100),
+    (("indeed", "google"), 200),
     (("linkedin",), 25),
 )
 
@@ -445,6 +454,30 @@ def _is_fractional_cfo_title(title: str, description: str = "") -> bool:
     )
 
 
+# Controller-LEVEL leadership, for splitting the fractional tier. A title that
+# names a CFO is CFO-level no matter what else it says ("Fractional CFO /
+# Controller" is a CFO search), so that is tested first by the caller.
+#
+# Deliberately narrow: controller and head-of-accounting only. A fractional VP
+# of Finance or Head of Finance is doing strategy, which is the fractional-CFO
+# firm's product, not the outsourced accountant's. "Accounting Manager" is not
+# listed because it never reaches this branch — it is not in
+# _FINANCE_LEADERSHIP_RES, so a part-time one stays JOB_FINANCE_LEAD, which
+# still feeds accounting.
+_CONTROLLER_LEVEL_RES: tuple[re.Pattern[str], ...] = (
+    _CONTROLLER_RE,
+    _HEAD_OF_ACCOUNTING_RE,
+)
+
+
+def _is_controller_level(title: str) -> bool:
+    """True when a fractional finance-leadership title sits at controller level
+    rather than CFO level."""
+    if _CFO_TITLE_RE.search(title):
+        return False
+    return any(r.search(title) for r in _CONTROLLER_LEVEL_RES)
+
+
 def _is_junior_finance_title(title: str) -> bool:
     """True for a junior IC finance title (bookkeeper, staff / junior
     accountant, AP / AR clerk, payroll / billing specialist). Reached only
@@ -473,9 +506,15 @@ def classify(title: str, description: str = "") -> SignalType | None:
     returns None and is dropped."""
     if not title:
         return None
-    # Finance ladder.
+    # Finance ladder. The fractional tier splits by LEVEL: a fractional CFO is
+    # sold by a fractional-CFO firm, a fractional controller by an outsourced
+    # ACCOUNTING firm, and a niche can only select on the signal type.
     if _is_fractional_cfo_title(title, description):
-        return SignalType.JOB_FRACTIONAL_CFO
+        return (
+            SignalType.JOB_FRACTIONAL_CONTROLLER
+            if _is_controller_level(title)
+            else SignalType.JOB_FRACTIONAL_CFO
+        )
     if _is_finance_lead_title(title):
         return SignalType.JOB_FINANCE_LEAD
     if _is_junior_finance_title(title):

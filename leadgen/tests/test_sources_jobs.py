@@ -53,8 +53,15 @@ def test_exec_hired_is_gone():
      SignalType.JOB_FRACTIONAL_CFO),
     ("Head of Finance", "We are hiring on a part-time basis",
      SignalType.JOB_FRACTIONAL_CFO),
+    # controller LEVEL routes to the accounting niche's lead-first signal, not
+    # the CFO one — a fractional controller is what an outsourced accounting
+    # firm sells, and the niche can only select on the type.
     ("Controller", "Interim coverage during a parental leave",
-     SignalType.JOB_FRACTIONAL_CFO),
+     SignalType.JOB_FRACTIONAL_CONTROLLER),
+    # ...but a CFO title anywhere in it is a CFO search
+    ("Fractional CFO / Controller", "", SignalType.JOB_FRACTIONAL_CFO),
+    # strategy titles stay CFO-level
+    ("Fractional VP of Finance", "", SignalType.JOB_FRACTIONAL_CFO),
     # qualifier in the title still works with no body at all
     ("Fractional CFO", "", SignalType.JOB_FRACTIONAL_CFO),
     # a full-time posting stays dropped -- no qualifier in either place
