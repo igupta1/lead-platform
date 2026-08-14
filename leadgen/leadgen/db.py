@@ -253,7 +253,7 @@ def _signal_dedup_key(sig_dict: dict[str, Any]) -> str:
 
 
 def _signal_url_key(sig_dict: dict[str, Any]) -> str | None:
-    """Second dedup key for job posts: ``type | source_url``. The SAME posting
+    """Second dedup key for job posts: the ``source_url`` ALONE. The SAME posting
     re-read with a differently derived title is one event, not two — which the
     title key alone cannot see (it changed the moment `_evidence_title` began
     prefixing "Fractional", splitting 73 live CFO postings in two).
@@ -261,11 +261,19 @@ def _signal_url_key(sig_dict: dict[str, Any]) -> str | None:
     Two keys, not one replacement: title-only misses a re-derived title, and
     url-only reopens the multi-board duplication the title key exists to close
     (one role on Indeed + LinkedIn + Google is three URLs, one event). A signal
-    is a duplicate when EITHER key matches. Non-job types already key on URL."""
+    is a duplicate when EITHER key matches. Non-job types already key on URL.
+
+    Deliberately NOT scoped by type. ``classify`` routes a posting into exactly
+    one bucket, so one URL is one type by construction — a URL carrying two is
+    always the same posting re-read after a CLASSIFIER change, never two events.
+    Keying on type made those invisible to dedup: when the fractional tier split
+    by level, 32 leads ended up holding the same Indeed posting twice, once as
+    ``job_fractional_cfo`` and once as ``job_fractional_controller``, which put a
+    controller posting at tier 1 of the cfo niche it had just been moved out of
+    and paid it a richer-stack bonus for a stack of one."""
     if sig_dict["type"] not in _JOB_TYPE_VALUES:
         return None
-    url = sig_dict.get("source_url") or ""
-    return f"{sig_dict['type']}|{url}" if url else None
+    return sig_dict.get("source_url") or None
 
 
 def _event_sort_value(sig_dict: dict[str, Any]) -> str:
@@ -303,10 +311,20 @@ def _merge_duplicate_signal(kept: dict[str, Any], incoming: dict[str, Any]) -> b
     holding a plain "Chief Financial Officer" — under a subject line promising a
     fractional role. Upgrading on merge fixes them on the next re-scrape rather
     than needing a backfill, and it can only ever ADD the qualifier: a title
-    that already names it is never overwritten."""
+    that already names it is never overwritten.
+
+    Takes the NEWEST type. When the two disagree the classifier has changed
+    since the stored copy was written, and the fresh reading is the current
+    answer. Without this a reclassification never reaches the leads already in
+    the store: nothing else rewrites a stored signal, so they would carry the
+    old type — and sit in the old niche — until the whole lead aged out."""
     changed = False
     if _event_sort_value(incoming) < _event_sort_value(kept):
         kept["event_date"] = incoming.get("event_date")
+        changed = True
+    inc_seen = str(incoming.get("captured_at") or "")
+    if incoming.get("type") != kept.get("type") and inc_seen >= str(kept.get("captured_at") or ""):
+        kept["type"] = incoming["type"]
         changed = True
     if _is_richer_title(incoming.get("evidence_text", ""), kept.get("evidence_text", "")):
         kept["evidence_text"] = incoming["evidence_text"]

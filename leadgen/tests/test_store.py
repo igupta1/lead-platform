@@ -1,6 +1,7 @@
 """The shared company store: global dedup, identity backfill, disqualifier
 gate, signal-level dedup."""
 
+import json
 from datetime import datetime, timedelta
 
 from leadgen import db
@@ -219,3 +220,81 @@ def test_a_bare_rescrape_never_strips_an_existing_qualifier(conn):
     db.upsert_lead(conn, _candidate("Beta", "Chief Financial Officer", url))
     lead = next(iter(db.iter_leads(conn)))
     assert lead.signals[0].evidence_text == "Interim Chief Financial Officer"
+
+
+# --- a reclassified posting is ONE posting ---------------------------------
+
+def test_same_url_collapses_when_the_classifier_changed(conn):
+    """The fractional tier split by level, so a stored "Controller" posting was
+    re-scraped under a new type. Keyed by type, dedup could not see it: 32 leads
+    ended up holding the same Indeed posting twice, sitting at tier 1 of the very
+    niche the split had just moved them out of."""
+    url = "https://www.indeed.com/viewjob?jk=90d11318cd"
+    old = LeadCandidate(
+        name="Goshen Engineering",
+        initial_signal=Signal(
+            type=SignalType.JOB_FRACTIONAL_CFO, source=SourceName.JOBS,
+            captured_at=datetime(2026, 8, 1), event_date=datetime(2026, 7, 28),
+            evidence_text="Controller", source_url=url,
+        ),
+    )
+    db.upsert_lead(conn, old)
+    new = LeadCandidate(
+        name="Goshen Engineering",
+        initial_signal=Signal(
+            type=SignalType.JOB_FRACTIONAL_CONTROLLER, source=SourceName.JOBS,
+            captured_at=datetime(2026, 8, 13), event_date=datetime(2026, 8, 2),
+            evidence_text="Controller", source_url=url,
+        ),
+    )
+    lead = db.upsert_lead(conn, new)
+    assert lead is not None
+    assert len(lead.signals) == 1, "one posting must stay one signal"
+    # the newer classification wins...
+    assert lead.signals[0].type is SignalType.JOB_FRACTIONAL_CONTROLLER
+    # ...and the earliest event date still survives, as for any duplicate
+    assert lead.signals[0].event_date == datetime(2026, 7, 28)
+
+
+def test_an_older_rescrape_never_downgrades_the_type(conn):
+    """Order is not guaranteed inside a run. A stale reading arriving after a
+    fresh one must not undo the reclassification."""
+    url = "https://www.indeed.com/viewjob?jk=aaa"
+    db.upsert_lead(conn, LeadCandidate(
+        name="Acme", initial_signal=Signal(
+            type=SignalType.JOB_FRACTIONAL_CONTROLLER, source=SourceName.JOBS,
+            captured_at=datetime(2026, 8, 13), evidence_text="Controller",
+            source_url=url)))
+    lead = db.upsert_lead(conn, LeadCandidate(
+        name="Acme", initial_signal=Signal(
+            type=SignalType.JOB_FRACTIONAL_CFO, source=SourceName.JOBS,
+            captured_at=datetime(2026, 8, 1), evidence_text="Controller",
+            source_url=url)))
+    assert lead is not None and len(lead.signals) == 1
+    assert lead.signals[0].type is SignalType.JOB_FRACTIONAL_CONTROLLER
+
+
+def test_nightly_pass_heals_leads_already_holding_both(conn):
+    """The store already contains the duplicates, so the fix has to repair them
+    rather than only prevent new ones. `dedup_signals_pass` runs every night."""
+    url = "https://www.indeed.com/viewjob?jk=bbb"
+    db.upsert_lead(conn, LeadCandidate(
+        name="CASAS International", initial_signal=Signal(
+            type=SignalType.JOB_FRACTIONAL_CFO, source=SourceName.JOBS,
+            captured_at=datetime(2026, 8, 1), evidence_text="Controller",
+            source_url=url)))
+    # force the second copy in the way the type-scoped key used to allow
+    conn.execute(
+        "UPDATE leads SET signals = json_insert(signals, '$[#]', json(?))",
+        (json.dumps({
+            "type": "job_fractional_controller", "source": "jobs",
+            "captured_at": "2026-08-13T00:00:00", "event_date": None,
+            "evidence_text": "Controller", "source_url": url, "payload": {},
+        }),),
+    )
+    conn.commit()
+    assert len(db.get_lead(conn, name_key=db.name_key("CASAS International")).signals) == 2
+    db.dedup_signals_pass(conn)
+    healed = db.get_lead(conn, name_key=db.name_key("CASAS International"))
+    assert len(healed.signals) == 1
+    assert healed.signals[0].type is SignalType.JOB_FRACTIONAL_CONTROLLER
