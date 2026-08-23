@@ -87,6 +87,14 @@ class Signal(BaseModel):
     # When the underlying event happened (posting date, filing date, breach
     # date). Recency is scored off this; falls back to captured_at if unknown.
     event_date: datetime | None = None
+    # How much the ``event_date`` can be trusted as the date the event actually
+    # happened. "high" for a source that publishes a real posting/filing/breach
+    # date; "low" when the best we have is the night we first saw it (the
+    # fractional board publishes no date at all). Consumers must not render a
+    # relative date off a "low" signal — outreach's `copy.honesty.date_suffix`
+    # already suppresses one — but the date is still a usable ordering and
+    # ageing key, so it is stamped rather than left null.
+    date_confidence: str = "high"
     evidence_text: str
     source_url: str
     payload: dict[str, Any] = Field(default_factory=dict)

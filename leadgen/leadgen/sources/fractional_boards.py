@@ -128,10 +128,33 @@ _FJ_ROLE_SLUG_RE = re.compile(
     r"devops|site-reliability|cloud-engineer|cloud-architect|platform-engineer)",  # cloud
     re.IGNORECASE,
 )
-_FJ_PUBLISHED_RE = re.compile(
-    r"Published:\s*([A-Za-z]{3}\s+[A-Za-z]{3}\s+\d{1,2}\s+\d{4})"
-)
-_FJ_MAX_FETCHES = 250       # bound nightly load (covers four niches now)
+# NO published-date regex, deliberately. There used to be one matching
+# "Published: Wed Aug 12 2026" — which is Webflow's SITE-BUILD timestamp, sitting
+# in an HTML comment at the top of every page on the site:
+#
+#     <!-- Last Published: Wed Aug 12 2026 18:54:11 GMT+0000 -->
+#
+# So every posting on the board reported the same date, and that date moved only
+# when the site owner republished. Three things followed, all bad:
+#
+#   * A first scrape stamped the board's ENTIRE standing backlog with one date.
+#     On 2026-07-22 that was 63 postings, which then expired together 30 days
+#     later and collapsed the fractional supply in a single day.
+#   * A newly-discovered posting arrived pre-aged by however stale the site build
+#     was, so it got less than its full window downstream.
+#   * The outreach copy printed "about 2 weeks ago" off it — the age of a Webflow
+#     deploy, asserted to the recipient as the age of a job posting.
+#
+# The page carries no posting date at all (checked: no "posted N days ago", no
+# date anywhere in the body), so there is nothing honest to parse. We stamp
+# FIRST-SEEN instead and mark it low confidence — see `_fetch_fractionaljobs`.
+# Covers the WHOLE in-scope board, with headroom. Measured 2026-08-23: the
+# sitemap carries 1,760 job URLs, 365 of which pass `_FJ_ROLE_SLUG_RE`. At 250
+# the crawl stopped 115 slugs short IN SITEMAP ORDER, and the tail is not random
+# — controller listings cluster there, so 67 of the board's 78 fractional
+# CONTROLLER postings were never fetched. That is the accounting pack's
+# lead-first signal, which was running on 12 leads while 67 sat unread.
+_FJ_MAX_FETCHES = 400
 _FJ_FETCH_SPACING_S = 0.3
 
 
@@ -192,16 +215,6 @@ def _fj_page_company(html: str) -> str | None:
     return company or None
 
 
-def _fj_page_date(html: str) -> datetime | None:
-    m = _FJ_PUBLISHED_RE.search(html)
-    if not m:
-        return None
-    try:
-        return datetime.strptime(m.group(1), "%a %b %d %Y")
-    except ValueError:
-        return None
-
-
 def _fetch_fractionaljobs(since: datetime, max_age_days: int) -> list[LeadCandidate]:
     captured_at = _utcnow()
     try:
@@ -252,11 +265,18 @@ def _fetch_fractionaljobs(since: datetime, max_age_days: int) -> list[LeadCandid
             r.raise_for_status()
         except requests.RequestException:
             continue
-        posted = _fj_page_date(r.text)
-        if posted is None:
-            continue  # undated -> refuse to ingest into the in-market tier
-        if (captured_at - posted).days > max_age_days or posted < since:
-            continue
+        # First-seen, not "posted": this board publishes no posting date (see the
+        # note where the old regex used to live). The night we first saw a
+        # listing is a real, defensible bound — it was live then — and
+        # `db._merge_duplicate_signal` keeps the EARLIEST date, so a posting's
+        # stamp never drifts forward on re-scrape. It is marked low confidence so
+        # no consumer renders it as a recency claim.
+        #
+        # No age filter here any more: it was comparing a Webflow build date
+        # against `since`, so a site that went 45 days without republishing would
+        # have silently dropped every posting on the board. Age is now bounded
+        # where it means something — the consumer's own window, off first-seen.
+        posted = captured_at
         # Prefer the page's real name over the slug guess, then re-run the name
         # gates on it: the corrected name is what gets STORED and printed, and
         # it can reveal an exclusion the mangled slug hid.
@@ -304,6 +324,8 @@ def _make_candidate(
             source=SourceName.FRACTIONAL_BOARD,
             captured_at=captured_at,
             event_date=_parse_posted_date(date_posted),
+            # First-seen, not published — the board gives no posting date.
+            date_confidence="low",
             evidence_text=title,
             source_url=url,
             payload={

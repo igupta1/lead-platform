@@ -279,6 +279,11 @@ def _lead_record(lead: Lead, niche: NicheConfig, score: float) -> dict[str, Any]
             {
                 "type": s.type.value,
                 "event_date": s.event_date.isoformat() if s.event_date else None,
+                # Published so the outreach engine can tell a real posting date
+                # from a first-seen stamp. Without it every date read as "high"
+                # and the copy printed a relative date off a Webflow build
+                # timestamp.
+                "date_confidence": s.date_confidence,
                 "evidence_text": s.evidence_text,
                 "source_url": s.source_url,
                 "payload": s.payload,
